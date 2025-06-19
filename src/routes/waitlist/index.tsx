@@ -1,10 +1,11 @@
 import { component$ } from "@builder.io/qwik";
+import PageTitle from "~/components/PageTitle";
 
 export default component$(() => {
 	return (
 		<section>
-			<h1>Waiting List</h1>
-			<p>This is the Waitlist page</p>
+			<PageTitle text="Waiting List" />
+			<p>This is the Waiting List page</p>
 		</section>
 	)
 })
