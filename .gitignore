@@ -1,5 +1,6 @@
 # Custom
 *.stackdump
+*.db
 
 # Build
 /dist
