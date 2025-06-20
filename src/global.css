@@ -1,1 +1,13 @@
 @import "tailwindcss";
+
+@layer base {
+	input {
+		background-color: rgb(239, 241, 243);
+		padding: 0.25em;
+		border-radius: 6px;
+		border: 1px solid rgb(218, 221, 223);
+	}
+	input:focus {
+		outline: 1.25px solid gray;
+	}
+}
