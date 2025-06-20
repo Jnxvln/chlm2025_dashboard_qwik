@@ -11,7 +11,7 @@ export const useCreateDriverAction = routeAction$(
     const { dateHired, dateReleased, ...rest } = data;
 
     try {
-      await prisma.driver.create({
+      const driver = await prisma.driver.create({
         data: {
           ...rest,
           // Convert string to Date if present
@@ -20,7 +20,7 @@ export const useCreateDriverAction = routeAction$(
         },
       });
 
-      return { success: true };
+      return { success: true, driverId: driver.id };
     } catch (error) {
       console.error('\nDriver creation failed:', error);
       return { success: false, error: 'Driver creation failed' };
@@ -44,8 +44,8 @@ export default component$(() => {
 
   useTask$(({ track }) => {
     const result = track(() => createDriverAction.value);
-    if (result?.success) {
-      window.location.href = '/drivers';
+    if (result?.success && result.driverId) {
+      window.location.href = `/drivers?highlight=${result.driverId}`;
     }
   });
 
