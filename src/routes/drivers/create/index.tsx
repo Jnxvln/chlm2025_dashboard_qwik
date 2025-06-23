@@ -1,17 +1,16 @@
 import { component$, useTask$ } from "@builder.io/qwik";
 import { routeAction$, zod$, z, Form } from "@builder.io/qwik-city";
-import { PrismaClient } from "@prisma/client";
+import { db } from '~/lib/db';
 import PageTitle from "~/components/PageTitle";
 
 export const useCreateDriverAction = routeAction$(
   async (data) => {
     console.log("\nIncoming form data:", data)
-    const prisma = new PrismaClient();
 
     const { dateHired, dateReleased, ...rest } = data;
 
     try {
-      const driver = await prisma.driver.create({
+      const driver = await db.driver.create({
         data: {
           ...rest,
           // Convert string to Date if present
