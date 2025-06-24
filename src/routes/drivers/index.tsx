@@ -4,6 +4,8 @@ import { PrismaClient } from "@prisma/client";
 import { NavLink } from "~/components/NavLink";
 import PageTitle from "~/components/PageTitle";
 import { DriverTable } from "~/components/drivers/DriverTable";
+import { routeAction$, zod$, z } from '@builder.io/qwik-city';
+import { db } from "~/lib/db";
 
 export const useGetDrivers = routeLoader$(async (event) => {
 	const prisma = new PrismaClient();
@@ -11,6 +13,18 @@ export const useGetDrivers = routeLoader$(async (event) => {
 	const highlightedId = event.url.searchParams.get('highlight');
 	return { drivers, highlightedId };
 })
+
+export const useDeleteDriverAction = routeAction$(async ({ id }, requestEvent) => {
+	try {
+		await db.driver.delete({ where: { id: Number(id) } });
+		return { success: true };
+	} catch (error) {
+		console.error('Delete failed:', error);
+		return { success: false, error: 'Failed to delete driver' };
+	}
+}, zod$({
+	id: z.string()
+}))
 
 export default component$(() => {
 

@@ -13,6 +13,7 @@ import {
 import { db } from '~/lib/db';
 import PageTitle from '~/components/PageTitle';
 import { useNavigate } from '@builder.io/qwik-city';
+import BackButton from '~/components/BackButton';
 
 export const useDriver = routeLoader$(async ({ params }) => {
   const id = Number(params.id);
@@ -78,6 +79,10 @@ export default component$(() => {
   return (
     <section class="max-w-3xl mx-auto px-4 py-6">
       <PageTitle text="Edit Driver" />
+
+      <div class="mt-3">
+        <BackButton />
+      </div>
 
       <Form action={updateDriver} class="mt-4 flex flex-col gap-4 bg-white border border-gray-200 shadow p-6 rounded-lg">
         <div class="flex gap-4">

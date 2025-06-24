@@ -1,5 +1,5 @@
-import { component$, useTask$ } from "@builder.io/qwik";
-import { routeAction$, zod$, z, Form } from "@builder.io/qwik-city";
+import { component$, useVisibleTask$, useTask$ } from "@builder.io/qwik";
+import { routeAction$, zod$, z, Form, useNavigate } from "@builder.io/qwik-city";
 import { db } from '~/lib/db';
 import PageTitle from "~/components/PageTitle";
 
@@ -40,11 +40,20 @@ export const useCreateDriverAction = routeAction$(
 
 export default component$(() => {
   const createDriverAction = useCreateDriverAction();
+  const nav = useNavigate();
 
-  useTask$(({ track }) => {
+  // useTask$(({ track }) => {
+  //   const result = track(() => createDriverAction.value);
+  //   if (result?.success && result.driverId) {
+  //     window.location.href = `/drivers?highlight=${result.driverId}`;
+  //   }
+  // });
+
+  useVisibleTask$(({ track }) => {
     const result = track(() => createDriverAction.value);
-    if (result?.success && result.driverId) {
-      window.location.href = `/drivers?highlight=${result.driverId}`;
+    if (createDriverAction.value?.success && result?.driverId) {
+      // success.value = true;
+      setTimeout(() => nav(`/drivers?highlight=${result.driverId}`), 1000);
     }
   });
 
@@ -90,7 +99,7 @@ export default component$(() => {
         </div>
       ) : createDriverAction.value?.success ? (
           <div class="text-foreground">
-            <strong class="font-bold text-green-500">SUCCESS! <span>Driver created</span></strong>
+            <strong class="font-bold text-green-500">Driver created! <span>Redirecting...</span></strong>
           </div>
       ) : (
         <div>

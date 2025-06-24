@@ -1,6 +1,13 @@
 import { component$ } from '@builder.io/qwik';
+import { useNavigate } from '@builder.io/qwik-city';
+import { useDeleteDriverAction } from '~/routes/drivers';
+
 
 export const DriverTable = component$(({ drivers, highlightId }: { drivers: any[], highlightId?: string }) => {
+
+  const navigate = useNavigate();
+  const deleteDriverAction = useDeleteDriverAction();
+
   return (
     <div class="overflow-x-auto shadow border border-gray-200 rounded-lg">
       <table class="min-w-full text-sm text-left text-gray-800 bg-white">
@@ -42,8 +49,13 @@ export const DriverTable = component$(({ drivers, highlightId }: { drivers: any[
                     : '—'}
                 </td>
                 <td class="px-4 py-3 text-center space-x-2">
-                  <button class="text-blue-600 hover:underline text-sm">Edit</button>
-                  <button class="text-red-500 hover:underline text-sm">Delete</button>
+                  <button class="text-blue-600 hover:underline text-sm" onClick$={() => navigate(`/drivers/edit/${driver.id}`)}>Edit</button>
+                  <button class="text-red-500 hover:underline text-sm" onClick$={async () => {
+                    const confirmed = confirm('Are you sure you want to delete this driver?');
+                    if (!confirmed) return;
+                    await deleteDriverAction.submit({ id: String(driver.id) })
+                    window.location.reload();
+                  }}>Delete</button>
                 </td>
               </tr>
             )
