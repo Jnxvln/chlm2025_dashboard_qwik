@@ -7,6 +7,7 @@ export const Nav = component$(() => {
 	const closeMenu = $(() => { isOpen.value = false; })
 
 	const links = [
+		{ href: '/', label: 'Home' },
 		{ href: '/drivers', label: 'Drivers' },
 		{ href: '/hauls', label: 'Hauls' },
 		{ href: '/materials', label: 'Materials' },

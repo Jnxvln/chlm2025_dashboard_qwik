@@ -1,41 +1,61 @@
-import { component$ } from "@builder.io/qwik";
+import { component$, useVisibleTask$ } from "@builder.io/qwik";
 import { routeLoader$ } from "@builder.io/qwik-city";
 import { PrismaClient } from "@prisma/client";
 import { NavLink } from "~/components/NavLink";
 import PageTitle from "~/components/PageTitle";
+import { DriverTable } from "~/components/drivers/DriverTable";
+import { routeAction$, zod$, z } from '@builder.io/qwik-city';
+import { db } from "~/lib/db";
 
-export const useGetDrivers = routeLoader$(async () => {
+export const useGetDrivers = routeLoader$(async (event) => {
 	const prisma = new PrismaClient();
 	const drivers = await prisma.driver.findMany();
-	return drivers;
+	const highlightedId = event.url.searchParams.get('highlight');
+	return { drivers, highlightedId };
 })
+
+export const useDeleteDriverAction = routeAction$(async ({ id }, requestEvent) => {
+	try {
+		await db.driver.delete({ where: { id: Number(id) } });
+		return { success: true };
+	} catch (error) {
+		console.error('Delete failed:', error);
+		return { success: false, error: 'Failed to delete driver' };
+	}
+}, zod$({
+	id: z.string()
+}))
 
 export default component$(() => {
 
-	const drivers = useGetDrivers();
+	const data = useGetDrivers();
+
+	useVisibleTask$(() => {
+		const url = new URL(window.location.href);
+		if (url.searchParams.has('highlight')) {
+			url.searchParams.delete('highlight');
+			history.replaceState(null, '', url.toString());
+		}
+	});
 
 	return (
 		<section>
 			<PageTitle text="Drivers" />
-			<p>This is the Drivers page</p>
+			<p class="mb-4">List of active and historical drivers.</p>
 
-			<div class="mt-2 mb-4">
-				<NavLink href="/drivers/create" class="font-semibold outline text-emerald-700 outline-emerald-700 rounded-3xl hover:bg-emerald-600 hover:outline-0 hover:text-white px-2 py-1 pb-1.5 transition-colors duration-150 ease-in-out">New Driver</NavLink>
+			<div class="mb-6">
+				<NavLink
+					href="/drivers/create"
+					class="font-semibold outline text-emerald-700 outline-emerald-700 rounded-3xl hover:bg-emerald-600 hover:outline-0 hover:text-white px-3 py-1.5 transition-colors duration-150 ease-in-out"
+				>
+					+ New Driver
+				</NavLink>
 			</div>
 
-			<div>
-				{drivers.value.map((driver) => (
-					<div key={driver.id}>
-						<div>Name: {driver.firstName} {driver.lastName}</div>
-						<div>Truck: {driver.defaultTruck}</div>
-						<div>ED Pay Rate: ${driver.endDumpPayRate.toFixed(2)}</div>
-						<div>FB Pay Rate: ${driver.flatBedPayRate.toFixed(2)}</div>
-						<div>Non-Commission Rate: ${driver.nonCommissionRate.toFixed(2)}</div>
-						<div>Date Hired: {driver.dateHired && new Date(driver.dateHired).toLocaleDateString()}</div>
-						<div>Date Released: {driver.dateReleased && new Date(driver.dateReleased).toLocaleDateString()}</div>
-					</div>
-				))}
-			</div>
+			<DriverTable 
+				drivers={data.value.drivers} 
+				highlightId={data.value.highlightedId ?? undefined} 
+			/>
 		</section>
 	)
 })
