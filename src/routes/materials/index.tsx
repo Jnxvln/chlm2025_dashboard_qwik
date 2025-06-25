@@ -4,7 +4,7 @@ import PageTitle from '~/components/PageTitle';
 export default component$(() => {
   return (
     <section>
-      <PageTitle text='Materials' />
+      <PageTitle text="Materials" />
       <p>This is the Materials page</p>
     </section>
   );

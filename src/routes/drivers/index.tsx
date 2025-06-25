@@ -42,13 +42,13 @@ export default component$(() => {
 
   return (
     <section>
-      <PageTitle text='Drivers' />
-      <p class='mb-4'>List of active and historical drivers.</p>
+      <PageTitle text="Drivers" />
+      <p class="mb-4">List of active and historical drivers.</p>
 
-      <div class='mb-6'>
+      <div class="mb-6">
         <NavLink
-          href='/drivers/create'
-          class='font-semibold outline text-emerald-700 outline-emerald-700 rounded-3xl hover:bg-emerald-600 hover:outline-0 hover:text-white px-3 py-1.5 transition-colors duration-150 ease-in-out'
+          href="/drivers/create"
+          class="font-semibold outline text-emerald-700 outline-emerald-700 rounded-3xl hover:bg-emerald-600 hover:outline-0 hover:text-white px-3 py-1.5 transition-colors duration-150 ease-in-out"
         >
           + New Driver
         </NavLink>

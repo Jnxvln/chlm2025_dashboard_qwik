@@ -24,13 +24,13 @@ export default component$(() => {
       <Form action={createUserAction}>
         <label>
           Name
-          <input name='name' value={createUserAction.formData?.get('name')} />
+          <input name="name" value={createUserAction.formData?.get('name')} />
         </label>
         <label>
           Email
-          <input name='email' value={createUserAction.formData?.get('email')} />
+          <input name="email" value={createUserAction.formData?.get('email')} />
         </label>
-        <button type='submit'>Create</button>
+        <button type="submit">Create</button>
       </Form>
       {createUserAction.value && (
         <div>

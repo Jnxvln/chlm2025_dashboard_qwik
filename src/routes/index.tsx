@@ -6,15 +6,15 @@ import PageTitle from '~/components/PageTitle';
 export default component$(() => {
   return (
     <>
-      <PageTitle text='Dashboard' />
+      <PageTitle text="Dashboard" />
 
       {/* Notices Section */}
-      <section class='mb-4'>
-        <header class='mt-4 p-4 bg-gray-100 rounded-lg rounded-b-none'>
-          <PageSubtitle text='Notices' />
+      <section class="mb-4">
+        <header class="mt-4 p-4 bg-gray-100 rounded-lg rounded-b-none">
+          <PageSubtitle text="Notices" />
         </header>
 
-        <div class='p-4 rounded-lg rounded-t-none border-2 border-neutral-200 border-t-0'>
+        <div class="p-4 rounded-lg rounded-t-none border-2 border-neutral-200 border-t-0">
           <ul>
             <li>
               6/23/2025: Waiting on Cherry Blend to come in for Larry Williams
@@ -30,15 +30,15 @@ export default component$(() => {
       </section>
 
       {/* Waitlist Section (Oldest?) */}
-      <section class='mb-4'>
-        <header class='p-4 bg-gray-100 rounded-lg rounded-b-none'>
-          <PageSubtitle text='Waitlist' />
-          <div class='mt-2'>
+      <section class="mb-4">
+        <header class="p-4 bg-gray-100 rounded-lg rounded-b-none">
+          <PageSubtitle text="Waitlist" />
+          <div class="mt-2">
             <p>The oldest top 10 entries listed here?</p>
           </div>
         </header>
 
-        <div class='p-4 rounded-lg rounded-t-none border-2 border-neutral-200 border-t-0'>
+        <div class="p-4 rounded-lg rounded-t-none border-2 border-neutral-200 border-t-0">
           <ul>
             <li>
               5/22/2025: Larry Williams | 2PL 4x4 Cherry Blend | 555-627-1255

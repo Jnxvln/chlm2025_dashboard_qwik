@@ -5,7 +5,7 @@ export default component$(() => {
   return (
     <>
       <Nav />
-      <main class='max-w-6xl mx-auto p-4'>
+      <main class="max-w-6xl mx-auto p-4">
         <Slot />
       </main>
     </>
