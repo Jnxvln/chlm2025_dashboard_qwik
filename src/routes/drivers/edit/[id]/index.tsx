@@ -36,7 +36,6 @@ export const useUpdateDriver = routeAction$(
         },
       });
 
-      // return { success: true };
       return { success: true, driverId: data.id };
     } catch (err) {
       console.error('Update failed', err);

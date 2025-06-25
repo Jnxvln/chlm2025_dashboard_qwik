@@ -15,7 +15,8 @@ export const useGetDrivers = routeLoader$(async (event) => {
 });
 
 export const useDeleteDriverAction = routeAction$(
-  async ({ id }, requestEvent) => {
+  // eslint-disable-next-line @typescript-eslint/no-unused-vars
+  async ({ id }, _requestEvent) => {
     try {
       await db.driver.delete({ where: { id: Number(id) } });
       return { success: true };
@@ -32,6 +33,7 @@ export const useDeleteDriverAction = routeAction$(
 export default component$(() => {
   const data = useGetDrivers();
 
+  // eslint-disable-next-line qwik/no-use-visible-task
   useVisibleTask$(() => {
     const url = new URL(window.location.href);
     if (url.searchParams.has('highlight')) {

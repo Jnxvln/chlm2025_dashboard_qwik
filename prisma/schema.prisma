@@ -31,3 +31,15 @@ model Driver {
   createdAt           DateTime    @default(now())
   updatedAt           DateTime    @default(now())
 }
+
+model Vendor {
+  id                    Int         @id @default(autoincrement())
+  name                  String
+  shortName             String
+  chtFuelSurcharge      Float
+  vendorFuelSurcharge   Float       @unique
+  isActive              Boolean     @default(true)
+
+  createdAt             DateTime    @default(now())
+  updatedAt             DateTime    @default(now())
+}
