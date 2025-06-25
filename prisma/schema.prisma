@@ -37,9 +37,38 @@ model Vendor {
   name                  String
   shortName             String
   chtFuelSurcharge      Float
-  vendorFuelSurcharge   Float       @unique
+  vendorFuelSurcharge   Float
   isActive              Boolean     @default(true)
-
   createdAt             DateTime    @default(now())
   updatedAt             DateTime    @default(now())
+
+  products              VendorProduct[]
+  VendorLocation        VendorLocation[]
+}
+
+model VendorProduct {
+  id                    Int               @id @default(autoincrement())
+  name                  String
+  productCost           Float
+  notes                 String
+  isActive              Boolean           @default(true)
+  createdAt             DateTime          @default(now())
+  updatedAt             DateTime          @default(now())
+  
+  vendor                Vendor            @relation(fields: [vendorId], references: [id])
+  vendorId              Int
+  vendorLocation        VendorLocation    @relation(fields: [vendorLocationId], references: [id])
+  vendorLocationId      Int
+}
+
+model VendorLocation {
+  id                    Int               @id @default(autoincrement())
+  name                  String            @unique
+  isActive              Boolean           @default(true)
+  createdAt             DateTime          @default(now())
+  updatedAt             DateTime          @default(now())
+  VendorProduct         VendorProduct[]
+
+  vendor                Vendor            @relation(fields: [vendorId], references: [id])
+  vendorId              Int
 }

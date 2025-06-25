@@ -3,26 +3,31 @@ import { routeLoader$ } from '@builder.io/qwik-city';
 import { PrismaClient } from '@prisma/client';
 import { NavLink } from '~/components/NavLink';
 import PageTitle from '~/components/PageTitle';
-import { VendorTable } from '~/components/vendors/VendorTable';
+import { VendorProductTable } from '~/components/vendor-products/VendorProductTable';
 import { routeAction$, zod$, z } from '@builder.io/qwik-city';
 import { db } from '~/lib/db';
 
-export const useGetVendors = routeLoader$(async (event) => {
+export const useGetVendorProducts = routeLoader$(async (event) => {
   const prisma = new PrismaClient();
-  const vendors = await prisma.vendor.findMany();
+  const vendorProducts = await prisma.vendorProduct.findMany({
+    include: {
+      vendor: true,
+      vendorLocation: true,
+    },
+  });
   const highlightedId = event.url.searchParams.get('highlight');
-  return { vendors, highlightedId };
+  return { vendorProducts, highlightedId };
 });
 
-export const useDeleteVendorAction = routeAction$(
+export const useDeleteVendorProductAction = routeAction$(
   // eslint-disable-next-line @typescript-eslint/no-unused-vars
   async ({ id }, _requestEvent) => {
     try {
-      await db.vendor.delete({ where: { id: Number(id) } });
+      await db.vendorProduct.delete({ where: { id: Number(id) } });
       return { success: true };
     } catch (error) {
       console.error('Delete failed:', error);
-      return { success: false, error: 'Failed to delete vendor' };
+      return { success: false, error: 'Failed to delete vendor product' };
     }
   },
   zod$({
@@ -31,7 +36,7 @@ export const useDeleteVendorAction = routeAction$(
 );
 
 export default component$(() => {
-  const data = useGetVendors();
+  const data = useGetVendorProducts();
 
   // eslint-disable-next-line qwik/no-use-visible-task
   useVisibleTask$(() => {
@@ -44,34 +49,20 @@ export default component$(() => {
 
   return (
     <section>
-      <PageTitle text="Vendors" />
-      <p class="mb-4">List of active and historical vendors.</p>
+      <PageTitle text="Vendor Products" />
+      <p class="mb-4">List of all products available from vendor locations.</p>
 
-      <div class="mb-6 flex flex-row flex-wrap">
+      <div class="mb-6">
         <NavLink
-          href="/vendors/create"
+          href="/vendor-products/create"
           class="font-semibold outline text-emerald-700 outline-emerald-700 rounded-3xl hover:bg-emerald-600 hover:outline-0 hover:text-white px-3 py-1.5 transition-colors duration-150 ease-in-out"
         >
-          + New Vendor
-        </NavLink>
-
-        <NavLink
-          href="/vendor-products"
-          class="font-semibold outline text-emerald-700 outline-emerald-700 rounded-3xl hover:bg-emerald-600 hover:outline-0 hover:text-white px-3 py-1.5 transition-colors duration-150 ease-in-out"
-        >
-          Products
-        </NavLink>
-
-        <NavLink
-          href="/vendor-locations"
-          class="font-semibold outline text-emerald-700 outline-emerald-700 rounded-3xl hover:bg-emerald-600 hover:outline-0 hover:text-white px-3 py-1.5 transition-colors duration-150 ease-in-out"
-        >
-          Locations
+          + New Vendor Product
         </NavLink>
       </div>
 
-      <VendorTable
-        vendors={data.value.vendors}
+      <VendorProductTable
+        vendorProducts={data.value.vendorProducts}
         highlightId={data.value.highlightedId ?? undefined}
       />
     </section>
