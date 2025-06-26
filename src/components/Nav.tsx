@@ -12,9 +12,9 @@ export const Nav = component$(() => {
     { href: '/', label: 'Home' },
     { href: '/drivers', label: 'Drivers' },
     { href: '/hauls', label: 'Hauls' },
-    { href: '/materials', label: 'Materials' },
     { href: '/vendors', label: 'Vendors' },
-    { href: '/waitlist', label: 'WaitList' },
+    { href: '/materials', label: 'Materials' },
+    { href: '/waitlist', label: 'Wait List' },
     { href: '/calculators', label: 'Calculators' },
     { href: '/settings', label: 'Settings' },
   ];

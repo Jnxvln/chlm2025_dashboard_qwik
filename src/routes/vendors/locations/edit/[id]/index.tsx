@@ -7,9 +7,9 @@ import {
   Form,
 } from '@builder.io/qwik-city';
 import { db } from '~/lib/db';
-import PageTitle from '~/components/PageTitle';
 import { useNavigate } from '@builder.io/qwik-city';
 import BackButton from '~/components/BackButton';
+import PageSubtitle from '~/components/PageSubtitle';
 
 export const useVendorLocation = routeLoader$(async ({ params }) => {
   const id = Number(params.id);
@@ -74,7 +74,7 @@ export default component$(() => {
 
   return (
     <section class="mx-auto px-4 py-6">
-      <PageTitle text="Edit Vendor Location" />
+      <PageSubtitle text="Edit Vendor Location" />
 
       <div class="mt-3">
         <BackButton />
