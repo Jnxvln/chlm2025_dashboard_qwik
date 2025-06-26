@@ -51,10 +51,6 @@ export default component$(() => {
     <section>
       <PageTitle text="New Vendor" />
 
-      <div class="mt-3">
-        <BackButton />
-      </div>
-
       <Form action={createVendorAction} class="mt-4 flex flex-col max-w-xl">
         <div class="flex my-2 items-center gap-2">
           <input name="name" type="text" placeholder="Vendor Name *" required />

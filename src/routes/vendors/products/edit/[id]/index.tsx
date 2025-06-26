@@ -101,17 +101,17 @@ export default component$(() => {
     track(() => updateVendorProduct.value?.success);
     if (updateVendorProduct.value?.success) {
       success.value = true;
-      setTimeout(() => nav('/vendor-products'), 1200);
+      setTimeout(() => nav('/vendors/products'), 1200);
     }
   });
 
   return (
-    <section class="max-w-3xl mx-auto px-4 py-6">
+    <section class="mx-auto px-4 py-6">
       <PageTitle text="Edit Vendor Product" />
 
-      <div class="mt-3">
+      {/* <div class="mt-3">
         <BackButton />
-      </div>
+      </div> */}
 
       <Form
         action={updateVendorProduct}

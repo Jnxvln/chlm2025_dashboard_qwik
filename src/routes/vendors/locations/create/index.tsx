@@ -8,8 +8,8 @@ import {
   useNavigate,
 } from '@builder.io/qwik-city';
 import { db } from '~/lib/db';
-import PageTitle from '~/components/PageTitle';
 import BackButton from '~/components/BackButton';
+import PageSubtitle from '~/components/PageSubtitle';
 
 export const useGetVendors = routeLoader$(async () => {
   const vendors = await db.vendor.findMany({
@@ -52,7 +52,7 @@ export default component$(() => {
     const result = track(() => createVendorLocationAction.value);
     if (createVendorLocationAction.value?.success && result?.vendorLocationId) {
       setTimeout(
-        () => nav(`/vendor-locations?highlight=${result.vendorLocationId}`),
+        () => nav(`/vendors/locations?highlight=${result.vendorLocationId}`),
         1000,
       );
     }
@@ -60,7 +60,7 @@ export default component$(() => {
 
   return (
     <section>
-      <PageTitle text="New Vendor Location" />
+      <PageSubtitle text="New Vendor Location" />
 
       <div class="mt-3">
         <BackButton />

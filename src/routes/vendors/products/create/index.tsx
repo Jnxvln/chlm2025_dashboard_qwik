@@ -8,8 +8,8 @@ import {
   useNavigate,
 } from '@builder.io/qwik-city';
 import { db } from '~/lib/db';
-import PageTitle from '~/components/PageTitle';
 import BackButton from '~/components/BackButton';
+import PageSubtitle from '~/components/PageSubtitle';
 
 export const useGetVendorsAndLocations = routeLoader$(async () => {
   const vendors = await db.vendor.findMany({
@@ -26,8 +26,6 @@ export const useGetVendorsAndLocations = routeLoader$(async () => {
 
 export const useCreateVendorProductAction = routeAction$(
   async (data) => {
-    console.log('\nIncoming form data:', data);
-
     try {
       const vendorProduct = await db.vendorProduct.create({
         data: {
@@ -74,7 +72,7 @@ export default component$(() => {
     const result = track(() => createVendorProductAction.value);
     if (createVendorProductAction.value?.success && result?.vendorProductId) {
       setTimeout(
-        () => nav(`/vendor-products?highlight=${result.vendorProductId}`),
+        () => nav(`/vendors/products?highlight=${result.vendorProductId}`),
         1000,
       );
     }
@@ -82,16 +80,13 @@ export default component$(() => {
 
   return (
     <section>
-      <PageTitle text="New Vendor Product" />
+      <PageSubtitle text="New Vendor Product" />
 
       <div class="mt-3">
         <BackButton />
       </div>
 
-      <Form
-        action={createVendorProductAction}
-        class="mt-4 flex flex-col max-w-xl"
-      >
+      <Form action={createVendorProductAction} class="mt-4 flex flex-col">
         <input
           name="name"
           type="text"

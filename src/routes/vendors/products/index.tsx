@@ -2,32 +2,32 @@ import { component$, useVisibleTask$ } from '@builder.io/qwik';
 import { routeLoader$ } from '@builder.io/qwik-city';
 import { PrismaClient } from '@prisma/client';
 import { NavLink } from '~/components/NavLink';
-import PageTitle from '~/components/PageTitle';
-import { VendorLocationTable } from '~/components/vendor-locations/VendorLocationTable';
+import { VendorProductTable } from '~/components/vendor-products/VendorProductTable';
 import { routeAction$, zod$, z } from '@builder.io/qwik-city';
 import { db } from '~/lib/db';
-import BackButton from '~/components/BackButton';
+import PageSubtitle from '~/components/PageSubtitle';
 
-export const useGetVendorLocations = routeLoader$(async (event) => {
+export const useGetVendorProducts = routeLoader$(async (event) => {
   const prisma = new PrismaClient();
-  const vendorLocations = await prisma.vendorLocation.findMany({
+  const vendorProducts = await prisma.vendorProduct.findMany({
     include: {
-      vendor: true, // Include vendor info for display
+      vendor: true,
+      vendorLocation: true,
     },
   });
   const highlightedId = event.url.searchParams.get('highlight');
-  return { vendorLocations, highlightedId };
+  return { vendorProducts, highlightedId };
 });
 
-export const useDeleteVendorLocationAction = routeAction$(
+export const useDeleteVendorProductAction = routeAction$(
   // eslint-disable-next-line @typescript-eslint/no-unused-vars
   async ({ id }, _requestEvent) => {
     try {
-      await db.vendorLocation.delete({ where: { id: Number(id) } });
+      await db.vendorProduct.delete({ where: { id: Number(id) } });
       return { success: true };
     } catch (error) {
       console.error('Delete failed:', error);
-      return { success: false, error: 'Failed to delete vendor location' };
+      return { success: false, error: 'Failed to delete vendor product' };
     }
   },
   zod$({
@@ -36,7 +36,7 @@ export const useDeleteVendorLocationAction = routeAction$(
 );
 
 export default component$(() => {
-  const data = useGetVendorLocations();
+  const data = useGetVendorProducts();
 
   // eslint-disable-next-line qwik/no-use-visible-task
   useVisibleTask$(() => {
@@ -49,24 +49,20 @@ export default component$(() => {
 
   return (
     <section>
-      <PageTitle text="Vendor Locations" />
-      <p class="mb-4">List of all vendor locations and quarries.</p>
+      <PageSubtitle text="Vendor Products" />
+      <p class="mb-4">List of all products available from vendor locations.</p>
 
-      <div class="mb-4">
-        <BackButton />
-      </div>
-
-      <div class="mb-8">
+      <div class="mb-6">
         <NavLink
-          href="/vendor-locations/create"
+          href="/vendors/products/create"
           class="font-semibold outline text-emerald-700 outline-emerald-700 rounded-3xl hover:bg-emerald-600 hover:outline-0 hover:text-white px-3 py-1.5 transition-colors duration-150 ease-in-out"
         >
-          + New Vendor Location
+          + New Vendor Product
         </NavLink>
       </div>
 
-      <VendorLocationTable
-        vendorLocations={data.value.vendorLocations}
+      <VendorProductTable
+        vendorProducts={data.value.vendorProducts}
         highlightId={data.value.highlightedId ?? undefined}
       />
     </section>

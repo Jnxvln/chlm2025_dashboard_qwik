@@ -65,7 +65,7 @@ export default component$(() => {
   });
 
   return (
-    <section class="max-w-3xl mx-auto px-4 py-6">
+    <section class="mx-auto px-4 py-6">
       <PageTitle text="Edit Vendor" />
 
       <div class="mt-3">

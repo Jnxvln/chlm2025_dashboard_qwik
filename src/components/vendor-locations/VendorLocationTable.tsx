@@ -1,6 +1,6 @@
 import { component$ } from '@builder.io/qwik';
 import { useNavigate } from '@builder.io/qwik-city';
-import { useDeleteVendorLocationAction } from '~/routes/vendor-locations';
+import { useDeleteVendorLocationAction } from '~/routes/vendors/locations';
 
 export const VendorLocationTable = component$(
   ({
@@ -51,7 +51,7 @@ export const VendorLocationTable = component$(
                     <button
                       class="text-blue-600 hover:underline text-sm"
                       onClick$={() =>
-                        navigate(`/vendor-locations/edit/${location.id}`)
+                        navigate(`/vendors/locations/edit/${location.id}`)
                       }
                     >
                       Edit

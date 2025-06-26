@@ -1,11 +1,10 @@
 import { component$, useVisibleTask$ } from '@builder.io/qwik';
 import { routeLoader$ } from '@builder.io/qwik-city';
 import { PrismaClient } from '@prisma/client';
-import { NavLink } from '~/components/NavLink';
-import PageTitle from '~/components/PageTitle';
 import { VendorTable } from '~/components/vendors/VendorTable';
 import { routeAction$, zod$, z } from '@builder.io/qwik-city';
 import { db } from '~/lib/db';
+import { NavLink } from '~/components/NavLink';
 
 export const useGetVendors = routeLoader$(async (event) => {
   const prisma = new PrismaClient();
@@ -43,30 +42,13 @@ export default component$(() => {
   });
 
   return (
-    <section>
-      <PageTitle text="Vendors" />
-      <p class="mb-4">List of active and historical vendors.</p>
-
-      <div class="mb-6 flex flex-row flex-wrap">
+    <section class="mt-8">
+      <div class="mb-4">
         <NavLink
           href="/vendors/create"
           class="font-semibold outline text-emerald-700 outline-emerald-700 rounded-3xl hover:bg-emerald-600 hover:outline-0 hover:text-white px-3 py-1.5 transition-colors duration-150 ease-in-out"
         >
           + New Vendor
-        </NavLink>
-
-        <NavLink
-          href="/vendor-products"
-          class="font-semibold outline text-emerald-700 outline-emerald-700 rounded-3xl hover:bg-emerald-600 hover:outline-0 hover:text-white px-3 py-1.5 transition-colors duration-150 ease-in-out"
-        >
-          Products
-        </NavLink>
-
-        <NavLink
-          href="/vendor-locations"
-          class="font-semibold outline text-emerald-700 outline-emerald-700 rounded-3xl hover:bg-emerald-600 hover:outline-0 hover:text-white px-3 py-1.5 transition-colors duration-150 ease-in-out"
-        >
-          Locations
         </NavLink>
       </div>
 

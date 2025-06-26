@@ -1,6 +1,6 @@
 import { component$ } from '@builder.io/qwik';
 import { useNavigate } from '@builder.io/qwik-city';
-import { useDeleteVendorProductAction } from '~/routes/vendor-products';
+import { useDeleteVendorProductAction } from '~/routes/vendors/products';
 
 export const VendorProductTable = component$(
   ({
@@ -14,7 +14,7 @@ export const VendorProductTable = component$(
     const deleteVendorProductAction = useDeleteVendorProductAction();
 
     return (
-      <div class="overflow-x-auto shadow border border-gray-200 rounded-lg">
+      <div class="mt-4 overflow-x-auto shadow border border-gray-200 rounded-lg">
         <table class="min-w-full text-sm text-left text-gray-800 bg-white">
           <thead class="bg-gray-100 text-gray-600 uppercase text-xs tracking-wider">
             <tr>
@@ -61,7 +61,7 @@ export const VendorProductTable = component$(
                     <button
                       class="text-blue-600 hover:underline text-sm"
                       onClick$={() =>
-                        navigate(`/vendor-products/edit/${product.id}`)
+                        navigate(`/vendors/products/edit/${product.id}`)
                       }
                     >
                       Edit

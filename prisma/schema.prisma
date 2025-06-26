@@ -63,7 +63,7 @@ model VendorProduct {
 
 model VendorLocation {
   id                    Int               @id @default(autoincrement())
-  name                  String            @unique
+  name                  String            
   isActive              Boolean           @default(true)
   createdAt             DateTime          @default(now())
   updatedAt             DateTime          @default(now())
