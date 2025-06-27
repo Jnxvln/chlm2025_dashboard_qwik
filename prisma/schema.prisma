@@ -72,3 +72,33 @@ model VendorLocation {
   vendor                Vendor            @relation(fields: [vendorId], references: [id])
   vendorId              Int
 }
+
+model MaterialCategory {
+  id                  Int         @id @default(autoincrement())
+  name                String
+  isActive            Boolean     @default(true)
+  createdAt           DateTime    @default(now())
+  updatedAt           DateTime    @default(now())
+
+  materials           Material[]
+}
+
+model Material {
+  id                  Int         @id @default(autoincrement())
+  name                String
+  stock               String
+  image               String?
+  bin                 String?
+  size                String?
+  description         String?
+  notes               String?
+  isFeatured          Boolean     @default(false)
+  isTruckable         Boolean     @default(false)
+  
+  isActive            Boolean     @default(true)
+  createdAt           DateTime    @default(now())
+  updatedAt           DateTime    @default(now())
+
+  category            MaterialCategory @relation(fields: [categoryId], references: [id])
+  categoryId          Int
+}
