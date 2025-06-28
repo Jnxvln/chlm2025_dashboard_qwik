@@ -14,6 +14,9 @@ model User {
   id                  Int         @id @default(autoincrement())
   email               String      @unique
   name                String?
+
+  Workday             Workday[]
+  Haul                Haul[]
 }
 
 model Driver {
@@ -30,6 +33,8 @@ model Driver {
 
   createdAt           DateTime    @default(now())
   updatedAt           DateTime    @default(now())
+
+  Workday             Workday[]
 }
 
 model Vendor {
@@ -44,6 +49,8 @@ model Vendor {
 
   products              VendorProduct[]
   VendorLocation        VendorLocation[]
+
+  Haul Haul[]
 }
 
 model VendorProduct {
@@ -74,17 +81,17 @@ model VendorLocation {
 }
 
 model MaterialCategory {
-  id                  Int         @id @default(autoincrement())
+  id                  Int                 @id @default(autoincrement())
   name                String
-  isActive            Boolean     @default(true)
-  createdAt           DateTime    @default(now())
-  updatedAt           DateTime    @default(now())
+  isActive            Boolean             @default(true)
+  createdAt           DateTime            @default(now())
+  updatedAt           DateTime            @default(now())
 
   materials           Material[]
 }
 
 model Material {
-  id                  Int         @id @default(autoincrement())
+  id                  Int                 @id @default(autoincrement())
   name                String
   stock               String
   image               String?
@@ -92,13 +99,63 @@ model Material {
   size                String?
   description         String?
   notes               String?
-  isFeatured          Boolean     @default(false)
-  isTruckable         Boolean     @default(false)
+  isFeatured          Boolean             @default(false)
+  isTruckable         Boolean             @default(false)
   
-  isActive            Boolean     @default(true)
-  createdAt           DateTime    @default(now())
-  updatedAt           DateTime    @default(now())
+  isActive            Boolean             @default(true)
+  createdAt           DateTime            @default(now())
+  updatedAt           DateTime            @default(now())
 
-  category            MaterialCategory @relation(fields: [categoryId], references: [id])
+  category            MaterialCategory    @relation(fields: [categoryId], references: [id])
   categoryId          Int
+}
+
+model Workday {
+  id                  Int                 @id @default(autoincrement())
+  date                String
+  chHours             Float
+  ncHours             Float
+  ncReasons           String?
+  notes               String?
+  hauls               Haul[]
+  createdAt           DateTime            @default(now())
+  updatedAt           DateTime            @default(now())
+
+  driver              Driver              @relation(fields: [driverId], references: [id])
+  driverId            Int
+
+  createdBy           User                @relation(fields: [createdById], references: [id])
+  createdById         Int
+}
+
+model Haul {
+  id                    Int                 @id @default(autoincrement())
+  dateHaul              String
+  timeHaul              String
+  truck                 String
+  customer              String              // i.e. "C&H", "SRM", "RRR", etc. Usually 3 letters, but not always
+  chInvoice             String?
+  loadType              String              // Choices: "enddump" OR "flatbed"
+  invoice               String?
+  
+  fromVendor            Vendor              @relation(fields: [fromVendorId], references: [id])
+  fromVendorId          Int
+  fromVendorLocation    String              @relation(fields: [fromVendorLocationId], references: [id])
+  fromVendorLocationId  Int
+  to                    String              // This field ties into freight routes
+  
+  product               String
+  
+  tons                  Float
+  rate                  Float
+  miles                 Float
+  payRate               Float
+
+  createdAt             DateTime            @default(now())
+  updatedAt             DateTime            @default(now())
+
+  workday               Workday             @relation(fields: [workdayId], references: [id])
+  workdayId             Int
+  createdBy             User                @relation(fields: [createdById], references: [id])
+  createdById           Int
 }
