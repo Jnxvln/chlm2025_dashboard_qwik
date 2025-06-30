@@ -27,8 +27,8 @@ model Driver {
   endDumpPayRate      Float
   flatBedPayRate      Float
   nonCommissionRate   Float
-  dateHired           String?
-  dateReleased        String?
+  dateHired           DateTime?
+  dateReleased        DateTime?
   isActive            Boolean     @default(true)
 
   createdAt           DateTime    @default(now())
@@ -49,8 +49,6 @@ model Vendor {
 
   products              VendorProduct[]
   VendorLocation        VendorLocation[]
-
-  Haul Haul[]
 }
 
 model VendorProduct {
@@ -66,6 +64,8 @@ model VendorProduct {
   vendorId              Int
   vendorLocation        VendorLocation    @relation(fields: [vendorLocationId], references: [id])
   vendorLocationId      Int
+
+  Haul Haul[]
 }
 
 model VendorLocation {
@@ -75,6 +75,7 @@ model VendorLocation {
   createdAt             DateTime          @default(now())
   updatedAt             DateTime          @default(now())
   VendorProduct         VendorProduct[]
+  freightRoutes         FreightRoute[]
 
   vendor                Vendor            @relation(fields: [vendorId], references: [id])
   vendorId              Int
@@ -112,11 +113,13 @@ model Material {
 
 model Workday {
   id                  Int                 @id @default(autoincrement())
-  date                String
+  date                DateTime
   chHours             Float
   ncHours             Float
   ncReasons           String?
   notes               String?
+  offDuty             Boolean             @default(false)
+  offDutyReason       String?
   hauls               Haul[]
   createdAt           DateTime            @default(now())
   updatedAt           DateTime            @default(now())
@@ -130,21 +133,19 @@ model Workday {
 
 model Haul {
   id                    Int                 @id @default(autoincrement())
-  dateHaul              String
-  timeHaul              String
+  dateHaul              DateTime
   truck                 String
   customer              String              // i.e. "C&H", "SRM", "RRR", etc. Usually 3 letters, but not always
   chInvoice             String?
   loadType              String              // Choices: "enddump" OR "flatbed"
   invoice               String?
   
-  fromVendor            Vendor              @relation(fields: [fromVendorId], references: [id])
-  fromVendorId          Int
-  fromVendorLocation    String              @relation(fields: [fromVendorLocationId], references: [id])
-  fromVendorLocationId  Int
-  to                    String              // This field ties into freight routes
+  // Foreign key relationships (no more hardcoded strings!)
+  vendorProduct         VendorProduct   @relation(fields: [vendorProductId], references: [id])
+  vendorProductId       Int
   
-  product               String
+  freightRoute          FreightRoute    @relation(fields: [freightRouteId], references: [id])
+  freightRouteId        Int
   
   tons                  Float
   rate                  Float
@@ -158,4 +159,17 @@ model Haul {
   workdayId             Int
   createdBy             User                @relation(fields: [createdById], references: [id])
   createdById           Int
+}
+
+model FreightRoute {
+  id                    Int             @id @default(autoincrement())
+  destination           String          // "C&H Yard", "COSS-Airport", "JWick-Texarkana, TX, etc."
+  freightCost           Float           // cost per mile
+  isActive              Boolean         @default(true)
+  createdAt             DateTime        @default(now())
+  updatedAt             DateTime        @default(now())
+  
+  hauls                 Haul[]
+  vendorLocation        VendorLocation  @relation(fields: [vendorLocationId], references: [id])
+  vendorLocationId      Int
 }
