@@ -39,8 +39,14 @@ export const useCreateDriverAction = routeAction$(
     endDumpPayRate: z.coerce.number(),
     flatBedPayRate: z.coerce.number(),
     nonCommissionRate: z.coerce.number(),
-    dateHired: z.string().optional(),
-    dateReleased: z.string().optional(),
+    dateHired: z
+      .string()
+      .optional()
+      .transform((s) => (s ? new Date(s) : null)),
+    dateReleased: z
+      .string()
+      .optional()
+      .transform((s) => (s ? new Date(s) : null)),
     isActive: z.coerce.boolean().optional().default(false),
   }),
 );
