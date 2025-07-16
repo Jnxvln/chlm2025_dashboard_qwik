@@ -5,7 +5,7 @@ import PageTitle from '~/components/PageTitle';
 
 export default component$(() => {
   return (
-    <>
+    <div class="container mx-auto p-6">
       <PageTitle text="Dashboard" />
 
       {/* Notices Section */}
@@ -53,12 +53,12 @@ export default component$(() => {
           </ul>
         </div>
       </section>
-    </>
+    </div>
   );
 });
 
 export const head: DocumentHead = {
-  title: 'Welcome to Qwik',
+  title: 'CHLM Dashboard',
   meta: [
     {
       name: 'description',

@@ -4,7 +4,7 @@ import PageTitle from '~/components/PageTitle';
 
 export default component$(() => {
   return (
-    <section>
+    <section class="container mx-auto p-6">
       <PageTitle text="Calculators" />
       <p class="mb-2">This is the Calculators page</p>
       <nav class="flex flex-col">

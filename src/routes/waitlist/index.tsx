@@ -3,7 +3,7 @@ import PageTitle from '~/components/PageTitle';
 
 export default component$(() => {
   return (
-    <section>
+    <section class="container mx-auto p-6">
       <PageTitle text="Waiting List" />
       <p>This is the Waiting List page</p>
     </section>

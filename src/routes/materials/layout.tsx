@@ -4,7 +4,7 @@ import PageTitle from '~/components/PageTitle';
 
 export default component$(() => {
   return (
-    <div>
+    <div class="container mx-auto p-6">
       <PageTitle text="Materials" />
       <p class="mb-4">List of active and historical materials.</p>
 

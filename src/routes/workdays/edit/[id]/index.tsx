@@ -1,4 +1,3 @@
-// src/routes/workdays/new/index.tsx
 import { component$, useSignal, useVisibleTask$ } from '@builder.io/qwik';
 import {
   routeLoader$,
@@ -8,19 +7,30 @@ import {
   zod$,
   z,
   useNavigate,
+  useLocation,
 } from '@builder.io/qwik-city';
 import { db } from '~/lib/db';
 import PageTitle from '~/components/PageTitle';
-import {
-  useDriversLoader,
-  useCurrentUserLoader,
-  useDriverParam,
-} from '../layout';
+import { useDriversLoader, useCurrentUserLoader } from '../../layout';
 
-export const useCreateWorkdayAction = routeAction$(
+export const useWorkdayLoader = routeLoader$(async ({ params, redirect }) => {
+  const workday = await db.workday.findUnique({
+    where: { id: Number(params.id) },
+    include: { driver: true },
+  });
+
+  if (!workday) {
+    throw redirect(302, '/workdays');
+  }
+
+  return workday;
+});
+
+export const useUpdateWorkdayAction = routeAction$(
   async (data) => {
     try {
-      const workday = await db.workday.create({
+      const workday = await db.workday.update({
+        where: { id: Number(data.id) },
         data: {
           date: data.date,
           chHours: data.chHours,
@@ -30,18 +40,18 @@ export const useCreateWorkdayAction = routeAction$(
           offDuty: data.offDuty,
           offDutyReason: data.offDutyReason || null,
           driverId: data.driverId,
-          createdById: data.createdById,
           updatedAt: new Date(),
         },
       });
 
       return { success: true, workdayId: workday.id };
     } catch (error) {
-      console.error('Workday creation failed:', error);
-      return { success: false, error: 'Failed to create workday' };
+      console.error('Workday update failed:', error);
+      return { success: false, error: 'Failed to update workday' };
     }
   },
   zod$({
+    id: z.coerce.number(),
     date: z.string().transform((s) => new Date(s)),
     chHours: z.coerce.number().min(0),
     ncHours: z.coerce.number().min(0),
@@ -50,26 +60,25 @@ export const useCreateWorkdayAction = routeAction$(
     offDuty: z.coerce.boolean(),
     offDutyReason: z.string().optional(),
     driverId: z.coerce.number(),
-    createdById: z.coerce.number(),
   }),
 );
 
 export default component$(() => {
+  const workday = useWorkdayLoader();
   const drivers = useDriversLoader();
-  const driverParam = useDriverParam();
   const currentUser = useCurrentUserLoader();
-  const createAction = useCreateWorkdayAction();
+  const updateAction = useUpdateWorkdayAction();
   const nav = useNavigate();
+  const loc = useLocation();
 
-  const isOffDuty = useSignal(false);
+  const backUrl = `/workdays${loc.url.search}`; // preserves ?driver=...&startDate=...&endDate=...
+  const isOffDuty = useSignal(workday.value.offDuty || false);
 
-  // Get today's date as default
-  const today = new Date().toISOString().split('T')[0];
+  const dateValue = new Date(workday.value.date).toISOString().split('T')[0];
 
-  // eslint-disable-next-line qwik/no-use-visible-task
   useVisibleTask$(({ track }) => {
-    const result = track(() => createAction.value);
-    if (createAction.value?.success && result?.workdayId) {
+    const result = track(() => updateAction.value);
+    if (updateAction.value?.success && result?.workdayId) {
       setTimeout(() => nav(`/workdays?highlight=${result.workdayId}`), 1000);
     }
   });
@@ -77,23 +86,17 @@ export default component$(() => {
   return (
     <div class="container mx-auto p-6 max-w-2xl">
       <div class="mb-6">
-        <Link href="/workdays" class="text-blue-500 hover:text-blue-700">
+        <Link href={backUrl} class="text-blue-500 hover:text-blue-700">
           ← Back to Workdays
         </Link>
-        <PageTitle text="New Workday" />
+        <PageTitle text="Edit Workday" />
       </div>
 
       <div class="bg-white shadow-md rounded-lg p-6">
-        <Form action={createAction}>
-          {/* Hidden field for current user */}
-          <input
-            type="hidden"
-            name="createdById"
-            value={currentUser.value?.id}
-          />
+        <Form action={updateAction}>
+          <input type="hidden" name="id" value={workday.value.id} />
 
           <div class="grid grid-cols-1 md:grid-cols-2 gap-6">
-            {/* Left Column */}
             <div class="space-y-4">
               <div>
                 <label
@@ -106,7 +109,7 @@ export default component$(() => {
                   type="date"
                   id="date"
                   name="date"
-                  value={today}
+                  value={dateValue}
                   required
                   class="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500"
                 />
@@ -124,16 +127,9 @@ export default component$(() => {
                   name="driverId"
                   required
                   class="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500"
-                  // value={drivers.value.currentDriver?.toString() ?? ''}
-                  value={driverParam.value}
-                  onChange$={(_, el) => {
-                    const url = new URL(window.location.href);
-                    if (el.value) url.searchParams.set('driver', el.value);
-                    else url.searchParams.delete('driver');
-                    nav(url.pathname + '?' + url.searchParams.toString());
-                  }}
+                  value={workday.value.driverId.toString()}
                 >
-                  <option value="">All Drivers</option>
+                  <option value="">Select a driver</option>
                   {drivers.value.map((driver) => (
                     <option key={driver.id} value={driver.id.toString()}>
                       {`${driver.firstName} ${driver.lastName}${driver.defaultTruck ? ` - ${driver.defaultTruck}` : ''}`}
@@ -155,7 +151,7 @@ export default component$(() => {
                   name="chHours"
                   min="0"
                   step="0.25"
-                  value="0"
+                  value={workday.value.chHours.toString()}
                   required
                   class="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500"
                   placeholder="8.00"
@@ -175,7 +171,7 @@ export default component$(() => {
                   name="ncHours"
                   min="0"
                   step="0.25"
-                  value="0"
+                  value={workday.value.ncHours.toString()}
                   required
                   class="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500"
                   placeholder="0.00"
@@ -195,11 +191,12 @@ export default component$(() => {
                   rows={2}
                   class="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500"
                   placeholder="Reason for non-commission hours..."
-                ></textarea>
+                >
+                  {workday.value.ncReasons || ''}
+                </textarea>
               </div>
             </div>
 
-            {/* Right Column */}
             <div class="space-y-4">
               <div>
                 <label
@@ -214,10 +211,11 @@ export default component$(() => {
                   rows={4}
                   class="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500"
                   placeholder="Any additional notes for this workday..."
-                ></textarea>
+                >
+                  {workday.value.notes || ''}
+                </textarea>
               </div>
 
-              {/* Off Duty Section */}
               <div class="border rounded-lg p-4 bg-gray-50">
                 <div class="flex items-center mb-3">
                   <input
@@ -225,6 +223,7 @@ export default component$(() => {
                     id="offDuty"
                     name="offDuty"
                     value="true"
+                    checked={isOffDuty.value}
                     class="h-4 w-4 text-blue-600 focus:ring-blue-500 border-gray-300 rounded"
                     onChange$={(_, el) => {
                       isOffDuty.value = el.checked;
@@ -252,22 +251,24 @@ export default component$(() => {
                       rows={2}
                       class="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500"
                       placeholder="Reason for being off duty..."
-                    ></textarea>
+                    >
+                      {workday.value.offDutyReason || ''}
+                    </textarea>
                   </div>
                 )}
               </div>
             </div>
           </div>
 
-          {createAction.value?.error && (
+          {updateAction.value?.error && (
             <div class="mt-4 p-3 bg-red-100 border border-red-400 text-red-700 rounded">
-              {createAction.value.error}
+              {updateAction.value.error}
             </div>
           )}
 
           <div class="flex justify-end space-x-4 mt-6">
             <Link
-              href="/workdays"
+              href={backUrl}
               class="px-4 py-2 border border-gray-300 rounded-md text-gray-700 hover:bg-gray-50"
             >
               Cancel
@@ -276,14 +277,14 @@ export default component$(() => {
               type="submit"
               class="px-4 py-2 bg-blue-500 text-white rounded-md hover:bg-blue-600 focus:outline-none focus:ring-2 focus:ring-blue-500"
             >
-              Create Workday
+              Update Workday
             </button>
           </div>
         </Form>
 
-        {createAction.value?.success && (
+        {updateAction.value?.success && (
           <div class="mt-4 p-3 bg-green-100 border border-green-400 text-green-700 rounded">
-            Workday created successfully! Redirecting...
+            Workday updated successfully! Redirecting...
           </div>
         )}
       </div>

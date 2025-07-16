@@ -1,40 +1,51 @@
 // src/routes/workdays/index.tsx
 import { component$, useVisibleTask$ } from '@builder.io/qwik';
 import {
+  useNavigate,
   routeLoader$,
   routeAction$,
   Link,
   zod$,
   z,
+  useLocation,
 } from '@builder.io/qwik-city';
 import { db } from '~/lib/db';
 import { NavLink } from '~/components/NavLink';
 import PageTitle from '~/components/PageTitle';
 
+function toValidDate(dateStr: string | null, fallback: Date): Date {
+  if (!dateStr) return fallback;
+  const d = new Date(dateStr);
+  return isNaN(d.getTime()) ? fallback : d;
+}
+
 export const useWorkdaysLoader = routeLoader$(async ({ query }) => {
   const driverId = query.get('driver');
   const startDate = query.get('startDate');
   const endDate = query.get('endDate');
-
-  // Default to current week if no dates provided
-  const now = new Date();
+  const now = new Date(); // Default to current week if no dates provided
   const monday = new Date(now.setDate(now.getDate() - now.getDay() + 1));
   const friday = new Date(monday);
   friday.setDate(friday.getDate() + 4);
 
-  const defaultStart = startDate || monday.toISOString().split('T')[0];
-  const defaultEnd = endDate || friday.toISOString().split('T')[0];
+  // const defaultStart = startDate || monday.toISOString().split('T')[0];
+  // const defaultEnd = endDate || friday.toISOString().split('T')[0];
+  const gte = toValidDate(startDate, monday);
+  const lte = toValidDate(endDate, friday);
 
   const where: any = {
     date: {
-      gte: defaultStart,
-      lte: defaultEnd,
+      gte: new Date(gte.toISOString().split('T')[0] + 'T00:00:00Z'),
+      lte: new Date(lte.toISOString().split('T')[0] + 'T23:59:59Z'),
     },
   };
 
   if (driverId) {
     where.driverId = parseInt(driverId);
   }
+
+  const defaultStart = gte.toISOString().split('T')[0]; // 'YYYY-MM-DD'
+  const defaultEnd = lte.toISOString().split('T')[0];
 
   const [workdays, drivers] = await Promise.all([
     db.workday.findMany({
@@ -79,10 +90,15 @@ export const useDeleteWorkdayAction = routeAction$(
 );
 
 export default component$(() => {
+  const nav = useNavigate();
   const data = useWorkdaysLoader();
   const deleteAction = useDeleteWorkdayAction();
+  const loc = useLocation();
+
+  const backUrl = `/workdays${loc.url.search}`; // preserves ?driver=...&startDate=...&endDate=...
 
   // Clear highlight parameter after page load
+  // eslint-disable-next-line qwik/no-use-visible-task
   useVisibleTask$(() => {
     const url = new URL(window.location.href);
     if (url.searchParams.has('highlight')) {
@@ -103,7 +119,16 @@ export default component$(() => {
         </NavLink>
       </div>
 
-      <p class="mb-6 text-gray-600">
+      <div class="flex gap-4">
+        <NavLink
+          href="/drivers"
+          class="font-semibold outline text-emerald-700 outline-emerald-700 rounded-3xl hover:bg-emerald-600 hover:outline-0 hover:text-white px-3 py-1.5 transition-colors duration-150 ease-in-out"
+        >
+          ← Drivers
+        </NavLink>
+      </div>
+
+      <p class="my-6 text-gray-600">
         Track daily driver hours, notes, and haul information.
       </p>
 
@@ -117,28 +142,29 @@ export default component$(() => {
             >
               Filter by Driver
             </label>
-            <select
-              id="driver"
-              value={data.value.currentDriver || ''}
-              class="px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500"
-              onChange$={(_, el) => {
-                const url = new URL(window.location.href);
-                if (el.value) {
-                  url.searchParams.set('driver', el.value);
-                } else {
-                  url.searchParams.delete('driver');
-                }
-                window.location.href = url.toString();
-              }}
-            >
-              <option value="">All Drivers</option>
-              {data.value.drivers.map((driver) => (
-                <option key={driver.id} value={driver.id.toString()}>
-                  {driver.firstName} {driver.lastName}
-                  {driver.defaultTruck && ` - ${driver.defaultTruck}`}
-                </option>
-              ))}
-            </select>
+            {typeof data.value.currentDriver !== 'undefined' && (
+              <select
+                id="driver"
+                value={data.value.currentDriver?.toString() || ''}
+                class="px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500"
+                onChange$={(_, el) => {
+                  const url = new URL(window.location.href);
+                  if (el.value) {
+                    url.searchParams.set('driver', el.value);
+                  } else {
+                    url.searchParams.delete('driver');
+                  }
+                  nav(url.pathname + '?' + url.searchParams.toString());
+                }}
+              >
+                <option value="">All Drivers</option>
+                {data.value.drivers.map((driver) => (
+                  <option key={driver.id} value={driver.id.toString()}>
+                    {`${driver.firstName} ${driver.lastName}${driver.defaultTruck ? ` - ${driver.defaultTruck}` : ''}`}
+                  </option>
+                ))}
+              </select>
+            )}
           </div>
 
           <div>
@@ -185,7 +211,7 @@ export default component$(() => {
 
       {/* Workdays Table */}
       {data.value.workdays.length > 0 ? (
-        <div class="bg-white shadow-md rounded-lg overflow-hidden">
+        <div class="bg-white shadow-md rounded-lg overflow-x-auto">
           <table class="min-w-full">
             <thead class="bg-gray-50">
               <tr>
@@ -237,14 +263,18 @@ export default component$(() => {
                       </div>
                     )}
                   </td>
-                  <td class="px-6 py-4 whitespace-nowrap">
+                  <td class="px-6 py-4 whitespace-nowrap text-sm text-gray-900">
                     {workday.offDuty ? (
-                      <span class="inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium bg-red-100 text-red-800">
-                        Off Duty
+                      <div>
+                        <span class="inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium bg-red-100 text-red-800">
+                          Off Duty
+                        </span>
                         {workday.offDutyReason && (
-                          <span class="ml-1">- {workday.offDutyReason}</span>
+                          <div class="text-xs text-gray-500 mt-1">
+                            {workday.offDutyReason}
+                          </div>
                         )}
-                      </span>
+                      </div>
                     ) : (
                       <span class="inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium bg-green-100 text-green-800">
                         On Duty
@@ -258,7 +288,8 @@ export default component$(() => {
                   </td>
                   <td class="px-6 py-4 whitespace-nowrap text-sm font-medium space-x-2">
                     <Link
-                      href={`/workdays/${workday.id}/edit`}
+                      // href={`/workdays/edit/${workday.id}`}
+                      href={`/workdays/edit/${workday.id}${loc.url.search}`}
                       class="text-indigo-600 hover:text-indigo-900"
                     >
                       Edit
