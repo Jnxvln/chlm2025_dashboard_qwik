@@ -143,7 +143,7 @@ export default component$(() => {
                 if (!isSummaryEnabled) {
                   e.preventDefault();
                 } else {
-                  // Future: link to summary page
+                  // TODO: link to summary page
                   // const url = new URL('/hauls/summary', window.location.origin);
                   // url.searchParams.set(...);
                   // window.location.href = url.toString();

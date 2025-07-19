@@ -73,7 +73,8 @@ export default component$(() => {
   const driverId = loc.url.searchParams.get('driver');
   const startDate = loc.url.searchParams.get('startDate');
   const endDate = loc.url.searchParams.get('endDate');
-  const returnTo = loc.url.searchParams.get('returnTo');
+  const encodedReturnTo = loc.url.searchParams.get('returnTo');
+  const returnTo = encodedReturnTo ? decodeURIComponent(encodedReturnTo) : null;
 
   const today = new Date().toISOString().split('T')[0];
 
