@@ -27,7 +27,7 @@ export const useWorkdayLoader = routeLoader$(async ({ params, redirect }) => {
 });
 
 export const useUpdateWorkdayAction = routeAction$(
-  async (data) => {
+  async (data, event) => {
     try {
       const workday = await db.workday.update({
         where: { id: Number(data.id) },
@@ -43,6 +43,11 @@ export const useUpdateWorkdayAction = routeAction$(
           updatedAt: new Date(),
         },
       });
+
+      // Redirect to returnTo if present
+      if (data.returnTo && typeof data.returnTo === 'string') {
+        throw event.redirect(302, data.returnTo);
+      }
 
       return { success: true, workdayId: workday.id };
     } catch (error) {
@@ -60,6 +65,7 @@ export const useUpdateWorkdayAction = routeAction$(
     offDuty: z.coerce.boolean(),
     offDutyReason: z.string().optional(),
     driverId: z.coerce.number(),
+    returnTo: z.string().optional(),
   }),
 );
 
@@ -71,9 +77,11 @@ export default component$(() => {
   const nav = useNavigate();
   const loc = useLocation();
 
-  const backUrl = `/workdays${loc.url.search}`; // preserves ?driver=...&startDate=...&endDate=...
-  const isOffDuty = useSignal(workday.value.offDuty || false);
+  // const backUrl = `/workdays${loc.url.search}`; // preserves ?driver=...&startDate=...&endDate=...
+  const returnToParam = loc.url.searchParams.get('returnTo');
+  const backUrl = returnToParam || `/workdays${loc.url.search}`;
 
+  const isOffDuty = useSignal(workday.value.offDuty || false);
   const dateValue = new Date(workday.value.date).toISOString().split('T')[0];
 
   useVisibleTask$(({ track }) => {
@@ -87,7 +95,7 @@ export default component$(() => {
     <div class="container mx-auto p-6 max-w-2xl">
       <div class="mb-6">
         <Link href={backUrl} class="text-blue-500 hover:text-blue-700">
-          ← Back to Workdays
+          ← Back to {returnToParam ? 'Hauls' : 'Workdays'}
         </Link>
         <PageTitle text="Edit Workday" />
       </div>
@@ -95,6 +103,7 @@ export default component$(() => {
       <div class="bg-white shadow-md rounded-lg p-6">
         <Form action={updateAction}>
           <input type="hidden" name="id" value={workday.value.id} />
+          <input type="hidden" name="returnTo" value={returnToParam || ''} />
 
           <div class="grid grid-cols-1 md:grid-cols-2 gap-6">
             <div class="space-y-4">

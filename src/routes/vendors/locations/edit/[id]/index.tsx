@@ -64,6 +64,12 @@ export default component$(() => {
   const success = useSignal(false);
   const nav = useNavigate();
 
+  const selectedVendorId = useSignal<number | undefined>(undefined);
+
+  useVisibleTask$(() => {
+    selectedVendorId.value = vendorLocation.value.vendorId;
+  });
+
   useVisibleTask$(({ track }) => {
     track(() => updateVendorLocation.value?.success);
     if (updateVendorLocation.value?.success) {
@@ -95,9 +101,15 @@ export default component$(() => {
 
         <select
           name="vendorId"
-          value={vendorLocation.value.vendorId}
+          // value={vendorLocation.value.vendorId}
+          value={selectedVendorId.value ?? ''}
           class="w-full border border-gray-300 rounded p-2"
           required
+          onChange$={(e) => {
+            selectedVendorId.value = Number(
+              (e.target as HTMLSelectElement).value,
+            );
+          }}
         >
           <option value="">Select Vendor *</option>
           {vendors.value.map((vendor) => (

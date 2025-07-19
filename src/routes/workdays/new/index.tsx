@@ -8,6 +8,7 @@ import {
   zod$,
   z,
   useNavigate,
+  useLocation,
 } from '@builder.io/qwik-city';
 import { db } from '~/lib/db';
 import PageTitle from '~/components/PageTitle';
@@ -18,7 +19,7 @@ import {
 } from '../layout';
 
 export const useCreateWorkdayAction = routeAction$(
-  async (data) => {
+  async (data, event) => {
     try {
       const workday = await db.workday.create({
         data: {
@@ -34,6 +35,11 @@ export const useCreateWorkdayAction = routeAction$(
           updatedAt: new Date(),
         },
       });
+
+      // Redirect to returnTo if present
+      if (data.returnTo && typeof data.returnTo === 'string') {
+        throw event.redirect(302, data.returnTo);
+      }
 
       return { success: true, workdayId: workday.id };
     } catch (error) {
@@ -51,6 +57,7 @@ export const useCreateWorkdayAction = routeAction$(
     offDutyReason: z.string().optional(),
     driverId: z.coerce.number(),
     createdById: z.coerce.number(),
+    returnTo: z.string().optional(),
   }),
 );
 
@@ -60,6 +67,9 @@ export default component$(() => {
   const currentUser = useCurrentUserLoader();
   const createAction = useCreateWorkdayAction();
   const nav = useNavigate();
+
+  const loc = useLocation();
+  const returnToParam = loc.url.searchParams.get('returnTo');
 
   const isOffDuty = useSignal(false);
 
@@ -77,14 +87,27 @@ export default component$(() => {
   return (
     <div class="container mx-auto p-6 max-w-2xl">
       <div class="mb-6">
-        <Link href="/workdays" class="text-blue-500 hover:text-blue-700">
+        {/* <Link href="/workdays" class="text-blue-500 hover:text-blue-700">
           ← Back to Workdays
-        </Link>
+        </Link> */}
+        {returnToParam && (
+          <div class="mb-4">
+            <a
+              href={returnToParam}
+              class="inline-block text-sm text-blue-600 hover:underline"
+            >
+              ← Back to Hauls
+            </a>
+          </div>
+        )}
+
         <PageTitle text="New Workday" />
       </div>
 
       <div class="bg-white shadow-md rounded-lg p-6">
         <Form action={createAction}>
+          <input type="hidden" name="returnTo" value={returnToParam || ''} />
+
           {/* Hidden field for current user */}
           <input
             type="hidden"

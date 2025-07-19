@@ -15,7 +15,7 @@ export const useGetVendorsAndLocations = routeLoader$(async () => {
   const vendors = await db.vendor.findMany({
     where: { isActive: true },
     include: {
-      VendorLocation: {
+      vendorLocations: {
         where: { isActive: true },
       },
     },
@@ -62,7 +62,7 @@ export default component$(() => {
     const vendorId = track(() => selectedVendorId.value);
     if (vendorId) {
       const vendor = vendors.value.find((v) => v.id === vendorId);
-      availableLocations.value = vendor?.VendorLocation || [];
+      availableLocations.value = vendor?.vendorLocations || [];
     } else {
       availableLocations.value = [];
     }

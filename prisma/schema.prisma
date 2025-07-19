@@ -15,8 +15,8 @@ model User {
   email               String      @unique
   name                String?
 
-  Workday             Workday[]
-  Haul                Haul[]
+  workdays            Workday[]
+  hauls               Haul[]
 }
 
 model Driver {
@@ -34,7 +34,7 @@ model Driver {
   createdAt           DateTime    @default(now())
   updatedAt           DateTime    @default(now())
 
-  Workday             Workday[]
+  workdays            Workday[]
 }
 
 model Vendor {
@@ -47,8 +47,8 @@ model Vendor {
   createdAt             DateTime    @default(now())
   updatedAt             DateTime    @default(now())
 
-  products              VendorProduct[]
-  VendorLocation        VendorLocation[]
+  vendorProducts        VendorProduct[]
+  vendorLocations       VendorLocation[]
 }
 
 model VendorProduct {
@@ -65,7 +65,7 @@ model VendorProduct {
   vendorLocation        VendorLocation    @relation(fields: [vendorLocationId], references: [id])
   vendorLocationId      Int
 
-  Haul Haul[]
+  hauls                 Haul[]
 }
 
 model VendorLocation {
@@ -74,7 +74,7 @@ model VendorLocation {
   isActive              Boolean           @default(true)
   createdAt             DateTime          @default(now())
   updatedAt             DateTime          @default(now())
-  VendorProduct         VendorProduct[]
+  vendorProducts        VendorProduct[]
   freightRoutes         FreightRoute[]
 
   vendor                Vendor            @relation(fields: [vendorId], references: [id])

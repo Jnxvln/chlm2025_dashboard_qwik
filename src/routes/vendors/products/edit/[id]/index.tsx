@@ -28,7 +28,7 @@ export const useGetVendorsAndLocations = routeLoader$(async () => {
   const vendors = await db.vendor.findMany({
     where: { isActive: true },
     include: {
-      VendorLocation: {
+      vendorLocations: {
         where: { isActive: true },
       },
     },
@@ -74,15 +74,21 @@ export default component$(() => {
   const success = useSignal(false);
   const nav = useNavigate();
 
-  const selectedVendorId = useSignal<number>(vendorProduct.value.vendorId);
+  // const selectedVendorId = useSignal<number>(vendorProduct.value.vendorId);
+  const selectedVendorId = useSignal<number | undefined>(undefined);
   const availableLocations = useSignal<any[]>([]);
+
+  // Initialize selected vendor ID with current vendor ID from the vendorProduct object
+  useVisibleTask$(() => {
+    selectedVendorId.value = vendorProduct.value.vendorId;
+  });
 
   // Initialize available locations on component load
   useVisibleTask$(() => {
     const vendor = vendors.value.find(
       (v) => v.id === vendorProduct.value.vendorId,
     );
-    availableLocations.value = vendor?.VendorLocation || [];
+    availableLocations.value = vendor?.vendorLocations || [];
   });
 
   // Update available locations when vendor changes
@@ -90,7 +96,7 @@ export default component$(() => {
     const vendorId = track(() => selectedVendorId.value);
     if (vendorId) {
       const vendor = vendors.value.find((v) => v.id === vendorId);
-      availableLocations.value = vendor?.VendorLocation || [];
+      availableLocations.value = vendor?.vendorLocations || [];
     } else {
       availableLocations.value = [];
     }
@@ -140,12 +146,17 @@ export default component$(() => {
 
         <select
           name="vendorId"
-          value={selectedVendorId.value}
+          // defaultValue={String(vendorProduct.value.vendorId)}
+          // value={selectedVendorId.value}
+          value={selectedVendorId.value ?? ''}
           class="w-full border border-gray-300 rounded p-2"
           required
           onChange$={(e) => {
-            const value = (e.target as HTMLSelectElement).value;
-            selectedVendorId.value = Number(value);
+            // const value = (e.target as HTMLSelectElement).value;
+            // selectedVendorId.value = Number(value);
+            selectedVendorId.value = Number(
+              (e.target as HTMLSelectElement).value,
+            );
           }}
         >
           <option value="">Select Vendor *</option>
@@ -156,19 +167,22 @@ export default component$(() => {
           ))}
         </select>
 
-        <select
-          name="vendorLocationId"
-          value={vendorProduct.value.vendorLocationId}
-          class="w-full border border-gray-300 rounded p-2"
-          required
-        >
-          <option value="">Select Location *</option>
-          {availableLocations.value.map((location) => (
-            <option key={location.id} value={location.id}>
-              {location.name}
-            </option>
-          ))}
-        </select>
+        {availableLocations.value.length > 0 && (
+          <select
+            name="vendorLocationId"
+            // value={vendorProduct.value.vendorLocationId}
+            value={vendorProduct.value.vendorLocation?.id}
+            class="w-full border border-gray-300 rounded p-2"
+            required
+          >
+            <option value="">Select Location *</option>
+            {availableLocations.value.map((location) => (
+              <option key={location.id} value={location.id}>
+                {location.name}
+              </option>
+            ))}
+          </select>
+        )}
 
         <label class="inline-flex items-center gap-2 mt-2">
           <input
