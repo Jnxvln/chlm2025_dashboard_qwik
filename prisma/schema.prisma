@@ -167,6 +167,7 @@ model FreightRoute {
   id                    Int             @id @default(autoincrement())
   destination           String          // "C&H Yard", "COSS-Airport", "JWick-Texarkana, TX, etc."
   freightCost           Float           // cost per mile
+  notes                 String?
   isActive              Boolean         @default(true)
   createdAt             DateTime        @default(now())
   updatedAt             DateTime        @default(now())

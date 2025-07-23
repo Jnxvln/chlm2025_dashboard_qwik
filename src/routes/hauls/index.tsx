@@ -21,45 +21,7 @@ export default component$(() => {
       {/* Filters */}
       <div class="mb-6 bg-white p-4 rounded-lg shadow">
         <div class="flex flex-wrap gap-4 items-end">
-          {/* DEBUG - REMOVE WHEN DONE */}
-          <p class="text-xs text-gray-500">
-            Debug: currentDriverId ={' '}
-            {JSON.stringify(data.value.currentDriverId)}
-          </p>
-
           {/* Driver Dropdown */}
-          {/* <div>
-            <label
-              for="driver"
-              class="block text-sm font-medium text-gray-700 mb-1"
-            >
-              Filter by Driver
-            </label>
-            <select
-              id="driver"
-              // value={data.value.currentDriverId?.toString() || ''}
-              value={String(data.value.currentDriverId ?? '')}
-              class="px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500"
-              onChange$={(_, el) => {
-                const url = new URL(window.location.href);
-                if (el.value) {
-                  url.searchParams.set('driver', el.value);
-                } else {
-                  url.searchParams.delete('driver');
-                }
-                nav(url.pathname + '?' + url.searchParams.toString());
-              }}
-            >
-              <option value="">All Drivers</option>
-              {data.value.drivers.map((driver) => (
-                <option key={driver.id} value={String(driver.id)}>
-                  {driver.firstName} {driver.lastName}
-                </option>
-              ))}
-            </select>
-          </div> */}
-
-          {/* ============================================================================= */}
           {data.value.drivers.length > 0 && (
             <div>
               <label
@@ -102,7 +64,6 @@ export default component$(() => {
               </select>
             </div>
           )}
-          {/* ============================================================================= */}
 
           {/* Start Date */}
           <div>
@@ -142,7 +103,6 @@ export default component$(() => {
               onChange$={(_, el) => {
                 const url = new URL(window.location.href);
                 url.searchParams.set('endDate', el.value);
-                // window.location.href = url.toString();
                 nav(url.pathname + '?' + url.searchParams.toString());
               }}
             />
