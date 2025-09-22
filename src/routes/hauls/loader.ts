@@ -25,11 +25,11 @@ export const useHaulsLoader = routeLoader$(async (event) => {
     orderBy: [{ lastName: 'asc' }],
   });
 
-  let hauls = [];
-  let workdaysByDate: Record<string, number> = {};
+  let workdays = [];
 
   if (filters.driverId && filters.startDate && filters.endDate) {
-    const workdays = await db.workday.findMany({
+    // Load workdays with nested hauls
+    workdays = await db.workday.findMany({
       where: {
         driverId: filters.driverId,
         date: {
@@ -37,47 +37,33 @@ export const useHaulsLoader = routeLoader$(async (event) => {
           lte: filters.endDate,
         },
       },
-      select: {
-        id: true,
-        date: true,
-      },
-    });
-
-    // Workdays by YYYY-MM-DD
-    workdaysByDate = Object.fromEntries(
-      workdays.map((w) => [w.date.toISOString().split('T')[0], w.id]),
-    );
-
-    // Load hauls joined with their workdays + nested vendor/freight route info
-    hauls = await db.haul.findMany({
-      where: {
-        workday: {
-          driverId: filters.driverId,
-          date: {
-            gte: filters.startDate,
-            lte: filters.endDate,
-          },
-        },
-      },
       include: {
-        workday: {
-          select: { id: true, date: true },
+        driver: true,
+        hauls: {
+          include: {
+            vendorProduct: {
+              include: { 
+                vendor: true,
+                vendorLocation: true,
+              },
+            },
+            freightRoute: {
+              include: { vendorLocation: true },
+            },
+          },
+          orderBy: [{ dateHaul: 'asc' }],
         },
-        vendorProduct: {
-          include: { vendor: true },
-        },
-        freightRoute: {
-          include: { vendorLocation: true },
+        _count: {
+          select: { hauls: true },
         },
       },
-      orderBy: [{ dateHaul: 'asc' }],
+      orderBy: [{ date: 'desc' }],
     });
   }
 
   return {
     drivers,
-    hauls,
-    workdaysByDate,
+    workdays,
     currentDriverId: filters.driverId,
     currentStartDate: startDateStr || '',
     currentEndDate: endDateStr || '',

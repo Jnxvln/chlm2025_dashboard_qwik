@@ -79,7 +79,8 @@ export default component$(() => {
 
   // const backUrl = `/workdays${loc.url.search}`; // preserves ?driver=...&startDate=...&endDate=...
   const returnToParam = loc.url.searchParams.get('returnTo');
-  const backUrl = returnToParam || `/workdays${loc.url.search}`;
+  const decodedReturnTo = returnToParam ? decodeURIComponent(returnToParam) : null;
+  const backUrl = decodedReturnTo || `/workdays${loc.url.search}`;
 
   const isOffDuty = useSignal(workday.value.offDuty || false);
   const dateValue = new Date(workday.value.date).toISOString().split('T')[0];
@@ -103,7 +104,7 @@ export default component$(() => {
       <div class="bg-white shadow-md rounded-lg p-6">
         <Form action={updateAction}>
           <input type="hidden" name="id" value={workday.value.id} />
-          <input type="hidden" name="returnTo" value={returnToParam || ''} />
+          <input type="hidden" name="returnTo" value={decodedReturnTo || ''} />
 
           <div class="grid grid-cols-1 md:grid-cols-2 gap-6">
             <div class="space-y-4">
@@ -136,11 +137,10 @@ export default component$(() => {
                   name="driverId"
                   required
                   class="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500"
-                  value={workday.value.driverId.toString()}
                 >
                   <option value="">Select a driver</option>
                   {drivers.value.map((driver) => (
-                    <option key={driver.id} value={driver.id.toString()}>
+                    <option key={driver.id} value={driver.id.toString()} selected={driver.id === workday.value.driverId}>
                       {`${driver.firstName} ${driver.lastName}${driver.defaultTruck ? ` - ${driver.defaultTruck}` : ''}`}
                     </option>
                   ))}
@@ -152,7 +152,7 @@ export default component$(() => {
                   for="chHours"
                   class="block text-sm font-medium text-gray-700 mb-2"
                 >
-                  Commission Hours *
+                  C&H Hours *
                 </label>
                 <input
                   type="number"

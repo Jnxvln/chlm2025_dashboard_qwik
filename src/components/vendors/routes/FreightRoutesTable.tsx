@@ -1,5 +1,5 @@
 import { component$ } from '@builder.io/qwik';
-import { Link, useNavigate } from '@builder.io/qwik-city';
+import { useNavigate } from '@builder.io/qwik-city';
 
 export const FreightRoutesTable = component$(
   ({ routes, highlightId }: { routes: any[]; highlightId?: string }) => {
@@ -10,10 +10,10 @@ export const FreightRoutesTable = component$(
         <table class="min-w-full text-sm text-left text-gray-800 bg-white">
           <thead class="bg-gray-100 text-gray-600 uppercase text-xs tracking-wider">
             <tr>
-              <th class="px-4 py-3">Destination</th>
-              <th class="px-4 py-3">Freight Cost</th>
               <th class="px-4 py-3">Vendor</th>
               <th class="px-4 py-3">Location</th>
+              <th class="px-4 py-3">Destination</th>
+              <th class="px-4 py-3">Freight Cost</th>
               <th class="px-4 py-3">Status</th>
               <th class="px-4 py-3 text-center">Actions</th>
             </tr>
@@ -28,12 +28,12 @@ export const FreightRoutesTable = component$(
                     isNew ? 'bg-yellow-100/50' : 'hover:bg-gray-100'
                   }`}
                 >
+                  <td class="px-4 py-3">{route.vendorLocation.vendor.name}</td>
+                  <td class="px-4 py-3">{route.vendorLocation.name}</td>
                   <td class="px-4 py-3 font-medium">{route.destination}</td>
                   <td class="px-4 py-3">
                     ${route.freightCost.toFixed(2)} / ton
                   </td>
-                  <td class="px-4 py-3">{route.vendorLocation.vendor.name}</td>
-                  <td class="px-4 py-3">{route.vendorLocation.name}</td>
                   <td class="px-4 py-3">
                     <span
                       class={`px-2 py-1 text-xs rounded-full ${

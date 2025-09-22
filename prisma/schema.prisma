@@ -11,8 +11,8 @@ datasource db {
 }
 
 model User {
-  id                  Int         @id @default(autoincrement())
-  email               String      @unique
+  id                  Int                 @id @default(autoincrement())
+  email               String              @unique
   name                String?
 
   workdays            Workday[]
@@ -20,7 +20,7 @@ model User {
 }
 
 model Driver {
-  id                  Int         @id @default(autoincrement())
+  id                  Int                 @id @default(autoincrement())
   firstName           String
   lastName            String
   defaultTruck        String?
@@ -29,23 +29,23 @@ model Driver {
   nonCommissionRate   Float
   dateHired           DateTime?
   dateReleased        DateTime?
-  isActive            Boolean     @default(true)
+  isActive            Boolean             @default(true)
 
-  createdAt           DateTime    @default(now())
-  updatedAt           DateTime    @default(now())
+  createdAt           DateTime            @default(now())
+  updatedAt           DateTime            @default(now())
 
   workdays            Workday[]
 }
 
 model Vendor {
-  id                    Int         @id @default(autoincrement())
+  id                    Int               @id @default(autoincrement())
   name                  String
   shortName             String
   chtFuelSurcharge      Float
   vendorFuelSurcharge   Float
-  isActive              Boolean     @default(true)
-  createdAt             DateTime    @default(now())
-  updatedAt             DateTime    @default(now())
+  isActive              Boolean           @default(true)
+  createdAt             DateTime          @default(now())
+  updatedAt             DateTime          @default(now())
 
   vendorProducts        VendorProduct[]
   vendorLocations       VendorLocation[]
@@ -112,22 +112,22 @@ model Material {
 }
 
 model Workday {
-  id                  Int                 @id @default(autoincrement())
+  id                  Int                  @id @default(autoincrement())
   date                DateTime
   chHours             Float
   ncHours             Float
   ncReasons           String?
   notes               String?
-  offDuty             Boolean             @default(false)
+  offDuty             Boolean              @default(false)
   offDutyReason       String?
   hauls               Haul[]
-  createdAt           DateTime            @default(now())
-  updatedAt           DateTime            @default(now())
+  createdAt           DateTime             @default(now())
+  updatedAt           DateTime             @default(now())
 
-  driver              Driver              @relation(fields: [driverId], references: [id])
+  driver              Driver               @relation(fields: [driverId], references: [id])
   driverId            Int
 
-  createdBy           User                @relation(fields: [createdById], references: [id])
+  createdBy           User                 @relation(fields: [createdById], references: [id])
   createdById         Int
 
   @@unique([driverId, date])
@@ -139,20 +139,18 @@ model Haul {
   truck                 String
   customer              String              // i.e. "C&H", "SRM", "RRR", etc. Usually 3 letters, but not always
   chInvoice             String?
-  loadType              String              // Choices: "enddump" OR "flatbed"
-  invoice               String?
+  loadType              String              // choose: "enddump" OR "flatbed"
+  loadRefNum            String?
   
-  // Foreign key relationships (no more hardcoded strings!)
-  vendorProduct         VendorProduct   @relation(fields: [vendorProductId], references: [id])
+  vendorProduct         VendorProduct       @relation(fields: [vendorProductId], references: [id])
   vendorProductId       Int
   
-  freightRoute          FreightRoute    @relation(fields: [freightRouteId], references: [id])
+  freightRoute          FreightRoute        @relation(fields: [freightRouteId], references: [id])
   freightRouteId        Int
   
-  tons                  Float
-  rate                  Float
-  miles                 Float
-  payRate               Float
+  rateMetric            String              // choose: "ton", "mile", or "hour"
+  rate                  Float               // rate per ton, mile, or hour
+  quantity              Float               // quantity of tons, miles, or hours
 
   createdAt             DateTime            @default(now())
   updatedAt             DateTime            @default(now())
@@ -164,15 +162,15 @@ model Haul {
 }
 
 model FreightRoute {
-  id                    Int             @id @default(autoincrement())
-  destination           String          // "C&H Yard", "COSS-Airport", "JWick-Texarkana, TX, etc."
-  freightCost           Float           // cost per mile
+  id                    Int                 @id @default(autoincrement())
+  destination           String              // "C&H Yard", "COSS-Airport", "JWick-Texarkana, TX, etc."
+  freightCost           Float               // cost per mile
   notes                 String?
-  isActive              Boolean         @default(true)
-  createdAt             DateTime        @default(now())
-  updatedAt             DateTime        @default(now())
+  isActive              Boolean             @default(true)
+  createdAt             DateTime            @default(now())
+  updatedAt             DateTime            @default(now())
   
   hauls                 Haul[]
-  vendorLocation        VendorLocation  @relation(fields: [vendorLocationId], references: [id])
+  vendorLocation        VendorLocation      @relation(fields: [vendorLocationId], references: [id])
   vendorLocationId      Int
 }

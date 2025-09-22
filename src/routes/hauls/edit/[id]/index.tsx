@@ -6,15 +6,15 @@ import {
 } from '@builder.io/qwik';
 import { Form, useNavigate, useLocation } from '@builder.io/qwik-city';
 
-import { useNewHaulLoader } from './loader';
-import { useNewHaulAction } from './action';
+import { useEditHaulLoader } from './loader';
+import { useEditHaulAction } from './action';
 
-export { useNewHaulLoader } from './loader';
-export { useNewHaulAction } from './action';
+export { useEditHaulLoader } from './loader';
+export { useEditHaulAction } from './action';
 
 export default component$(() => {
-  const data = useNewHaulLoader();
-  const action = useNewHaulAction();
+  const data = useEditHaulLoader();
+  const action = useEditHaulAction();
   const nav = useNavigate();
   const loc = useLocation();
 
@@ -22,18 +22,14 @@ export default component$(() => {
   const selectedLocationId = useSignal<string | null>(null);
   const selectedLoadType = useSignal<'enddump' | 'flatbed'>('enddump');
   const selectedRate = useSignal<number | null>(null);
-  const selectedDriverId = useSignal<string>(data.value.driverId?.toString() || '');
-  const truckNumber = useSignal<string>('');
 
-  // const returnTo = loc.url.searchParams.get('returnTo') ?? '';
   const raw = loc.url.searchParams.get('returnTo') ?? '';
   const returnTo = raw.startsWith('/') ? decodeURIComponent(raw) : '';
-  
+
   // Extract params for fallback URL
   const driverParam = loc.url.searchParams.get('driver') || '';
   const startDateParam = loc.url.searchParams.get('startDate') || '';
   const endDateParam = loc.url.searchParams.get('endDate') || '';
-  
   
   // Build fallback URL with filters
   const fallbackUrl = `/hauls?${new URLSearchParams({
@@ -41,6 +37,16 @@ export default component$(() => {
     ...(startDateParam && { startDate: startDateParam }),
     ...(endDateParam && { endDate: endDateParam })
   }).toString()}`;
+
+  // Initialize signals with loaded data
+  useVisibleTask$(() => {
+    if (data.value.haul) {
+      selectedVendorId.value = data.value.haul.vendorProduct.vendorId.toString();
+      selectedLocationId.value = data.value.haul.vendorProduct.vendorLocationId.toString();
+      selectedLoadType.value = data.value.haul.loadType as 'enddump' | 'flatbed';
+      selectedRate.value = data.value.haul.rate;
+    }
+  });
 
   // Dynamically filter vendor locations
   const filteredLocations = useComputed$(() => {
@@ -51,7 +57,7 @@ export default component$(() => {
     );
   });
 
-  // Dynamically filter freight routes and auto-fill rate
+  // Dynamically filter freight routes
   const filteredRoutes = useComputed$(() => {
     return (
       data.value?.freightRoutes?.filter(
@@ -74,72 +80,37 @@ export default component$(() => {
     );
   });
 
-  const today = new Date().toISOString().split('T')[0];
-
-  // Initialize truck number with selected driver's default truck
-  useVisibleTask$(() => {
-    if (data.value.driverId) {
-      const driver = data.value.drivers.find(d => d.id === data.value.driverId);
-      if (driver?.defaultTruck) {
-        truckNumber.value = driver.defaultTruck;
-        selectedDriverId.value = data.value.driverId.toString();
-      }
-    }
-  });
-
   useVisibleTask$(({ track }) => {
     const result = track(() => action.value);
-    if (result?.success && result?.haulId) {
+    if (result?.success) {
       setTimeout(() => {
-        nav(result.returnTo || '/hauls');
+        nav(result.returnTo || fallbackUrl);
       }, 1000);
     }
   });
 
+  if (!data.value.haul) {
+    return <div class="p-6">Haul not found</div>;
+  }
+
+  const haul = data.value.haul;
+
   return (
     <div class="p-6 max-w-3xl mx-auto">
+      <h1 class="text-2xl font-bold mb-6">Edit Haul</h1>
+      
       <Form action={action} class="space-y-4">
-        <input type="hidden" name="workdayId" value={data.value.workdayId} />
-        <input
-          type="hidden"
-          name="createdById"
-          value={data.value.createdById}
-        />
+        <input type="hidden" name="haulId" value={haul.id} />
         <input type="hidden" name="returnTo" value={returnTo} />
 
-        {/* Row 1: Date Only */}
-        <div>
-          <label class="block text-sm font-medium mb-1">Haul Date</label>
-          <input
-            name="dateHaul"
-            type="date"
-            value={data.value.haulDate}
-            required
-            class="input w-full"
-          />
-        </div>
-
-        {/* Row 2: Driver, Load Type, Truck # */}
+        {/* Row 1 */}
         <div class="grid grid-cols-3 gap-4">
           <div>
             <label class="block text-sm font-medium mb-1">Driver</label>
-            <select 
-              name="driverId" 
-              class="input w-full" 
-              required
-              onChange$={(_, el) => {
-                selectedDriverId.value = el.value;
-                const driver = data.value.drivers.find(d => d.id.toString() === el.value);
-                if (driver?.defaultTruck) {
-                  truckNumber.value = driver.defaultTruck;
-                } else {
-                  truckNumber.value = '';
-                }
-              }}
-            >
+            <select name="driverId" class="input w-full" required>
               {Array.isArray(data.value?.drivers) &&
                 data.value.drivers.map((v) => (
-                  <option key={v.id} value={v.id} selected={v.id === data.value.driverId}>
+                  <option key={v.id} value={v.id} selected={v.id === haul.workday.driverId}>
                     {v.firstName} {v.lastName}{' '}
                     {v.defaultTruck ? `(${v.defaultTruck})` : ''}
                   </option>
@@ -159,44 +130,40 @@ export default component$(() => {
                   | 'flatbed')
               }
             >
-              <option value="enddump">End Dump</option>
-              <option value="flatbed">Flat Bed</option>
+              <option value="enddump" selected={haul.loadType === 'enddump'}>End Dump</option>
+              <option value="flatbed" selected={haul.loadType === 'flatbed'}>Flat Bed</option>
             </select>
           </div>
 
           <div>
             <label class="block text-sm font-medium mb-1">Truck #</label>
-            <input 
-              name="truck" 
-              class="input w-full" 
-              required 
-              value={truckNumber.value}
-              onInput$={(_, el) => {
-                truckNumber.value = el.value;
-              }}
-            />
+            <input name="truck" class="input w-full" required value={haul.truck} />
           </div>
         </div>
 
-        {/* Row 3: Customer, Load/Ref #, CH Invoice (conditional) */}
-        <div class={selectedLoadType.value === 'flatbed' ? "grid grid-cols-3 gap-4" : "grid grid-cols-2 gap-4"}>
+        {/* Row 2 */}
+        <div class="grid grid-cols-3 gap-4">
+          <div>
+            <label class="block text-sm font-medium mb-1">Haul Date</label>
+            <input
+              name="dateHaul"
+              type="date"
+              value={haul.dateHaul.toISOString().split('T')[0]}
+              required
+              class="input w-full"
+            />
+          </div>
           <div>
             <label class="block text-sm font-medium mb-1">Customer</label>
-            <input name="customer" type="text" class="input w-full" />
+            <input name="customer" type="text" class="input w-full" value={haul.customer || ''} />
           </div>
           <div>
             <label class="block text-sm font-medium mb-1">Load/Ref #</label>
-            <input name="loadRefNum" type="text" class="input w-full" />
+            <input name="loadRefNum" type="text" class="input w-full" value={haul.loadRefNum || ''} />
           </div>
-          {selectedLoadType.value === 'flatbed' && (
-            <div>
-              <label class="block text-sm font-medium mb-1">CH Invoice #</label>
-              <input name="chInvoice" type="text" class="input w-full" />
-            </div>
-          )}
         </div>
 
-        {/* Row 4: Vendor, Location, Route */}
+        {/* Row 3 */}
         <div class="grid grid-cols-3 gap-4">
           <div>
             <label class="block text-sm font-medium mb-1">From (Vendor)</label>
@@ -212,7 +179,7 @@ export default component$(() => {
               <option value="">Select Vendor</option>
               {Array.isArray(data.value?.vendors) &&
                 data.value.vendors.map((v) => (
-                  <option key={v.id} value={v.id}>
+                  <option key={v.id} value={v.id} selected={v.id === haul.vendorProduct.vendorId}>
                     {v.name}
                   </option>
                 ))}
@@ -232,7 +199,7 @@ export default component$(() => {
               <option value="">Select Location</option>
               {Array.isArray(filteredLocations.value) &&
                 filteredLocations.value.map((loc) => (
-                  <option key={loc.id} value={loc.id}>
+                  <option key={loc.id} value={loc.id} selected={loc.id === haul.vendorProduct.vendorLocationId}>
                     {loc.name}
                   </option>
                 ))}
@@ -254,7 +221,7 @@ export default component$(() => {
             >
               <option value="">Select Route</option>
               {filteredRoutes.value.map((fr) => (
-                <option key={fr.id} value={fr.id}>
+                <option key={fr.id} value={fr.id} selected={fr.id === haul.freightRouteId}>
                   {fr.destination}
                 </option>
               ))}
@@ -262,7 +229,7 @@ export default component$(() => {
           </div>
         </div>
 
-        {/* Row 5: Material */}
+        {/* Row 4 */}
         <div>
           <label class="block text-sm font-medium mb-1">Material</label>
           <select
@@ -274,21 +241,21 @@ export default component$(() => {
             <option value="">Select Material</option>
             {Array.isArray(filteredProducts.value) &&
               filteredProducts.value.map((vp) => (
-                <option key={vp.id} value={vp.id}>
+                <option key={vp.id} value={vp.id} selected={vp.id === haul.vendorProductId}>
                   {vp.name}
                 </option>
               ))}
           </select>
         </div>
 
-        {/* Row 6: Rate Metric, Quantity, Rate */}
+        {/* Row 5 */}
         <div class="grid grid-cols-3 gap-4">
           <div>
             <label class="block text-sm font-medium mb-1">Rate Metric</label>
             <select name="rateMetric" class="input w-full" required>
-              <option value="ton">Tons</option>
-              <option value="mile">Miles</option>
-              <option value="hour">Hours</option>
+              <option value="ton" selected={haul.rateMetric === 'ton'}>Tons</option>
+              <option value="mile" selected={haul.rateMetric === 'mile'}>Miles</option>
+              <option value="hour" selected={haul.rateMetric === 'hour'}>Hours</option>
             </select>
           </div>
           <div>
@@ -299,6 +266,7 @@ export default component$(() => {
               step="0.01"
               class="input w-full"
               required
+              value={haul.quantity}
             />
           </div>
           <div>
@@ -309,11 +277,18 @@ export default component$(() => {
               step="0.01"
               class="input w-full"
               required
-              value={selectedRate.value ?? ''}
+              value={selectedRate.value ?? haul.rate}
             />
           </div>
         </div>
 
+        {/* Conditionally show CH Invoice for flatbed */}
+        {selectedLoadType.value === 'flatbed' && (
+          <div>
+            <label class="block text-sm font-medium mb-1">CH Invoice #</label>
+            <input name="chInvoice" type="text" class="input w-full" value={haul.chInvoice || ''} />
+          </div>
+        )}
 
         {/* Buttons */}
         <div class="flex justify-end items-center mt-4">
@@ -328,7 +303,7 @@ export default component$(() => {
               type="submit"
               class="px-4 py-2 bg-blue-600 text-white rounded hover:bg-blue-700"
             >
-              Save
+              Update Haul
             </button>
           </div>
         </div>
@@ -338,7 +313,7 @@ export default component$(() => {
           <div class="text-red-600">{action.value.error}</div>
         )}
         {action.value?.success && (
-          <div class="text-green-600">Haul created! Redirecting…</div>
+          <div class="text-green-600">Haul updated! Redirecting…</div>
         )}
       </Form>
     </div>

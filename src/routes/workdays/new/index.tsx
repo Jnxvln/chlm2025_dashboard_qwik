@@ -170,7 +170,7 @@ export default component$(() => {
                   for="chHours"
                   class="block text-sm font-medium text-gray-700 mb-2"
                 >
-                  Commission Hours *
+                  C&H Hours *
                 </label>
                 <input
                   type="number"

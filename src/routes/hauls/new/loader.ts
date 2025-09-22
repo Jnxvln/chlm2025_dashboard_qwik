@@ -6,7 +6,7 @@ export const useNewHaulLoader = routeLoader$(async (event) => {
   const url = event.url;
   const driverId = parseInt(url.searchParams.get('driver') || '', 10);
   const rawDate =
-    url.searchParams.get('startDate') || new Date().toISOString().split('T')[0]; // fallback to today
+    url.searchParams.get('date') || url.searchParams.get('startDate') || new Date().toISOString().split('T')[0]; // fallback to today
 
   // Fetch all drivers
   const drivers = await db.driver.findMany({
@@ -23,6 +23,9 @@ export const useNewHaulLoader = routeLoader$(async (event) => {
   console.log('loader running:', {
     driverId,
     rawDate,
+    dateParam: url.searchParams.get('date'),
+    startDateParam: url.searchParams.get('startDate'),
+    actualDateUsed: rawDate
   });
 
   if (!driverId || !rawDate) {
@@ -52,9 +55,23 @@ export const useNewHaulLoader = routeLoader$(async (event) => {
     select: { id: true },
   });
 
+  const vendors = await db.vendor.findMany({
+    where: { isActive: true },
+    include: {
+      vendorLocations: {
+        where: { isActive: true },
+        orderBy: { name: 'asc' },
+      },
+    },
+    orderBy: { name: 'asc' },
+  });
+
   const vendorProducts = await db.vendorProduct.findMany({
     where: { isActive: true },
-    include: { vendor: true },
+    include: {
+      vendor: true,
+      vendorLocation: true,
+    },
     orderBy: [{ name: 'asc' }],
   });
 
@@ -67,6 +84,7 @@ export const useNewHaulLoader = routeLoader$(async (event) => {
   return {
     workdayId: workday.id,
     createdById: user?.id || 1,
+    vendors,
     vendorProducts,
     freightRoutes,
     haulDate: dateStr,
