@@ -174,3 +174,19 @@ model FreightRoute {
   vendorLocation        VendorLocation      @relation(fields: [vendorLocationId], references: [id])
   vendorLocationId      Int
 }
+
+// TODO: Real customer data, please encrypt (don't forget to decrypt when reading)
+model WaitlistEntry {
+  id                    Int                 @id @default(autoincrement())
+  firstName             String              // (`firstName` should be encrypted)
+  lastName              String              // (`lastName` should be encrypted)
+  phone                 String              // Required to contact customer upon resource arrival. (`phone` should be encrypted)
+  email                 String?             // Optional. (`email` should be encrypted)
+  resource              String              // The thing(s) being waited on (i.e. product, service, etc.) - Does NOT need to be encrypted
+  quantity              String?             // Quantity needed (i.e. "2 yards", "1 pallet", etc.)
+  status                String              @default("waiting") // "waiting", "contacted", "fulfilled", "cancelled"
+  contactedAt           DateTime?           // When customer was last contacted
+  notes                 String?             // Any additional notes (`notes` should be encrypted) 
+  createdAt             DateTime            @default(now())
+  updatedAt             DateTime            @default(now())
+}
