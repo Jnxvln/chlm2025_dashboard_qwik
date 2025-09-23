@@ -280,16 +280,21 @@ export default component$(() => {
             </a>
 
             <a
-              href="#"
+              href={
+                isSummaryEnabled
+                  ? (() => {
+                      const url = new URLSearchParams();
+                      url.set('driverId', data.value.currentDriverId!.toString());
+                      url.set('startDate', data.value.currentStartDate!);
+                      url.set('endDate', data.value.currentEndDate!);
+                      return `/reports/hauls?${url.toString()}`;
+                    })()
+                  : '#'
+              }
               class={isSummaryEnabled ? 'btn btn-secondary' : 'btn btn-ghost'}
               onClick$={(e) => {
                 if (!isSummaryEnabled) {
                   e.preventDefault();
-                } else {
-                  // TODO: link to summary page
-                  // const url = new URL('/hauls/summary', window.location.origin);
-                  // url.searchParams.set(...);
-                  // window.location.href = url.toString();
                 }
               }}
             >

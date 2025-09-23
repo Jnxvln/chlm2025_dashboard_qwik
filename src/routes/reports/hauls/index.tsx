@@ -1,0 +1,299 @@
+import { component$, $ } from '@builder.io/qwik';
+import { useNavigate } from '@builder.io/qwik-city';
+export { useHaulsSummaryLoader } from './loader';
+import { useHaulsSummaryLoader } from './loader';
+import { EditIcon } from '~/components/icons';
+
+function formatDate(date: string | Date) {
+  return new Date(date).toLocaleDateString('en-US', {
+    month: '2-digit',
+    day: '2-digit',
+    year: 'numeric',
+  });
+}
+
+function formatCurrency(amount: number) {
+  return new Intl.NumberFormat('en-US', {
+    style: 'currency',
+    currency: 'USD',
+    minimumFractionDigits: 2,
+    maximumFractionDigits: 2,
+  }).format(amount);
+}
+
+const NC_RATE = 20.00; // $20.00 constant for now
+
+export default component$(() => {
+  const data = useHaulsSummaryLoader();
+  const nav = useNavigate();
+
+  const handlePrint = $(() => {
+    window.print();
+  });
+
+  const handleBack = $(() => {
+    const returnUrl = `/hauls?driver=${data.value.driver.id}&startDate=${data.value.startDate}&endDate=${data.value.endDate}`;
+    nav(returnUrl);
+  });
+
+  // Calculate totals
+  let totalFreightPay = 0;
+  let totalDriverPay = 0;
+
+  // Track unique workdays to avoid double-counting hours
+  const seenWorkdayIds = new Set<number>();
+  let totalChHours = 0;
+  let totalNcHours = 0;
+
+  const haulsWithCalculations = data.value.allHauls.map((haul, index) => {
+    const freightPay = haul.quantity * haul.rate;
+    const driverPayRate = haul.loadType === 'enddump'
+      ? data.value.driver.endDumpPayRate
+      : data.value.driver.flatBedPayRate;
+    const driverPay = freightPay * driverPayRate;
+
+    totalFreightPay += freightPay;
+    totalDriverPay += driverPay;
+
+    // Only count hours once per workday
+    if (!seenWorkdayIds.has(haul.workday.id)) {
+      totalChHours += haul.workday.chHours;
+      totalNcHours += haul.workday.ncHours;
+      seenWorkdayIds.add(haul.workday.id);
+    }
+
+    // Determine if this is the first haul of the day
+    const isFirstHaulOfDay = index === 0 ||
+      formatDate(data.value.allHauls[index - 1].dateHaul) !== formatDate(haul.dateHaul);
+
+    return {
+      ...haul,
+      freightPay,
+      driverPay,
+      isFirstHaulOfDay,
+    };
+  });
+
+  const ncTotal = totalNcHours * NC_RATE;
+  const driverTotal = totalDriverPay + ncTotal;
+
+  return (
+    <>
+      <style>
+        {`
+          @media print {
+            .no-print {
+              display: none !important;
+            }
+            body {
+              background: white !important;
+              color: black !important;
+            }
+            .print-page {
+              background: white !important;
+              color: black !important;
+              margin: 0 !important;
+              padding: 1.5rem 1.5rem 1.5rem 2rem !important;
+              box-shadow: none !important;
+              max-width: none !important;
+            }
+          }
+
+          .print-page {
+            background: white;
+            color: black;
+            min-height: 100vh;
+            padding: 1.5rem 1.5rem 1.5rem 2rem;
+            max-width: 8.5in;
+            margin: 0 auto;
+          }
+
+          .report-header {
+            text-align: center;
+          }
+
+          .report-header h1 {
+            font-size: 0.875rem;
+            font-weight: bold;
+            margin: 0;
+            padding: 0;
+          }
+
+          .report-header h2 {
+            font-size: 1.25rem;
+            font-weight: bold;
+            margin: 0;
+            padding: 0;
+            margin-bottom: 0.5rem;
+          }
+
+          .report-info {
+            display: flex;
+            justify-content: space-between;
+            margin-bottom: 1rem;
+          }
+
+          .report-table {
+            width: 100%;
+            border-collapse: collapse;
+            margin-bottom: 1rem;
+            font-size: 0.75rem;
+          }
+
+          .report-table th,
+          .report-table td {
+            border: 1px solid black;
+            padding: 0.125rem 0.25rem;
+            text-align: left;
+            line-height: 1.2;
+          }
+
+          .report-table th {
+            background-color: #f5f5f5;
+            font-weight: bold;
+          }
+
+          .report-table td.number {
+            text-align: right;
+          }
+
+          .summary-section {
+            display: grid;
+            grid-template-columns: 1fr 1fr 1fr;
+            gap: 2rem;
+            margin-top: 1rem;
+            padding-top: 1rem;
+            border-top: 1px solid black;
+            font-size: 0.8rem;
+          }
+
+          .summary-column > div {
+            margin-bottom: 0.25rem;
+          }
+
+          .summary-column .bold {
+            font-weight: bold;
+          }
+        `}
+      </style>
+
+      <div class="print-page">
+        {/* Action Buttons - No Print */}
+        <div class="no-print mb-4 flex gap-2">
+          <button onClick$={handleBack} class="btn btn-secondary">
+            ← Back
+          </button>
+          <button onClick$={handlePrint} class="btn btn-primary">
+            🖨 Print
+          </button>
+        </div>
+
+        {/* Report Header */}
+        <div class="report-header">
+          <h1>C&H Trucking</h1>
+          <h2>Haul Summary</h2>
+        </div>
+
+        {/* Report Info Row */}
+        <div class="report-info">
+          <div>
+            <strong>Driver:</strong> {data.value.driver.firstName} {data.value.driver.lastName}
+          </div>
+          <div>
+            <strong>Period:</strong> {formatDate(data.value.startDate)} - {formatDate(data.value.endDate)}
+          </div>
+        </div>
+
+        {/* Hauls Table */}
+        {data.value.allHauls.length === 0 ? (
+          <div style="text-align: center; margin: 2rem 0;">
+            <p>No hauls recorded for this period</p>
+          </div>
+        ) : (
+          <table class="report-table">
+            <thead>
+              <tr>
+                <th>Date</th>
+                <th>Cust</th>
+                <th>Ref #</th>
+                <th>CH Inv</th>
+                <th>Material</th>
+                <th>From</th>
+                <th>To</th>
+                <th>Qty</th>
+                <th>Metric</th>
+                <th>Rate</th>
+                <th>CH Hrs</th>
+                <th>NC Hrs</th>
+                <th>Freight Pay</th>
+                <th>Driver Pay</th>
+                <th class="no-print">Actions</th>
+              </tr>
+            </thead>
+            <tbody>
+              {haulsWithCalculations.map((haul) => (
+                <tr key={haul.id}>
+                  <td>{formatDate(haul.dateHaul)}</td>
+                  <td>{haul.customer}</td>
+                  <td>{haul.loadRefNum || '—'}</td>
+                  <td>{haul.chInvoice || '—'}</td>
+                  <td>{haul.vendorProduct.name}</td>
+                  <td>{haul.vendorProduct.vendor.shortName}-{haul.vendorProduct.vendorLocation.name}</td>
+                  <td>{haul.freightRoute.destination}</td>
+                  <td class="number">{haul.quantity.toFixed(2)}</td>
+                  <td>{haul.rateMetric}</td>
+                  <td class="number">{formatCurrency(haul.rate)}</td>
+                  <td class="number">{haul.isFirstHaulOfDay ? haul.workday.chHours.toFixed(2) : '—'}</td>
+                  <td class="number">{haul.isFirstHaulOfDay ? haul.workday.ncHours.toFixed(2) : '—'}</td>
+                  <td class="number">{formatCurrency(haul.freightPay)}</td>
+                  <td class="number">{formatCurrency(haul.driverPay)}</td>
+                  <td class="no-print text-center">
+                    <a
+                      href={`/hauls/edit/${haul.id}?returnTo=${encodeURIComponent(`/reports/hauls?driverId=${data.value.driver.id}&startDate=${data.value.startDate}&endDate=${data.value.endDate}`)}`}
+                      title="Edit Haul"
+                      class="btn-icon btn-icon-primary"
+                    >
+                      <EditIcon size={14} />
+                    </a>
+                  </td>
+                </tr>
+              ))}
+            </tbody>
+          </table>
+        )}
+
+        {/* Summary Section */}
+        <div class="summary-section">
+          {/* Left Column */}
+          <div class="summary-column">
+            <div><strong>C&H Hours:</strong> {totalChHours.toFixed(2)}</div>
+            <div><strong>NC Hours:</strong> {totalNcHours.toFixed(2)}</div>
+            <div><strong>NC Rate:</strong> {formatCurrency(NC_RATE)}</div>
+          </div>
+
+          {/* Middle Column */}
+          <div class="summary-column">
+            <div><strong>NC Reasons:</strong></div>
+            {data.value.totals.ncReasonDetails.length > 0 ? (
+              data.value.totals.ncReasonDetails.map((reason, index) => (
+                <div key={index} style="margin-bottom: 0.125rem;">{reason}</div>
+              ))
+            ) : (
+              <div>None</div>
+            )}
+          </div>
+
+          {/* Right Column */}
+          <div class="summary-column">
+            <div><strong>Total Freight Pay:</strong> {formatCurrency(totalFreightPay)}</div>
+            <div><strong>Driver Subtotal:</strong> {formatCurrency(totalDriverPay)}</div>
+            <div><strong>NC Total:</strong> {formatCurrency(ncTotal)}</div>
+            <div style="padding-top: 0.5rem; border-top: 1px solid black; margin-top: 0.5rem;">
+              <strong>Driver Total:</strong> {formatCurrency(driverTotal)}
+            </div>
+          </div>
+        </div>
+      </div>
+    </>
+  );
+});
