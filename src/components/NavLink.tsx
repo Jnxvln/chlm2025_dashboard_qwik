@@ -1,9 +1,12 @@
 import { Slot, component$ } from '@builder.io/qwik';
 import { Link, useLocation, type LinkProps } from '@builder.io/qwik-city';
 
-type NavLinkProps = LinkProps & { activeClass?: string };
+type NavLinkProps = LinkProps & {
+  activeClass?: string;
+  activeStyle?: string;
+};
 
-export const NavLink = component$(({ activeClass, ...props }: NavLinkProps) => {
+export const NavLink = component$(({ activeClass, activeStyle, ...props }: NavLinkProps) => {
   const location = useLocation();
   const currentPath = location.url.pathname;
   const targetPath = props.href ?? '';
@@ -16,6 +19,7 @@ export const NavLink = component$(({ activeClass, ...props }: NavLinkProps) => {
     <Link
       {...props}
       class={[props.class, isActive && activeClass ? activeClass : '']}
+      style={isActive && activeStyle ? activeStyle : props.style}
     >
       <Slot />
     </Link>

@@ -70,101 +70,118 @@ export default component$(() => {
         <BackButton />
       </div>
 
-      <Form action={createDriverAction} class="mt-4 flex flex-col max-w-xl">
-        <div class="flex my-2 items-center gap-2">
-          <input
-            name="firstName"
-            type="text"
-            placeholder="First Name *"
-            required
-          />
-          <input
-            name="lastName"
-            type="text"
-            placeholder="Last Name *"
-            required
-          />
-          <input name="defaultTruck" type="text" placeholder="Truck #" />
+      <div class="card mt-4 max-w-xl">
+        <Form action={createDriverAction} class="flex flex-col gap-4">
+        <div class="grid grid-cols-2 gap-4">
+          <div>
+            <label class="block text-sm font-medium mb-2" style="color: rgb(var(--color-text-secondary))">First Name *</label>
+            <input
+              name="firstName"
+              type="text"
+              required
+              class="w-full"
+            />
+          </div>
+          <div>
+            <label class="block text-sm font-medium mb-2" style="color: rgb(var(--color-text-secondary))">Last Name *</label>
+            <input
+              name="lastName"
+              type="text"
+              required
+              class="w-full"
+            />
+          </div>
+        </div>
+        <div>
+          <label class="block text-sm font-medium mb-2" style="color: rgb(var(--color-text-secondary))">Default Truck #</label>
+          <input name="defaultTruck" type="text" class="w-full" />
         </div>
 
-        <input
-          name="endDumpPayRate"
-          type="number"
-          min={0}
-          step={0.01}
-          placeholder="End Dump Pay Rate *"
-          class="my-2"
-          required
-        />
-        <input
-          name="flatBedPayRate"
-          type="number"
-          min={0}
-          step={0.01}
-          placeholder="Flatbed Pay Rate *"
-          class="my-2"
-          required
-        />
-        <input
-          name="nonCommissionRate"
-          type="number"
-          min={0}
-          step={0.01}
-          placeholder="Non-commission Rate *"
-          class="my-2"
-          required
-        />
-
-        <div class="flex my-2 items-center gap-2">
+        <div>
+          <label class="block text-sm font-medium mb-2" style="color: rgb(var(--color-text-secondary))">End Dump Pay Rate *</label>
           <input
-            name="dateHired"
-            type="datetime-local"
-            placeholder="Date Hired"
+            name="endDumpPayRate"
+            type="number"
+            min={0}
+            step={0.01}
+            required
+            class="w-full"
           />
+        </div>
+        <div>
+          <label class="block text-sm font-medium mb-2" style="color: rgb(var(--color-text-secondary))">Flatbed Pay Rate *</label>
           <input
-            name="dateReleased"
-            type="datetime-local"
-            placeholder="Date Released"
+            name="flatBedPayRate"
+            type="number"
+            min={0}
+            step={0.01}
+            required
+            class="w-full"
+          />
+        </div>
+        <div>
+          <label class="block text-sm font-medium mb-2" style="color: rgb(var(--color-text-secondary))">Non-commission Rate *</label>
+          <input
+            name="nonCommissionRate"
+            type="number"
+            min={0}
+            step={0.01}
+            required
+            class="w-full"
           />
         </div>
 
-        <div class="flex items-center my-3 mb-4">
-          <label for="isActive" class="mr-2 hover:cursor-pointer">
-            Is Active
-          </label>
+        <div class="grid grid-cols-2 gap-4">
+          <div>
+            <label class="block text-sm font-medium mb-2" style="color: rgb(var(--color-text-secondary))">Date Hired</label>
+            <input
+              name="dateHired"
+              type="datetime-local"
+              class="w-full"
+            />
+          </div>
+          <div>
+            <label class="block text-sm font-medium mb-2" style="color: rgb(var(--color-text-secondary))">Date Released</label>
+            <input
+              name="dateReleased"
+              type="datetime-local"
+              class="w-full"
+            />
+          </div>
+        </div>
+
+        <div class="flex items-center gap-2">
           <input
             name="isActive"
             type="checkbox"
             id="isActive"
             value="true"
             checked
-            class="hover:cursor-pointer"
+            style="accent-color: rgb(var(--color-primary))"
           />
+          <label for="isActive" class="text-sm font-medium" style="color: rgb(var(--color-text-primary))">
+            Is Active
+          </label>
         </div>
 
-        <div>
-          <button
-            type="submit"
-            class="bg-emerald-600 text-white px-4 py-1 rounded-lg hover:bg-emerald-700 hover:cursor-pointer transition-colors duration-150 ease-in-out"
-          >
-            Submit
-          </button>
-        </div>
+        <button
+          type="submit"
+          class="btn btn-primary"
+        >
+          Create Driver
+        </button>
       </Form>
+      </div>
 
-      {createDriverAction.value?.error ? (
-        <div>
-          <strong class="font-bold text-red-500">Error: </strong>
-          <span>{createDriverAction.value.error}</span>
+      {createDriverAction.value?.error && (
+        <div class="mt-4 p-3 rounded-lg" style="background-color: rgb(var(--color-danger) / 0.1); color: rgb(var(--color-danger))">
+          Error: {createDriverAction.value.error}
         </div>
-      ) : createDriverAction.value?.success ? (
-        <div class="text-foreground">
-          <strong class="font-bold text-green-500">
-            Driver created! <span>Redirecting...</span>
-          </strong>
+      )}
+      {createDriverAction.value?.success && (
+        <div class="mt-4 p-3 rounded-lg" style="background-color: rgb(var(--color-success) / 0.1); color: rgb(var(--color-success))">
+          Driver created! Redirecting...
         </div>
-      ) : (
-        <div></div>
       )}
     </section>
   );

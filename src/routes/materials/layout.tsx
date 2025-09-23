@@ -11,14 +11,14 @@ export default component$(() => {
       <div class="mb-6 gap-2 flex flex-row flex-wrap">
         <NavLink
           href="/materials"
-          class="font-semibold outline text-emerald-700 outline-emerald-700 rounded-3xl hover:bg-emerald-600 hover:outline-0 hover:text-white px-3 py-1.5 transition-colors duration-150 ease-in-out"
+          class="btn btn-accent btn-sm"
         >
           Materials
         </NavLink>
 
         <NavLink
           href="/materials/categories"
-          class="font-semibold outline text-emerald-700 outline-emerald-700 rounded-3xl hover:bg-emerald-600 hover:outline-0 hover:text-white px-3 py-1.5 transition-colors duration-150 ease-in-out"
+          class="btn btn-accent btn-sm"
         >
           Categories
         </NavLink>

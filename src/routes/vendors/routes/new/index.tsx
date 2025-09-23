@@ -102,17 +102,18 @@ export default component$(() => {
         <BackButton />
       </div>
 
-      <Form
-        action={action}
-        class="space-y-4 bg-white p-6 rounded shadow max-w-lg"
-      >
+      <div class="card max-w-lg">
+        <Form
+          action={action}
+          class="space-y-4"
+        >
         {/* Vendor */}
         <div>
-          <label class="block font-medium mb-1">Vendor</label>
+          <label class="block text-sm font-medium mb-2" style="color: rgb(var(--color-text-secondary))">Vendor</label>
           <select
             name="vendorId"
             required
-            class="w-full rounded border border-gray-300 px-3 py-2 shadow-sm focus:outline-none focus:ring-2 focus:ring-emerald-500 focus:border-emerald-500 bg-white"
+            class="w-full"
             onChange$={(e) => {
               selectedVendorId.value = (e.target as HTMLSelectElement).value;
             }}
@@ -128,11 +129,11 @@ export default component$(() => {
 
         {/* Vendor Location */}
         <div>
-          <label class="block font-medium mb-1">Vendor Location</label>
+          <label class="block text-sm font-medium mb-2" style="color: rgb(var(--color-text-secondary))">Vendor Location</label>
           <select
             name="vendorLocationId"
             required
-            class="w-full rounded border border-gray-300 px-3 py-2 shadow-sm focus:outline-none focus:ring-2 focus:ring-emerald-500 focus:border-emerald-500 bg-white"
+            class="w-full"
           >
             <option value="">Select a location</option>
             {filteredLocations.value.map((loc) => (
@@ -145,45 +146,46 @@ export default component$(() => {
 
         {/* Destination */}
         <div>
-          <label class="block font-medium mb-1">Destination</label>
-          <input name="destination" type="text" class="input w-full" />
+          <label class="block text-sm font-medium mb-2" style="color: rgb(var(--color-text-secondary))">Destination</label>
+          <input name="destination" type="text" class="w-full" />
         </div>
 
         {/* Freight Cost */}
         <div>
-          <label class="block font-medium mb-1">Freight Cost (per ton)</label>
+          <label class="block text-sm font-medium mb-2" style="color: rgb(var(--color-text-secondary))">Freight Cost (per ton)</label>
           <input
             name="freightCost"
             type="number"
             step="0.01"
-            class="input w-full"
+            class="w-full"
           />
         </div>
 
         {/* Notes */}
         <div>
-          <label class="block font-medium mb-1">Notes</label>
-          <textarea name="notes" rows={4} class="input w-full"></textarea>
+          <label class="block text-sm font-medium mb-2" style="color: rgb(var(--color-text-secondary))">Notes</label>
+          <textarea name="notes" rows={4} class="w-full"></textarea>
         </div>
 
         {/* Active toggle */}
         <div class="flex items-center gap-2">
-          <input name="isActive" type="checkbox" checked />
-          <label>Active</label>
+          <input name="isActive" type="checkbox" checked style="accent-color: rgb(var(--color-primary))" />
+          <label class="text-sm font-medium" style="color: rgb(var(--color-text-primary))">Active</label>
         </div>
 
         <button
           type="submit"
-          class="bg-emerald-600 text-white px-4 py-2 rounded hover:bg-emerald-700"
+          class="btn btn-primary"
         >
           Save Freight Route
         </button>
       </Form>
+      </div>
 
       {action.value?.success && (
-        <p class="text-green-700 mt-4">
+        <div class="mt-4 p-3 rounded-lg" style="background-color: rgb(var(--color-success) / 0.1); color: rgb(var(--color-success))">
           Freight Route created! ID: {action.value.id}
-        </p>
+        </div>
       )}
     </section>
   );

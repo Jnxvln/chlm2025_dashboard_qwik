@@ -66,69 +66,70 @@ export default component$(() => {
         <BackButton />
       </div>
 
-      <Form
-        action={createVendorLocationAction}
-        class="mt-4 flex flex-col max-w-xl"
-      >
-        <input
-          name="name"
-          type="text"
-          placeholder="Location Name *"
-          class="my-2"
-          defaultValue="Main"
-          required
-        />
-
-        <select
-          name="vendorId"
-          class="my-2 border border-gray-300 rounded p-2"
-          required
+      <div class="card mt-4 max-w-xl">
+        <Form
+          action={createVendorLocationAction}
+          class="flex flex-col gap-4"
         >
+        <div>
+          <label class="block text-sm font-medium mb-2" style="color: rgb(var(--color-text-secondary))">Location Name *</label>
+          <input
+            name="name"
+            type="text"
+            defaultValue="Main"
+            required
+            class="w-full"
+          />
+        </div>
+
+        <div>
+          <label class="block text-sm font-medium mb-2" style="color: rgb(var(--color-text-secondary))">Vendor *</label>
+          <select
+            name="vendorId"
+            class="w-full"
+            required
+          >
           <option value="">Select Vendor *</option>
           {vendors.value.map((vendor) => (
             <option key={vendor.id} value={vendor.id}>
               {vendor.name} ({vendor.shortName})
             </option>
           ))}
-        </select>
+          </select>
+        </div>
 
-        <div class="flex items-center my-3 mb-4">
-          <label for="isActive" class="mr-2 hover:cursor-pointer">
-            Is Active
-          </label>
+        <div class="flex items-center gap-2">
           <input
             name="isActive"
             type="checkbox"
             id="isActive"
             value="true"
             checked
-            class="hover:cursor-pointer"
+            style="accent-color: rgb(var(--color-primary))"
           />
+          <label for="isActive" class="text-sm font-medium" style="color: rgb(var(--color-text-primary))">
+            Is Active
+          </label>
         </div>
 
-        <div>
-          <button
-            type="submit"
-            class="bg-emerald-600 text-white px-4 py-1 rounded-lg hover:bg-emerald-700 hover:cursor-pointer transition-colors duration-150 ease-in-out"
-          >
-            Submit
-          </button>
-        </div>
+        <button
+          type="submit"
+          class="btn btn-primary"
+        >
+          Create Vendor Location
+        </button>
       </Form>
+      </div>
 
-      {createVendorLocationAction.value?.error ? (
-        <div>
-          <strong class="font-bold text-red-500">Error: </strong>
-          <span>{createVendorLocationAction.value.error}</span>
+      {createVendorLocationAction.value?.error && (
+        <div class="mt-4 p-3 rounded-lg" style="background-color: rgb(var(--color-danger) / 0.1); color: rgb(var(--color-danger))">
+          Error: {createVendorLocationAction.value.error}
         </div>
-      ) : createVendorLocationAction.value?.success ? (
-        <div class="text-foreground">
-          <strong class="font-bold text-green-500">
-            Vendor location created! <span>Redirecting...</span>
-          </strong>
+      )}
+      {createVendorLocationAction.value?.success && (
+        <div class="mt-4 p-3 rounded-lg" style="background-color: rgb(var(--color-success) / 0.1); color: rgb(var(--color-success))">
+          Vendor location created! Redirecting...
         </div>
-      ) : (
-        <div></div>
       )}
     </section>
   );

@@ -1,8 +1,10 @@
 {
   "permissions": {
-    "defaultMode": "acceptEdits",
     "allow": [
-      "WebFetch(domain:docs.claude.com)"
-    ]
+      "WebFetch(domain:docs.claude.com)",
+      "Bash(npm run dev:*)",
+      "Bash(npm run build.types:*)"
+    ],
+    "defaultMode": "acceptEdits"
   }
 }

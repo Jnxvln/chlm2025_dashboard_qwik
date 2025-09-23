@@ -1,6 +1,8 @@
 import { component$ } from '@builder.io/qwik';
 import { routeLoader$, Link } from '@builder.io/qwik-city';
 import { db } from '~/lib/db';
+import { EditIcon, DeleteIcon } from '~/components/icons';
+import { NavLink } from '~/components/NavLink';
 
 export const useMaterialCategoriesLoader = routeLoader$(async () => {
   const categories = await db.materialCategory.findMany({
@@ -21,76 +23,91 @@ export default component$(() => {
   return (
     <div class="container mx-auto p-6">
       <div class="flex justify-between items-center mb-6">
-        <h1 class="text-3xl font-bold">Material Categories</h1>
-        <Link
+        <h1 class="text-3xl font-bold" style="color: rgb(var(--color-text-primary))">Material Categories</h1>
+        <NavLink
           href="/materials/categories/new"
-          class="bg-blue-500 hover:bg-blue-700 text-white font-bold py-2 px-4 rounded"
+          class="btn btn-primary"
         >
-          Add New Category
-        </Link>
+          + Add New Category
+        </NavLink>
       </div>
 
-      <div class="bg-white shadow-md rounded-lg overflow-hidden">
-        <table class="min-w-full">
-          <thead class="bg-gray-50">
+      <div class="flex gap-4 mb-6">
+        <NavLink
+          href="/materials"
+          class="btn btn-ghost"
+        >
+          ← Materials
+        </NavLink>
+      </div>
+
+      <div class="table-container overflow-x-auto">
+        <table class="table-modern">
+          <thead>
             <tr>
-              <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
+              <th class="text-left">
                 Name
               </th>
-              <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
+              <th class="text-left">
                 Materials Count
               </th>
-              <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
+              <th class="text-left">
                 Created
               </th>
-              <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
+              <th class="text-center">
                 Actions
               </th>
             </tr>
           </thead>
-          <tbody class="bg-white divide-y divide-gray-200">
+          <tbody>
             {categories.value.map((category) => (
-              <tr key={category.id} class="hover:bg-gray-50">
-                <td class="px-6 py-4 whitespace-nowrap text-sm font-medium text-gray-900">
+              <tr key={category.id}>
+                <td class="whitespace-nowrap font-medium">
                   {category.name}
                 </td>
-                <td class="px-6 py-4 whitespace-nowrap text-sm text-gray-500">
-                  {category._count.materials}
+                <td class="whitespace-nowrap">
+                  <span class="badge badge-secondary">
+                    {category._count.materials} materials
+                  </span>
                 </td>
-                <td class="px-6 py-4 whitespace-nowrap text-sm text-gray-500">
+                <td class="whitespace-nowrap" style="color: rgb(var(--color-text-secondary))">
                   {new Date(category.createdAt).toLocaleDateString()}
                 </td>
-                <td class="px-6 py-4 whitespace-nowrap text-sm font-medium space-x-2">
-                  <Link
-                    href={`/materials/categories/${category.id}/edit`}
-                    class="text-indigo-600 hover:text-indigo-900"
-                  >
-                    Edit
-                  </Link>
-                  <Link
-                    href={`/materials/categories/${category.id}/delete`}
-                    class="text-red-600 hover:text-red-900"
-                  >
-                    Delete
-                  </Link>
+                <td class="text-center">
+                  <div class="flex justify-center items-center gap-2">
+                    <NavLink
+                      href={`/materials/categories/${category.id}/edit`}
+                      class="btn-icon btn-icon-primary"
+                      title="Edit category"
+                    >
+                      <EditIcon />
+                    </NavLink>
+                    <NavLink
+                      href={`/materials/categories/${category.id}/delete`}
+                      class="btn-icon btn-icon-danger"
+                      title="Delete category"
+                    >
+                      <DeleteIcon />
+                    </NavLink>
+                  </div>
                 </td>
               </tr>
             ))}
           </tbody>
         </table>
-
-        {categories.value.length === 0 && (
-          <div class="text-center py-12">
-            <p class="text-gray-500">No material categories found.</p>
-            <Link
-              href="/materials/categories/new"
-              class="mt-4 inline-block bg-blue-500 hover:bg-blue-700 text-white font-bold py-2 px-4 rounded"
-            >
-              Create your first category
-            </Link>
-          </div>
-        )}
       </div>
+
+      {categories.value.length === 0 && (
+        <div class="card text-center py-12">
+          <p class="mb-4" style="color: rgb(var(--color-text-secondary))">No material categories found.</p>
+          <NavLink
+            href="/materials/categories/new"
+            class="btn btn-primary"
+          >
+            Create your first category
+          </NavLink>
+        </div>
+      )}
     </div>
   );
 });

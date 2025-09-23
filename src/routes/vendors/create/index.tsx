@@ -51,73 +51,79 @@ export default component$(() => {
     <section>
       <PageTitle text="New Vendor" />
 
-      <Form action={createVendorAction} class="mt-4 flex flex-col max-w-xl">
-        <div class="flex my-2 items-center gap-2">
-          <input name="name" type="text" placeholder="Vendor Name *" required />
+      <div class="card mt-4 max-w-xl">
+        <Form action={createVendorAction} class="flex flex-col gap-4">
+        <div class="grid grid-cols-2 gap-4">
+          <div>
+            <label class="block text-sm font-medium mb-2" style="color: rgb(var(--color-text-secondary))">Vendor Name *</label>
+            <input name="name" type="text" required class="w-full" />
+          </div>
+          <div>
+            <label class="block text-sm font-medium mb-2" style="color: rgb(var(--color-text-secondary))">Short Name *</label>
+            <input
+              name="shortName"
+              type="text"
+              required
+              class="w-full"
+            />
+          </div>
+        </div>
+
+        <div>
+          <label class="block text-sm font-medium mb-2" style="color: rgb(var(--color-text-secondary))">CHT Fuel Surcharge *</label>
           <input
-            name="shortName"
-            type="text"
-            placeholder="Short Name *"
+            name="chtFuelSurcharge"
+            type="number"
+            min={0}
+            step={0.01}
             required
+            class="w-full"
+          />
+        </div>
+        <div>
+          <label class="block text-sm font-medium mb-2" style="color: rgb(var(--color-text-secondary))">Vendor Fuel Surcharge *</label>
+          <input
+            name="vendorFuelSurcharge"
+            type="number"
+            min={0}
+            step={0.01}
+            required
+            class="w-full"
           />
         </div>
 
-        <input
-          name="chtFuelSurcharge"
-          type="number"
-          min={0}
-          step={0.01}
-          placeholder="CHT Fuel Surcharge *"
-          class="my-2"
-          required
-        />
-        <input
-          name="vendorFuelSurcharge"
-          type="number"
-          min={0}
-          step={0.01}
-          placeholder="Vendor Fuel Surcharge *"
-          class="my-2"
-          required
-        />
-
-        <div class="flex items-center my-3 mb-4">
-          <label for="isActive" class="mr-2 hover:cursor-pointer">
-            Is Active
-          </label>
+        <div class="flex items-center gap-2">
           <input
             name="isActive"
             type="checkbox"
             id="isActive"
             value="true"
             checked
-            class="hover:cursor-pointer"
+            style="accent-color: rgb(var(--color-primary))"
           />
+          <label for="isActive" class="text-sm font-medium" style="color: rgb(var(--color-text-primary))">
+            Is Active
+          </label>
         </div>
 
-        <div>
-          <button
-            type="submit"
-            class="bg-emerald-600 text-white px-4 py-1 rounded-lg hover:bg-emerald-700 hover:cursor-pointer transition-colors duration-150 ease-in-out"
-          >
-            Submit
-          </button>
-        </div>
+        <button
+          type="submit"
+          class="btn btn-primary"
+        >
+          Create Vendor
+        </button>
       </Form>
+      </div>
 
-      {createVendorAction.value?.error ? (
-        <div>
-          <strong class="font-bold text-red-500">Error: </strong>
-          <span>{createVendorAction.value.error}</span>
+      {createVendorAction.value?.error && (
+        <div class="mt-4 p-3 rounded-lg" style="background-color: rgb(var(--color-danger) / 0.1); color: rgb(var(--color-danger))">
+          Error: {createVendorAction.value.error}
         </div>
-      ) : createVendorAction.value?.success ? (
-        <div class="text-foreground">
-          <strong class="font-bold text-green-500">
-            Vendor created! <span>Redirecting...</span>
-          </strong>
+      )}
+      {createVendorAction.value?.success && (
+        <div class="mt-4 p-3 rounded-lg" style="background-color: rgb(var(--color-success) / 0.1); color: rgb(var(--color-success))">
+          Vendor created! Redirecting...
         </div>
-      ) : (
-        <div></div>
       )}
     </section>
   );

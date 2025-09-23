@@ -6,16 +6,16 @@ export const FreightRoutesTable = component$(
     const nav = useNavigate();
 
     return (
-      <div class="overflow-x-auto shadow border border-gray-200 rounded-lg">
-        <table class="min-w-full text-sm text-left text-gray-800 bg-white">
-          <thead class="bg-gray-100 text-gray-600 uppercase text-xs tracking-wider">
+      <div class="table-container">
+        <table class="table-modern">
+          <thead>
             <tr>
-              <th class="px-4 py-3">Vendor</th>
-              <th class="px-4 py-3">Location</th>
-              <th class="px-4 py-3">Destination</th>
-              <th class="px-4 py-3">Freight Cost</th>
-              <th class="px-4 py-3">Status</th>
-              <th class="px-4 py-3 text-center">Actions</th>
+              <th>Vendor</th>
+              <th>Location</th>
+              <th>Destination</th>
+              <th>Freight Cost</th>
+              <th>Status</th>
+              <th>Actions</th>
             </tr>
           </thead>
           <tbody>
@@ -24,46 +24,42 @@ export const FreightRoutesTable = component$(
               return (
                 <tr
                   key={route.id}
-                  class={`border-t border-gray-200 transition-colors ${
-                    isNew ? 'bg-yellow-100/50' : 'hover:bg-gray-100'
-                  }`}
+                  class={isNew ? 'row-highlighted' : ''}
                 >
-                  <td class="px-4 py-3">{route.vendorLocation.vendor.name}</td>
-                  <td class="px-4 py-3">{route.vendorLocation.name}</td>
-                  <td class="px-4 py-3 font-medium">{route.destination}</td>
-                  <td class="px-4 py-3">
+                  <td>{route.vendorLocation.vendor.name}</td>
+                  <td>{route.vendorLocation.name}</td>
+                  <td class="font-medium">{route.destination}</td>
+                  <td>
                     ${route.freightCost.toFixed(2)} / ton
                   </td>
-                  <td class="px-4 py-3">
+                  <td>
                     <span
-                      class={`px-2 py-1 text-xs rounded-full ${
-                        route.isActive
-                          ? 'bg-green-100 text-green-800'
-                          : 'bg-red-100 text-red-800'
-                      }`}
+                      class={route.isActive ? 'badge badge-success' : 'badge badge-danger'}
                     >
                       {route.isActive ? 'Active' : 'Inactive'}
                     </span>
                   </td>
-                  <td class="px-4 py-3 text-center space-x-2">
-                    <button
-                      class="text-blue-600 hover:underline text-sm hover:cursor-pointer"
-                      onClick$={() => nav(`/vendors/routes/${route.id}/edit`)}
-                    >
-                      Edit
-                    </button>
-                    <button
-                      class="text-red-500 hover:underline text-sm hover:cursor-pointer"
-                      onClick$={() => {
-                        const confirmed = confirm(
-                          'Are you sure you want to delete this freight route?',
-                        );
-                        if (!confirmed) return;
-                        alert('Delete logic not wired in yet');
-                      }}
-                    >
-                      Delete
-                    </button>
+                  <td>
+                    <div class="flex gap-2">
+                      <button
+                        class="btn-icon btn-icon-primary"
+                        onClick$={() => nav(`/vendors/routes/${route.id}/edit`)}
+                      >
+                        Edit
+                      </button>
+                      <button
+                        class="btn-icon btn-icon-danger"
+                        onClick$={() => {
+                          const confirmed = confirm(
+                            'Are you sure you want to delete this freight route?',
+                          );
+                          if (!confirmed) return;
+                          alert('Delete logic not wired in yet');
+                        }}
+                      >
+                        Delete
+                      </button>
+                    </div>
                   </td>
                 </tr>
               );

@@ -86,68 +86,74 @@ export default component$(() => {
         <BackButton />
       </div>
 
-      <Form
-        action={updateVendorLocation}
-        class="mt-4 flex flex-col gap-4 bg-white border border-gray-200 shadow p-6 rounded-lg"
-      >
-        <input
-          name="name"
-          type="text"
-          value={vendorLocation.value.name}
-          required
-          placeholder="Location Name"
-          class="w-full border border-gray-300 rounded p-2"
-        />
-
-        <select
-          name="vendorId"
-          // value={vendorLocation.value.vendorId}
-          value={selectedVendorId.value ?? ''}
-          class="w-full border border-gray-300 rounded p-2"
-          required
-          onChange$={(e) => {
-            selectedVendorId.value = Number(
-              (e.target as HTMLSelectElement).value,
-            );
-          }}
+      <div class="card mt-4">
+        <Form
+          action={updateVendorLocation}
+          class="flex flex-col gap-4"
         >
+        <div>
+          <label class="block text-sm font-medium mb-2" style="color: rgb(var(--color-text-secondary))">Location Name *</label>
+          <input
+            name="name"
+            type="text"
+            value={vendorLocation.value.name}
+            required
+            class="w-full"
+          />
+        </div>
+
+        <div>
+          <label class="block text-sm font-medium mb-2" style="color: rgb(var(--color-text-secondary))">Vendor *</label>
+          <select
+            name="vendorId"
+            value={selectedVendorId.value ?? ''}
+            class="w-full"
+            required
+            onChange$={(e) => {
+              selectedVendorId.value = Number(
+                (e.target as HTMLSelectElement).value,
+              );
+            }}
+          >
           <option value="">Select Vendor *</option>
           {vendors.value.map((vendor) => (
             <option key={vendor.id} value={vendor.id}>
               {vendor.name} ({vendor.shortName})
             </option>
           ))}
-        </select>
+          </select>
+        </div>
 
-        <label class="inline-flex items-center gap-2 mt-2">
+        <div class="flex items-center gap-2">
           <input
             name="isActive"
             type="checkbox"
             value="true"
             checked={vendorLocation.value.isActive}
-            class="accent-emerald-600"
+            style="accent-color: rgb(var(--color-primary))"
           />
-          <span>Is Active</span>
-        </label>
+          <label class="text-sm font-medium" style="color: rgb(var(--color-text-primary))">Is Active</label>
+        </div>
 
         <button
           type="submit"
-          class="bg-emerald-600 text-white px-6 py-2 rounded hover:bg-emerald-700 transition-colors"
+          class="btn btn-primary"
         >
           Update Vendor Location
         </button>
 
         {updateVendorLocation.value?.error && (
-          <p class="text-red-600 font-medium">
+          <div class="p-3 rounded-lg" style="background-color: rgb(var(--color-danger) / 0.1); color: rgb(var(--color-danger))">
             {updateVendorLocation.value.error}
-          </p>
+          </div>
         )}
         {success.value && (
-          <p class="text-green-600 font-medium">
+          <div class="p-3 rounded-lg" style="background-color: rgb(var(--color-success) / 0.1); color: rgb(var(--color-success))">
             Vendor location updated! Redirecting...
-          </p>
+          </div>
         )}
       </Form>
+      </div>
     </section>
   );
 });

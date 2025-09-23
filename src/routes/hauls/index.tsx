@@ -3,6 +3,7 @@ export { useHaulsLoader } from './loader';
 import { useNavigate, routeAction$, zod$, z } from '@builder.io/qwik-city';
 import { useHaulsLoader } from './loader';
 import PageTitle from '~/components/PageTitle';
+import { AddIcon, EditIcon, DeleteIcon } from '~/components/icons';
 import { db } from '~/lib/db';
 
 export const useDeleteHaulAction = routeAction$(
@@ -148,14 +149,15 @@ export default component$(() => {
       <PageTitle text="Hauls" />
 
       {/* Filters */}
-      <div class="mb-6 bg-white p-4 rounded-lg shadow">
+      <div class="card mb-6">
         <div class="flex flex-wrap gap-4 items-end">
           {/* Driver Dropdown */}
           {data.value.drivers.length > 0 && (
             <div>
               <label
                 for="driver"
-                class="block text-sm font-medium text-gray-700 mb-1"
+                class="block text-sm font-medium mb-1"
+                style="color: rgb(var(--color-text-secondary))"
               >
                 Filter by Driver
               </label>
@@ -163,7 +165,6 @@ export default component$(() => {
               <select
                 id="driver"
                 name="driver"
-                class="px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500"
                 onChange$={(_, el) => {
                   const driverValue = el.value || '';
                   saveToLocalStorage(STORAGE_KEYS.driver, driverValue);
@@ -194,7 +195,8 @@ export default component$(() => {
           <div>
             <label
               for="startDate"
-              class="block text-sm font-medium text-gray-700 mb-1"
+              class="block text-sm font-medium mb-1"
+              style="color: rgb(var(--color-text-secondary))"
             >
               Start Date
             </label>
@@ -202,7 +204,6 @@ export default component$(() => {
               type="date"
               id="startDate"
               value={data.value.currentStartDate}
-              class="px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500"
               onChange$={(_, el) => {
                 const startDateValue = el.value;
                 saveToLocalStorage(STORAGE_KEYS.startDate, startDateValue);
@@ -222,7 +223,8 @@ export default component$(() => {
           <div>
             <label
               for="endDate"
-              class="block text-sm font-medium text-gray-700 mb-1"
+              class="block text-sm font-medium mb-1"
+              style="color: rgb(var(--color-text-secondary))"
             >
               End Date
             </label>
@@ -230,7 +232,6 @@ export default component$(() => {
               type="date"
               id="endDate"
               value={data.value.currentEndDate}
-              class="px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500"
               onChange$={(_, el) => {
                 const endDateValue = el.value;
                 saveToLocalStorage(STORAGE_KEYS.endDate, endDateValue);
@@ -246,8 +247,8 @@ export default component$(() => {
             />
           </div>
 
-          {/* Haul Summary Button */}
-          <div class="ml-auto">
+          {/* Action Buttons */}
+          <div class="ml-auto flex gap-2">
             <a
               href={
                 hasDriverSelected
@@ -273,22 +274,14 @@ export default component$(() => {
                   e.preventDefault();
                 }
               }}
-              class={`inline-block mr-2 px-4 py-2 rounded-md font-semibold ${
-                hasDriverSelected
-                  ? 'bg-blue-600 text-white hover:bg-blue-700'
-                  : 'bg-gray-300 text-white cursor-not-allowed'
-              }`}
+              class={hasDriverSelected ? 'btn btn-primary' : 'btn btn-ghost'}
             >
               New Haul
             </a>
 
             <a
               href="#"
-              class={`inline-block px-4 py-2 rounded-md text-white font-semibold ${
-                isSummaryEnabled
-                  ? 'bg-gray-800 hover:bg-gray-700'
-                  : 'bg-gray-300 cursor-not-allowed'
-              }`}
+              class={isSummaryEnabled ? 'btn btn-secondary' : 'btn btn-ghost'}
               onClick$={(e) => {
                 if (!isSummaryEnabled) {
                   e.preventDefault();
@@ -307,18 +300,20 @@ export default component$(() => {
       </div>
 
       {data.value.workdays.length === 0 ? (
-        <p class="text-gray-500 italic">No workdays found for selected filters.</p>
+        <div class="card text-center">
+          <p style="color: rgb(var(--color-text-secondary))">No workdays found for selected filters.</p>
+        </div>
       ) : (
-        <div class="overflow-x-auto">
-          <table class="min-w-full bg-white border border-gray-200 text-sm">
-            <thead class="bg-gray-100 text-gray-700 font-semibold">
+        <div class="table-container overflow-x-auto">
+          <table class="table-modern">
+            <thead>
               <tr>
-                <th class="px-3 py-2 text-left border">Date</th>
-                <th class="px-3 py-2 text-left border">Driver</th>
-                <th class="px-3 py-2 text-left border">CH Hours</th>
-                <th class="px-3 py-2 text-left border">NC Hours</th>
-                <th class="px-3 py-2 text-center border">Hauls</th>
-                <th class="px-3 py-2 text-center border">Actions</th>
+                <th>Date</th>
+                <th>Driver</th>
+                <th>CH Hours</th>
+                <th>NC Hours</th>
+                <th class="text-center">Hauls</th>
+                <th class="text-center">Actions</th>
               </tr>
             </thead>
             <tbody>
@@ -330,128 +325,138 @@ export default component$(() => {
                 return (
                   <>
                     {/* Main Workday Row */}
-                    <tr key={workday.id} class="hover:bg-gray-50">
-                      <td class="px-3 py-2 border whitespace-nowrap">
+                    <tr key={workday.id}>
+                      <td class="whitespace-nowrap font-medium">
                         {dateStr}
                       </td>
-                      <td class="px-3 py-2 border">
+                      <td>
                         <div class="font-medium">
                           {workday.driver.firstName} {workday.driver.lastName}
                         </div>
                         {workday.driver.defaultTruck && (
-                          <div class="text-xs text-gray-500">
+                          <div class="text-xs mt-1" style="color: rgb(var(--color-text-tertiary))">
                             Truck: {workday.driver.defaultTruck}
                           </div>
                         )}
                       </td>
-                      <td class="px-3 py-2 border">
-                        {workday.chHours} hrs
+                      <td>
+                        <span class="font-medium">{workday.chHours} hrs</span>
                       </td>
-                      <td class="px-3 py-2 border">
-                        {workday.ncHours} hrs
-                        {workday.ncReasons && (
-                          <div class="text-xs text-gray-500 mt-1">
-                            {workday.ncReasons}
-                          </div>
-                        )}
+                      <td>
+                        <div>
+                          <span class="font-medium">{workday.ncHours} hrs</span>
+                          {workday.ncReasons && (
+                            <div class="text-xs mt-1" style="color: rgb(var(--color-text-tertiary))">
+                              {workday.ncReasons}
+                            </div>
+                          )}
+                        </div>
                       </td>
-                      <td class="px-3 py-2 border text-center">
+                      <td class="text-center">
                         {haulCount === 0 ? (
                           <a
                             href={`/hauls/new?driver=${data.value.currentDriverId}&date=${dateStr}&startDate=${data.value.currentStartDate}&endDate=${data.value.currentEndDate}&returnTo=${encodeURIComponent(`/hauls?driver=${data.value.currentDriverId}&startDate=${data.value.currentStartDate}&endDate=${data.value.currentEndDate}`)}`}
-                            class="inline-flex items-center px-2 py-1 text-xs bg-blue-500 text-white rounded hover:bg-blue-600"
+                            class="btn btn-sm btn-primary"
                           >
-                            + Create Haul
+                            <AddIcon size={14} />
+                            Create Haul
                           </a>
                         ) : (
                           <button
                             onClick$={() => toggleRowExpansion(workday.id)}
-                            class="inline-flex items-center px-2 py-1 text-xs bg-gray-100 text-gray-700 rounded hover:bg-gray-200"
+                            class="btn btn-sm btn-ghost"
                           >
                             {haulCount} haul{haulCount !== 1 ? 's' : ''} {isExpanded ? '▼' : '▶'}
                           </button>
                         )}
                       </td>
-                      <td class="px-3 py-2 border text-center space-x-2">
-                        <a
-                          href={`/workdays/edit/${workday.id}?returnTo=${encodeURIComponent(`/hauls?driver=${data.value.currentDriverId}&startDate=${data.value.currentStartDate}&endDate=${data.value.currentEndDate}`)}`}
-                          title="Edit Workday"
-                          class="text-indigo-600 hover:text-indigo-900"
-                        >
-                          📅
-                        </a>
-                        {haulCount > 0 && (
+                      <td class="text-center">
+                        <div class="flex justify-center items-center gap-1">
                           <a
-                            href={`/hauls/new?driver=${data.value.currentDriverId}&date=${dateStr}&startDate=${data.value.currentStartDate}&endDate=${data.value.currentEndDate}&returnTo=${encodeURIComponent(`/hauls?driver=${data.value.currentDriverId}&startDate=${data.value.currentStartDate}&endDate=${data.value.currentEndDate}`)}`}
-                            title="Add Haul"
-                            class="text-green-600 hover:text-green-900"
+                            href={`/workdays/edit/${workday.id}?returnTo=${encodeURIComponent(`/hauls?driver=${data.value.currentDriverId}&startDate=${data.value.currentStartDate}&endDate=${data.value.currentEndDate}`)}`}
+                            title="Edit Workday"
+                            class="btn-icon btn-icon-primary"
                           >
-                            ➕
+                            <EditIcon size={16} />
                           </a>
-                        )}
+                          {haulCount > 0 && (
+                            <a
+                              href={`/hauls/new?driver=${data.value.currentDriverId}&date=${dateStr}&startDate=${data.value.currentStartDate}&endDate=${data.value.currentEndDate}&returnTo=${encodeURIComponent(`/hauls?driver=${data.value.currentDriverId}&startDate=${data.value.currentStartDate}&endDate=${data.value.currentEndDate}`)}`}
+                              title="Add Haul"
+                              class="btn-icon"
+                              style="color: rgb(var(--color-success))"
+                            >
+                              <AddIcon size={16} />
+                            </a>
+                          )}
+                        </div>
                       </td>
                     </tr>
 
                     {/* Expanded Hauls Row */}
                     {isExpanded && haulCount > 0 && (
                       <tr key={`${workday.id}-expanded`}>
-                        <td colspan="6" class="px-0 py-0 border-l border-r">
-                          <div class="bg-gray-50 p-3">
-                            <div class="overflow-x-auto">
-                              <table class="w-full text-xs">
-                                <thead class="bg-gray-200 text-gray-600">
+                        <td colSpan={6} class="p-0">
+                          <div style="background-color: rgb(var(--color-bg-secondary))" class="p-4">
+                            <div class="table-container">
+                              <table class="table-modern text-xs">
+                                <thead>
                                   <tr>
-                                    <th class="px-2 py-1 text-left">Customer / Invoices</th>
-                                    <th class="px-2 py-1 text-left">From → To</th>
-                                    <th class="px-2 py-1 text-left">Material / Tons / Rate</th>
-                                    <th class="px-2 py-1 text-left">Miles / Pay / Truck</th>
-                                    <th class="px-2 py-1 text-center">Actions</th>
+                                    <th class="text-left">Customer / Invoices</th>
+                                    <th class="text-left">From → To</th>
+                                    <th class="text-left">Material / Tons / Rate</th>
+                                    <th class="text-left">Miles / Pay / Truck</th>
+                                    <th class="text-center">Actions</th>
                                   </tr>
                                 </thead>
                                 <tbody>
                                   {workday.hauls.map((haul) => (
-                                    <tr key={haul.id} class="hover:bg-gray-100">
-                                      <td class="px-2 py-1">
+                                    <tr key={haul.id}>
+                                      <td>
                                         <div class="font-medium">{haul.customer}</div>
-                                        <div class="text-xs text-gray-500">
+                                        <div class="text-xs mt-1" style="color: rgb(var(--color-text-tertiary))">
                                           {haul.chInvoice && <span>CH: {haul.chInvoice} | </span>}Load/Ref: {haul.loadRefNum || '—'}
                                         </div>
                                       </td>
-                                      <td class="px-2 py-1">
-                                        <div>{haul.vendorProduct.vendor.shortName}-{haul.vendorProduct.vendorLocation.name}</div>
-                                        <div class="text-xs text-gray-500">
+                                      <td>
+                                        <div class="font-medium">{haul.vendorProduct.vendor.shortName}-{haul.vendorProduct.vendorLocation.name}</div>
+                                        <div class="text-xs mt-1" style="color: rgb(var(--color-text-tertiary))">
                                           → {haul.freightRoute.destination}
                                         </div>
                                       </td>
-                                      <td class="px-2 py-1">
-                                        <div>{haul.vendorProduct.name}</div>
-                                        <div class="text-xs text-gray-500">
+                                      <td>
+                                        <div class="font-medium">{haul.vendorProduct.name}</div>
+                                        <div class="text-xs mt-1" style="color: rgb(var(--color-text-tertiary))">
                                           {haul.quantity}t @ ${haul.rate}/t
                                         </div>
                                       </td>
-                                      <td class="px-2 py-1">
-                                        <div>{haul.miles} mi</div>
-                                        <div class="text-xs text-gray-500">
+                                      <td>
+                                        <div class="font-medium">{haul.miles} mi</div>
+                                        <div class="text-xs mt-1" style="color: rgb(var(--color-text-tertiary))">
                                           Pay: ${haul.payRate} | Truck {haul.truck}
                                         </div>
                                       </td>
-                                      <td class="px-2 py-1 text-center space-x-1">
-                                        <a href={`/hauls/edit/${haul.id}?returnTo=${encodeURIComponent(`/hauls?driver=${data.value.currentDriverId}&startDate=${data.value.currentStartDate}&endDate=${data.value.currentEndDate}`)}`} title="Edit">
-                                          ✏️
-                                        </a>
-                                        <a
-                                          href={`/hauls/new?duplicateId=${haul.id}&driver=${data.value.currentDriverId}&date=${dateStr}&startDate=${data.value.currentStartDate}&endDate=${data.value.currentEndDate}&returnTo=${encodeURIComponent(`/hauls?driver=${data.value.currentDriverId}&startDate=${data.value.currentStartDate}&endDate=${data.value.currentEndDate}`)}`}
-                                          title="Duplicate"
-                                        >
-                                          📋
-                                        </a>
-                                        <button
-                                          title="Delete"
-                                          onClick$={() => handleDeleteHaul(haul.id, haul.customer || 'Unknown Customer')}
-                                          class="text-red-600 hover:text-red-900 cursor-pointer"
-                                        >
-                                          🗑
-                                        </button>
+                                      <td class="text-center">
+                                        <div class="flex justify-center items-center gap-1">
+                                          <a href={`/hauls/edit/${haul.id}?returnTo=${encodeURIComponent(`/hauls?driver=${data.value.currentDriverId}&startDate=${data.value.currentStartDate}&endDate=${data.value.currentEndDate}`)}`} title="Edit Haul" class="btn-icon btn-icon-primary">
+                                            <EditIcon size={14} />
+                                          </a>
+                                          <a
+                                            href={`/hauls/new?duplicateId=${haul.id}&driver=${data.value.currentDriverId}&date=${dateStr}&startDate=${data.value.currentStartDate}&endDate=${data.value.currentEndDate}&returnTo=${encodeURIComponent(`/hauls?driver=${data.value.currentDriverId}&startDate=${data.value.currentStartDate}&endDate=${data.value.currentEndDate}`)}`}
+                                            title="Duplicate Haul"
+                                            class="btn-icon"
+                                            style="color: rgb(var(--color-secondary))"
+                                          >
+                                            📋
+                                          </a>
+                                          <button
+                                            title="Delete Haul"
+                                            onClick$={() => handleDeleteHaul(haul.id, haul.customer || 'Unknown Customer')}
+                                            class="btn-icon btn-icon-danger"
+                                          >
+                                            <DeleteIcon size={14} />
+                                          </button>
+                                        </div>
                                       </td>
                                     </tr>
                                   ))}

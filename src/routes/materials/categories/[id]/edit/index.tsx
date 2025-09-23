@@ -1,6 +1,7 @@
 import { component$ } from '@builder.io/qwik';
 import { routeLoader$, routeAction$, Form, Link } from '@builder.io/qwik-city';
 import { db } from '~/lib/db';
+import BackButton from '~/components/BackButton';
 
 export const useCategoryLoader = routeLoader$(async ({ params }) => {
   const id = parseInt(params.id);
@@ -53,51 +54,49 @@ export default component$(() => {
   return (
     <div class="container mx-auto p-6 max-w-2xl">
       <div class="mb-6">
-        <Link
-          href="/materials/categories"
-          class="text-blue-500 hover:text-blue-700"
-        >
-          ← Back to Categories
-        </Link>
-        <h1 class="text-3xl font-bold mt-2">Edit Material Category</h1>
+        <BackButton />
+        <h1 class="text-3xl font-bold" style="color: rgb(var(--color-text-primary))">Edit Material Category</h1>
       </div>
 
-      <div class="bg-white shadow-md rounded-lg p-6">
+      <div class="card">
         <Form action={updateAction}>
-          <div class="mb-4">
-            <label
-              for="name"
-              class="block text-sm font-medium text-gray-700 mb-2"
-            >
-              Category Name *
-            </label>
-            <input
-              type="text"
-              id="name"
-              name="name"
-              value={category.value.name}
-              required
-              class="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent"
-              placeholder="Enter category name"
-            />
+          <div class="space-y-6">
+            <div>
+              <label
+                for="name"
+                class="block text-sm font-medium mb-2"
+                style="color: rgb(var(--color-text-secondary))"
+              >
+                Category Name *
+              </label>
+              <input
+                type="text"
+                id="name"
+                name="name"
+                value={category.value.name}
+                required
+                class="w-full"
+                placeholder="Enter category name"
+              />
+            </div>
           </div>
 
           {updateAction.value?.error && (
-            <div class="mb-4 p-3 bg-red-100 border border-red-400 text-red-700 rounded">
+            <div class="p-3 rounded-lg" style="background-color: rgb(var(--color-danger) / 0.1); color: rgb(var(--color-danger))">
               {updateAction.value.error}
             </div>
           )}
 
-          <div class="flex justify-end space-x-4">
+          <div class="flex justify-end gap-3">
             <Link
               href="/materials/categories"
-              class="px-4 py-2 border border-gray-300 rounded-md text-gray-700 hover:bg-gray-50"
+              class="btn btn-ghost"
             >
               Cancel
             </Link>
             <button
               type="submit"
-              class="px-4 py-2 bg-blue-500 text-white rounded-md hover:bg-blue-600 focus:outline-none focus:ring-2 focus:ring-blue-500"
+              class="btn btn-primary"
             >
               Update Category
             </button>

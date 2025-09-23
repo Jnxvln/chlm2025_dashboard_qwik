@@ -113,7 +113,7 @@ export default component$(() => {
         <PageTitle text="Workdays" />
         <NavLink
           href="/workdays/new"
-          class="bg-blue-500 hover:bg-blue-700 text-white font-bold py-2 px-4 rounded"
+          class="btn btn-primary"
         >
           + New Workday
         </NavLink>
@@ -122,23 +122,24 @@ export default component$(() => {
       <div class="flex gap-4">
         <NavLink
           href="/drivers"
-          class="font-semibold outline text-emerald-700 outline-emerald-700 rounded-3xl hover:bg-emerald-600 hover:outline-0 hover:text-white px-3 py-1.5 transition-colors duration-150 ease-in-out"
+          class="btn btn-ghost"
         >
           ← Drivers
         </NavLink>
       </div>
 
-      <p class="my-6 text-gray-600">
+      <p class="my-6" style="color: rgb(var(--color-text-secondary))">
         Track daily driver hours, notes, and haul information.
       </p>
 
       {/* Filters */}
-      <div class="mb-6 bg-white p-4 rounded-lg shadow">
+      <div class="card mb-6">
         <div class="flex flex-wrap gap-4 items-center">
           <div>
             <label
               for="driver"
-              class="block text-sm font-medium text-gray-700 mb-1"
+              class="block text-sm font-medium mb-1"
+              style="color: rgb(var(--color-text-secondary))"
             >
               Filter by Driver
             </label>
@@ -146,7 +147,7 @@ export default component$(() => {
               <select
                 id="driver"
                 value={data.value.currentDriver?.toString() || ''}
-                class="px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500"
+                class="w-full"
                 onChange$={(_, el) => {
                   const url = new URL(window.location.href);
                   if (el.value) {
@@ -170,7 +171,8 @@ export default component$(() => {
           <div>
             <label
               for="startDate"
-              class="block text-sm font-medium text-gray-700 mb-1"
+              class="block text-sm font-medium mb-1"
+              style="color: rgb(var(--color-text-secondary))"
             >
               Start Date
             </label>
@@ -178,7 +180,7 @@ export default component$(() => {
               type="date"
               id="startDate"
               value={data.value.currentStartDate}
-              class="px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500"
+              class="w-full"
               onChange$={(_, el) => {
                 const url = new URL(window.location.href);
                 url.searchParams.set('startDate', el.value);
@@ -190,7 +192,8 @@ export default component$(() => {
           <div>
             <label
               for="endDate"
-              class="block text-sm font-medium text-gray-700 mb-1"
+              class="block text-sm font-medium mb-1"
+              style="color: rgb(var(--color-text-secondary))"
             >
               End Date
             </label>
@@ -198,7 +201,7 @@ export default component$(() => {
               type="date"
               id="endDate"
               value={data.value.currentEndDate}
-              class="px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500"
+              class="w-full"
               onChange$={(_, el) => {
                 const url = new URL(window.location.href);
                 url.searchParams.set('endDate', el.value);
@@ -211,102 +214,107 @@ export default component$(() => {
 
       {/* Workdays Table */}
       {data.value.workdays.length > 0 ? (
-        <div class="bg-white shadow-md rounded-lg overflow-x-auto">
-          <table class="min-w-full">
-            <thead class="bg-gray-50">
+        <div class="table-container overflow-x-auto">
+          <table class="table-modern">
+            <thead>
               <tr>
-                <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
+                <th class="text-left">
                   Date
                 </th>
-                <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
+                <th class="text-left">
                   Driver
                 </th>
-                <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
+                <th class="text-left">
                   CH Hours
                 </th>
-                <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
+                <th class="text-left">
                   NC Hours
                 </th>
-                <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
+                <th class="text-left">
                   Status
                 </th>
-                <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
+                <th class="text-left">
                   Hauls
                 </th>
-                <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
+                <th class="text-center">
                   Actions
                 </th>
               </tr>
             </thead>
-            <tbody class="bg-white divide-y divide-gray-200">
+            <tbody>
               {data.value.workdays.map((workday) => (
-                <tr key={workday.id} class="hover:bg-gray-50">
-                  <td class="px-6 py-4 whitespace-nowrap text-sm text-gray-900">
+                <tr key={workday.id}>
+                  <td class="whitespace-nowrap font-medium">
                     {new Date(workday.date).toLocaleDateString()}
                   </td>
-                  <td class="px-6 py-4 whitespace-nowrap text-sm font-medium text-gray-900">
-                    {workday.driver.firstName} {workday.driver.lastName}
+                  <td class="whitespace-nowrap">
+                    <div class="font-medium">
+                      {workday.driver.firstName} {workday.driver.lastName}
+                    </div>
                     {workday.driver.defaultTruck && (
-                      <span class="text-gray-500 ml-1">
-                        - {workday.driver.defaultTruck}
-                      </span>
-                    )}
-                  </td>
-                  <td class="px-6 py-4 whitespace-nowrap text-sm text-gray-900">
-                    {workday.chHours} hrs
-                  </td>
-                  <td class="px-6 py-4 whitespace-nowrap text-sm text-gray-900">
-                    {workday.ncHours} hrs
-                    {workday.ncReasons && (
-                      <div class="text-xs text-gray-500 mt-1">
-                        {workday.ncReasons}
+                      <div class="text-xs mt-1" style="color: rgb(var(--color-text-tertiary))">
+                        Truck: {workday.driver.defaultTruck}
                       </div>
                     )}
                   </td>
-                  <td class="px-6 py-4 whitespace-nowrap text-sm text-gray-900">
+                  <td class="whitespace-nowrap">
+                    <span class="font-medium">{workday.chHours} hrs</span>
+                  </td>
+                  <td class="whitespace-nowrap">
+                    <div>
+                      <span class="font-medium">{workday.ncHours} hrs</span>
+                      {workday.ncReasons && (
+                        <div class="text-xs mt-1" style="color: rgb(var(--color-text-tertiary))">
+                          {workday.ncReasons}
+                        </div>
+                      )}
+                    </div>
+                  </td>
+                  <td class="whitespace-nowrap">
                     {workday.offDuty ? (
                       <div>
-                        <span class="inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium bg-red-100 text-red-800">
+                        <span class="badge badge-danger">
                           Off Duty
                         </span>
                         {workday.offDutyReason && (
-                          <div class="text-xs text-gray-500 mt-1">
+                          <div class="text-xs mt-1" style="color: rgb(var(--color-text-tertiary))">
                             {workday.offDutyReason}
                           </div>
                         )}
                       </div>
                     ) : (
-                      <span class="inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium bg-green-100 text-green-800">
+                      <span class="badge badge-success">
                         On Duty
                       </span>
                     )}
                   </td>
-                  <td class="px-6 py-4 whitespace-nowrap text-sm text-gray-900">
-                    <span class="inline-flex items-center px-2 py-1 rounded-full text-xs font-medium bg-blue-100 text-blue-800">
+                  <td class="whitespace-nowrap">
+                    <span class="badge badge-secondary">
                       {workday._count.hauls} hauls
                     </span>
                   </td>
-                  <td class="px-6 py-4 whitespace-nowrap text-sm font-medium space-x-2">
-                    <Link
-                      // href={`/workdays/edit/${workday.id}`}
-                      href={`/workdays/edit/${workday.id}${loc.url.search}`}
-                      class="text-indigo-600 hover:text-indigo-900"
-                    >
-                      Edit
-                    </Link>
-                    <button
-                      class="text-red-600 hover:text-red-900"
-                      onClick$={async () => {
-                        const confirmed = confirm(
-                          'Are you sure you want to delete this workday?',
-                        );
-                        if (!confirmed) return;
-                        await deleteAction.submit({ id: String(workday.id) });
-                        window.location.reload();
-                      }}
-                    >
-                      Delete
-                    </button>
+                  <td class="text-center">
+                    <div class="flex justify-center items-center gap-2">
+                      <Link
+                        href={`/workdays/edit/${workday.id}${loc.url.search}`}
+                        class="btn btn-sm btn-primary"
+                      >
+                        Edit
+                      </Link>
+                      <button
+                        class="btn btn-sm btn-danger"
+                        onClick$={async () => {
+                          const confirmed = confirm(
+                            'Are you sure you want to delete this workday?',
+                          );
+                          if (!confirmed) return;
+                          await deleteAction.submit({ id: String(workday.id) });
+                          window.location.reload();
+                        }}
+                      >
+                        Delete
+                      </button>
+                    </div>
                   </td>
                 </tr>
               ))}
@@ -314,8 +322,8 @@ export default component$(() => {
           </table>
         </div>
       ) : (
-        <div class="text-center py-12">
-          <div class="text-gray-400 mb-4">
+        <div class="card text-center py-12">
+          <div class="mb-4" style="color: rgb(var(--color-muted))">
             <svg
               class="w-24 h-24 mx-auto"
               fill="currentColor"
@@ -328,15 +336,15 @@ export default component$(() => {
               />
             </svg>
           </div>
-          <h3 class="text-lg font-medium text-gray-900 mb-2">
+          <h3 class="text-lg font-medium mb-2" style="color: rgb(var(--color-text-primary))">
             No workdays found
           </h3>
-          <p class="text-gray-500 mb-4">
+          <p class="mb-4" style="color: rgb(var(--color-text-secondary))">
             Get started by creating your first workday.
           </p>
           <NavLink
             href="/workdays/new"
-            class="inline-block bg-blue-500 hover:bg-blue-700 text-white font-bold py-2 px-4 rounded"
+            class="btn btn-primary"
           >
             Create Workday
           </NavLink>

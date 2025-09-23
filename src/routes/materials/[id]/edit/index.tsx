@@ -1,6 +1,7 @@
 import { component$ } from '@builder.io/qwik';
 import { routeLoader$, routeAction$, Form, Link } from '@builder.io/qwik-city';
 import { db } from '~/lib/db';
+import BackButton from '~/components/BackButton';
 
 export const useMaterialEditLoader = routeLoader$(async ({ params }) => {
   const id = parseInt(params.id);
@@ -72,13 +73,11 @@ export default component$(() => {
   return (
     <div class="container mx-auto p-6 max-w-4xl">
       <div class="mb-6">
-        <Link href="/materials" class="text-blue-500 hover:text-blue-700">
-          ← Back to Materials
-        </Link>
-        <h1 class="text-3xl font-bold mt-2">Edit Material</h1>
+        <BackButton />
+        <h1 class="text-3xl font-bold" style="color: rgb(var(--color-text-primary))">Edit Material</h1>
       </div>
 
-      <div class="bg-white shadow-md rounded-lg p-6">
+      <div class="card">
         <Form action={updateAction}>
           <div class="grid grid-cols-1 md:grid-cols-2 gap-6">
             {/* Left Column */}
@@ -86,7 +85,8 @@ export default component$(() => {
               <div>
                 <label
                   for="name"
-                  class="block text-sm font-medium text-gray-700 mb-2"
+                  class="block text-sm font-medium mb-2"
+                  style="color: rgb(var(--color-text-secondary))"
                 >
                   Material Name *
                 </label>
@@ -96,7 +96,7 @@ export default component$(() => {
                   name="name"
                   value={data.value.material.name}
                   required
-                  class="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500"
+                  class="w-full"
                   placeholder="Enter material name"
                 />
               </div>
@@ -104,7 +104,8 @@ export default component$(() => {
               <div>
                 <label
                   for="stock"
-                  class="block text-sm font-medium text-gray-700 mb-2"
+                  class="block text-sm font-medium mb-2"
+                  style="color: rgb(var(--color-text-secondary))"
                 >
                   Stock *
                 </label>
@@ -114,7 +115,7 @@ export default component$(() => {
                   name="stock"
                   value={data.value.material.stock}
                   required
-                  class="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500"
+                  class="w-full"
                   placeholder="e.g., In Stock, Low Stock, Out of Stock"
                 />
               </div>
@@ -122,7 +123,8 @@ export default component$(() => {
               <div>
                 <label
                   for="categoryId"
-                  class="block text-sm font-medium text-gray-700 mb-2"
+                  class="block text-sm font-medium mb-2"
+                  style="color: rgb(var(--color-text-secondary))"
                 >
                   Category *
                 </label>
@@ -131,7 +133,7 @@ export default component$(() => {
                   name="categoryId"
                   value={data.value.material.categoryId.toString()}
                   required
-                  class="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500"
+                  class="w-full"
                 >
                   <option value="">Select a category</option>
                   {data.value.categories.map((category) => (
@@ -145,7 +147,8 @@ export default component$(() => {
               <div>
                 <label
                   for="size"
-                  class="block text-sm font-medium text-gray-700 mb-2"
+                  class="block text-sm font-medium mb-2"
+                  style="color: rgb(var(--color-text-secondary))"
                 >
                   Size
                 </label>
@@ -154,7 +157,7 @@ export default component$(() => {
                   id="size"
                   name="size"
                   value={data.value.material.size || ''}
-                  class="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500"
+                  class="w-full"
                   placeholder="e.g., 2x4, Large, Small"
                 />
               </div>
@@ -162,7 +165,8 @@ export default component$(() => {
               <div>
                 <label
                   for="bin"
-                  class="block text-sm font-medium text-gray-700 mb-2"
+                  class="block text-sm font-medium mb-2"
+                  style="color: rgb(var(--color-text-secondary))"
                 >
                   Bin Location
                 </label>
@@ -171,7 +175,7 @@ export default component$(() => {
                   id="bin"
                   name="bin"
                   value={data.value.material.bin || ''}
-                  class="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500"
+                  class="w-full"
                   placeholder="e.g., A1, B2, Yard-3"
                 />
               </div>
@@ -182,7 +186,8 @@ export default component$(() => {
               <div>
                 <label
                   for="image"
-                  class="block text-sm font-medium text-gray-700 mb-2"
+                  class="block text-sm font-medium mb-2"
+                  style="color: rgb(var(--color-text-secondary))"
                 >
                   Image URL
                 </label>
@@ -191,7 +196,7 @@ export default component$(() => {
                   id="image"
                   name="image"
                   value={data.value.material.image || ''}
-                  class="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500"
+                  class="w-full"
                   placeholder="https://example.com/image.jpg"
                 />
               </div>
@@ -199,7 +204,8 @@ export default component$(() => {
               <div>
                 <label
                   for="description"
-                  class="block text-sm font-medium text-gray-700 mb-2"
+                  class="block text-sm font-medium mb-2"
+                  style="color: rgb(var(--color-text-secondary))"
                 >
                   Description
                 </label>
@@ -207,7 +213,7 @@ export default component$(() => {
                   id="description"
                   name="description"
                   rows={4}
-                  class="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500"
+                  class="w-full"
                   placeholder="Describe the material..."
                 >
                   {data.value.material.description || ''}
@@ -217,7 +223,8 @@ export default component$(() => {
               <div>
                 <label
                   for="notes"
-                  class="block text-sm font-medium text-gray-700 mb-2"
+                  class="block text-sm font-medium mb-2"
+                  style="color: rgb(var(--color-text-secondary))"
                 >
                   Internal Notes
                 </label>
@@ -225,7 +232,7 @@ export default component$(() => {
                   id="notes"
                   name="notes"
                   rows={3}
-                  class="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500"
+                  class="w-full"
                   placeholder="Internal notes (not visible to customers)..."
                 >
                   {data.value.material.notes || ''}
@@ -240,11 +247,13 @@ export default component$(() => {
                     id="isFeatured"
                     name="isFeatured"
                     checked={data.value.material.isFeatured}
-                    class="h-4 w-4 text-blue-600 focus:ring-blue-500 border-gray-300 rounded"
+                    class="h-4 w-4 rounded"
+                    style="accent-color: rgb(var(--color-primary))"
                   />
                   <label
                     for="isFeatured"
-                    class="ml-2 block text-sm text-gray-700"
+                    class="ml-2 block text-sm font-medium"
+                    style="color: rgb(var(--color-text-primary))"
                   >
                     Featured Material
                   </label>
@@ -256,11 +265,13 @@ export default component$(() => {
                     id="isTruckable"
                     name="isTruckable"
                     checked={data.value.material.isTruckable}
-                    class="h-4 w-4 text-blue-600 focus:ring-blue-500 border-gray-300 rounded"
+                    class="h-4 w-4 rounded"
+                    style="accent-color: rgb(var(--color-primary))"
                   />
                   <label
                     for="isTruckable"
-                    class="ml-2 block text-sm text-gray-700"
+                    class="ml-2 block text-sm font-medium"
+                    style="color: rgb(var(--color-text-primary))"
                   >
                     Available for Truck Delivery
                   </label>
@@ -270,21 +281,21 @@ export default component$(() => {
           </div>
 
           {updateAction.value?.error && (
-            <div class="mt-4 p-3 bg-red-100 border border-red-400 text-red-700 rounded">
+            <div class="p-3 rounded-lg" style="background-color: rgb(var(--color-danger) / 0.1); color: rgb(var(--color-danger))">
               {updateAction.value.error}
             </div>
           )}
 
-          <div class="flex justify-end space-x-4 mt-6">
+          <div class="flex justify-end gap-3">
             <Link
               href="/materials"
-              class="px-4 py-2 border border-gray-300 rounded-md text-gray-700 hover:bg-gray-50"
+              class="btn btn-ghost"
             >
               Cancel
             </Link>
             <button
               type="submit"
-              class="px-4 py-2 bg-blue-500 text-white rounded-md hover:bg-blue-600 focus:outline-none focus:ring-2 focus:ring-blue-500"
+              class="btn btn-primary"
             >
               Update Material
             </button>

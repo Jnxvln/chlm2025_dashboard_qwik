@@ -5,6 +5,7 @@ import {
   useVisibleTask$,
 } from '@builder.io/qwik';
 import { Form, useNavigate, useLocation } from '@builder.io/qwik-city';
+import BackButton from '~/components/BackButton';
 
 import { useEditHaulLoader } from './loader';
 import { useEditHaulAction } from './action';
@@ -90,24 +91,34 @@ export default component$(() => {
   });
 
   if (!data.value.haul) {
-    return <div class="p-6">Haul not found</div>;
+    return (
+      <div class="p-6 max-w-3xl mx-auto">
+        <div class="card text-center">
+          <p style="color: rgb(var(--color-text-secondary))">Haul not found</p>
+        </div>
+      </div>
+    );
   }
 
   const haul = data.value.haul;
 
   return (
     <div class="p-6 max-w-3xl mx-auto">
-      <h1 class="text-2xl font-bold mb-6">Edit Haul</h1>
-      
-      <Form action={action} class="space-y-4">
+      <div class="mb-6">
+        <BackButton />
+        <h1 class="text-2xl font-bold" style="color: rgb(var(--color-text-primary))">Edit Haul</h1>
+      </div>
+
+      <div class="card">
+        <Form action={action} class="space-y-6">
         <input type="hidden" name="haulId" value={haul.id} />
         <input type="hidden" name="returnTo" value={returnTo} />
 
         {/* Row 1 */}
         <div class="grid grid-cols-3 gap-4">
           <div>
-            <label class="block text-sm font-medium mb-1">Driver</label>
-            <select name="driverId" class="input w-full" required>
+            <label class="block text-sm font-medium mb-1" style="color: rgb(var(--color-text-secondary))">Driver</label>
+            <select name="driverId" class="w-full" required>
               {Array.isArray(data.value?.drivers) &&
                 data.value.drivers.map((v) => (
                   <option key={v.id} value={v.id} selected={v.id === haul.workday.driverId}>
@@ -119,10 +130,10 @@ export default component$(() => {
           </div>
 
           <div>
-            <label class="block text-sm font-medium mb-1">Load Type</label>
+            <label class="block text-sm font-medium mb-1" style="color: rgb(var(--color-text-secondary))">Load Type</label>
             <select
               name="loadType"
-              class="input w-full"
+              class="w-full"
               required
               onChange$={(e) =>
                 (selectedLoadType.value = e.target.value as
@@ -136,40 +147,40 @@ export default component$(() => {
           </div>
 
           <div>
-            <label class="block text-sm font-medium mb-1">Truck #</label>
-            <input name="truck" class="input w-full" required value={haul.truck} />
+            <label class="block text-sm font-medium mb-1" style="color: rgb(var(--color-text-secondary))">Truck #</label>
+            <input name="truck" class="w-full" required value={haul.truck} />
           </div>
         </div>
 
         {/* Row 2 */}
         <div class="grid grid-cols-3 gap-4">
           <div>
-            <label class="block text-sm font-medium mb-1">Haul Date</label>
+            <label class="block text-sm font-medium mb-1" style="color: rgb(var(--color-text-secondary))">Haul Date</label>
             <input
               name="dateHaul"
               type="date"
               value={haul.dateHaul.toISOString().split('T')[0]}
               required
-              class="input w-full"
+              class="w-full"
             />
           </div>
           <div>
-            <label class="block text-sm font-medium mb-1">Customer</label>
-            <input name="customer" type="text" class="input w-full" value={haul.customer || ''} />
+            <label class="block text-sm font-medium mb-1" style="color: rgb(var(--color-text-secondary))">Customer</label>
+            <input name="customer" type="text" class="w-full" value={haul.customer || ''} />
           </div>
           <div>
-            <label class="block text-sm font-medium mb-1">Load/Ref #</label>
-            <input name="loadRefNum" type="text" class="input w-full" value={haul.loadRefNum || ''} />
+            <label class="block text-sm font-medium mb-1" style="color: rgb(var(--color-text-secondary))">Load/Ref #</label>
+            <input name="loadRefNum" type="text" class="w-full" value={haul.loadRefNum || ''} />
           </div>
         </div>
 
         {/* Row 3 */}
         <div class="grid grid-cols-3 gap-4">
           <div>
-            <label class="block text-sm font-medium mb-1">From (Vendor)</label>
+            <label class="block text-sm font-medium mb-1" style="color: rgb(var(--color-text-secondary))">From (Vendor)</label>
             <select
               name="vendorId"
-              class="input w-full"
+              class="w-full"
               required
               onChange$={(e) => {
                 selectedVendorId.value = e.target.value;
@@ -187,10 +198,10 @@ export default component$(() => {
           </div>
 
           <div>
-            <label class="block text-sm font-medium mb-1">Location</label>
+            <label class="block text-sm font-medium mb-1" style="color: rgb(var(--color-text-secondary))">Location</label>
             <select
               name="vendorLocationId"
-              class="input w-full"
+              class="w-full"
               required
               onChange$={(e) => {
                 selectedLocationId.value = e.target.value;
@@ -207,10 +218,10 @@ export default component$(() => {
           </div>
 
           <div>
-            <label class="block text-sm font-medium mb-1">To (Route)</label>
+            <label class="block text-sm font-medium mb-1" style="color: rgb(var(--color-text-secondary))">To (Route)</label>
             <select
               name="freightRouteId"
-              class="input w-full"
+              class="w-full"
               required
               onChange$={(e) => {
                 const fr = data.value.freightRoutes.find(
@@ -231,11 +242,11 @@ export default component$(() => {
 
         {/* Row 4 */}
         <div>
-          <label class="block text-sm font-medium mb-1">Material</label>
+          <label class="block text-sm font-medium mb-1" style="color: rgb(var(--color-text-secondary))">Material</label>
           <select
             name="vendorProductId"
             required
-            class="input w-full"
+            class="w-full"
             disabled={!selectedVendorId.value || !selectedLocationId.value}
           >
             <option value="">Select Material</option>
@@ -251,31 +262,31 @@ export default component$(() => {
         {/* Row 5 */}
         <div class="grid grid-cols-3 gap-4">
           <div>
-            <label class="block text-sm font-medium mb-1">Rate Metric</label>
-            <select name="rateMetric" class="input w-full" required>
+            <label class="block text-sm font-medium mb-1" style="color: rgb(var(--color-text-secondary))">Rate Metric</label>
+            <select name="rateMetric" class="w-full" required>
               <option value="ton" selected={haul.rateMetric === 'ton'}>Tons</option>
               <option value="mile" selected={haul.rateMetric === 'mile'}>Miles</option>
               <option value="hour" selected={haul.rateMetric === 'hour'}>Hours</option>
             </select>
           </div>
           <div>
-            <label class="block text-sm font-medium mb-1">Quantity</label>
+            <label class="block text-sm font-medium mb-1" style="color: rgb(var(--color-text-secondary))">Quantity</label>
             <input
               name="quantity"
               type="number"
               step="0.01"
-              class="input w-full"
+              class="w-full"
               required
               value={haul.quantity}
             />
           </div>
           <div>
-            <label class="block text-sm font-medium mb-1">Rate</label>
+            <label class="block text-sm font-medium mb-1" style="color: rgb(var(--color-text-secondary))">Rate</label>
             <input
               name="rate"
               type="number"
               step="0.01"
-              class="input w-full"
+              class="w-full"
               required
               value={selectedRate.value ?? haul.rate}
             />
@@ -285,23 +296,23 @@ export default component$(() => {
         {/* Conditionally show CH Invoice for flatbed */}
         {selectedLoadType.value === 'flatbed' && (
           <div>
-            <label class="block text-sm font-medium mb-1">CH Invoice #</label>
-            <input name="chInvoice" type="text" class="input w-full" value={haul.chInvoice || ''} />
+            <label class="block text-sm font-medium mb-1" style="color: rgb(var(--color-text-secondary))">CH Invoice #</label>
+            <input name="chInvoice" type="text" class="w-full" value={haul.chInvoice || ''} />
           </div>
         )}
 
         {/* Buttons */}
-        <div class="flex justify-end items-center mt-4">
-          <div class="flex gap-4">
+        <div class="flex justify-end items-center mt-6">
+          <div class="flex gap-3">
             <a
               href={returnTo || fallbackUrl}
-              class="px-4 py-2 border rounded text-gray-600 hover:bg-gray-100"
+              class="btn btn-ghost"
             >
               Cancel
             </a>
             <button
               type="submit"
-              class="px-4 py-2 bg-blue-600 text-white rounded hover:bg-blue-700"
+              class="btn btn-primary"
             >
               Update Haul
             </button>
@@ -310,12 +321,13 @@ export default component$(() => {
 
         {/* Messages */}
         {action.value?.error && (
-          <div class="text-red-600">{action.value.error}</div>
+          <div class="p-3 rounded-lg" style="background-color: rgb(var(--color-danger) / 0.1); color: rgb(var(--color-danger))">{action.value.error}</div>
         )}
         {action.value?.success && (
-          <div class="text-green-600">Haul updated! Redirecting…</div>
+          <div class="p-3 rounded-lg" style="background-color: rgb(var(--color-success) / 0.1); color: rgb(var(--color-success))">Haul updated! Redirecting…</div>
         )}
-      </Form>
+        </Form>
+      </div>
     </div>
   );
 });

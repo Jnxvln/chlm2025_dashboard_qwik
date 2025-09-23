@@ -94,7 +94,7 @@ export default component$(() => {
           <div class="mb-4">
             <a
               href={returnToParam}
-              class="inline-block text-sm text-blue-600 hover:underline"
+              class="btn btn-ghost btn-sm"
             >
               ← Back to Hauls
             </a>
@@ -104,8 +104,8 @@ export default component$(() => {
         <PageTitle text="New Workday" />
       </div>
 
-      <div class="bg-white shadow-md rounded-lg p-6">
-        <Form action={createAction}>
+      <div class="card">
+        <Form action={createAction} class="space-y-6">
           <input type="hidden" name="returnTo" value={returnToParam || ''} />
 
           {/* Hidden field for current user */}
@@ -121,7 +121,8 @@ export default component$(() => {
               <div>
                 <label
                   for="date"
-                  class="block text-sm font-medium text-gray-700 mb-2"
+                  class="block text-sm font-medium mb-2"
+                  style="color: rgb(var(--color-text-secondary))"
                 >
                   Date *
                 </label>
@@ -131,14 +132,15 @@ export default component$(() => {
                   name="date"
                   value={today}
                   required
-                  class="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500"
+                  class="w-full"
                 />
               </div>
 
               <div>
                 <label
                   for="driverId"
-                  class="block text-sm font-medium text-gray-700 mb-2"
+                  class="block text-sm font-medium mb-2"
+                  style="color: rgb(var(--color-text-secondary))"
                 >
                   Driver *
                 </label>
@@ -146,7 +148,7 @@ export default component$(() => {
                   id="driverId"
                   name="driverId"
                   required
-                  class="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500"
+                  class="w-full"
                   // value={drivers.value.currentDriver?.toString() ?? ''}
                   value={driverParam.value}
                   onChange$={(_, el) => {
@@ -168,7 +170,8 @@ export default component$(() => {
               <div>
                 <label
                   for="chHours"
-                  class="block text-sm font-medium text-gray-700 mb-2"
+                  class="block text-sm font-medium mb-2"
+                  style="color: rgb(var(--color-text-secondary))"
                 >
                   C&H Hours *
                 </label>
@@ -180,7 +183,7 @@ export default component$(() => {
                   step="0.25"
                   value="0"
                   required
-                  class="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500"
+                  class="w-full"
                   placeholder="8.00"
                 />
               </div>
@@ -188,7 +191,8 @@ export default component$(() => {
               <div>
                 <label
                   for="ncHours"
-                  class="block text-sm font-medium text-gray-700 mb-2"
+                  class="block text-sm font-medium mb-2"
+                  style="color: rgb(var(--color-text-secondary))"
                 >
                   Non-Commission Hours *
                 </label>
@@ -200,7 +204,7 @@ export default component$(() => {
                   step="0.25"
                   value="0"
                   required
-                  class="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500"
+                  class="w-full"
                   placeholder="0.00"
                 />
               </div>
@@ -208,7 +212,8 @@ export default component$(() => {
               <div>
                 <label
                   for="ncReasons"
-                  class="block text-sm font-medium text-gray-700 mb-2"
+                  class="block text-sm font-medium mb-2"
+                  style="color: rgb(var(--color-text-secondary))"
                 >
                   Non-Commission Reasons
                 </label>
@@ -216,7 +221,7 @@ export default component$(() => {
                   id="ncReasons"
                   name="ncReasons"
                   rows={2}
-                  class="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500"
+                  class="w-full"
                   placeholder="Reason for non-commission hours..."
                 ></textarea>
               </div>
@@ -227,7 +232,8 @@ export default component$(() => {
               <div>
                 <label
                   for="notes"
-                  class="block text-sm font-medium text-gray-700 mb-2"
+                  class="block text-sm font-medium mb-2"
+                  style="color: rgb(var(--color-text-secondary))"
                 >
                   Notes
                 </label>
@@ -235,27 +241,29 @@ export default component$(() => {
                   id="notes"
                   name="notes"
                   rows={4}
-                  class="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500"
+                  class="w-full"
                   placeholder="Any additional notes for this workday..."
                 ></textarea>
               </div>
 
               {/* Off Duty Section */}
-              <div class="border rounded-lg p-4 bg-gray-50">
+              <div class="rounded-lg p-4" style="border: 1px solid rgb(var(--color-border)); background-color: rgb(var(--color-bg-secondary))">
                 <div class="flex items-center mb-3">
                   <input
                     type="checkbox"
                     id="offDuty"
                     name="offDuty"
                     value="true"
-                    class="h-4 w-4 text-blue-600 focus:ring-blue-500 border-gray-300 rounded"
+                    class="h-4 w-4 rounded"
+                    style="accent-color: rgb(var(--color-primary))"
                     onChange$={(_, el) => {
                       isOffDuty.value = el.checked;
                     }}
                   />
                   <label
                     for="offDuty"
-                    class="ml-2 block text-sm font-medium text-gray-700"
+                    class="ml-2 block text-sm font-medium"
+                    style="color: rgb(var(--color-text-primary))"
                   >
                     Driver was off duty
                   </label>
@@ -265,7 +273,8 @@ export default component$(() => {
                   <div>
                     <label
                       for="offDutyReason"
-                      class="block text-sm font-medium text-gray-700 mb-2"
+                      class="block text-sm font-medium mb-2"
+                      style="color: rgb(var(--color-text-secondary))"
                     >
                       Off Duty Reason
                     </label>
@@ -273,7 +282,7 @@ export default component$(() => {
                       id="offDutyReason"
                       name="offDutyReason"
                       rows={2}
-                      class="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500"
+                      class="w-full"
                       placeholder="Reason for being off duty..."
                     ></textarea>
                   </div>
@@ -283,21 +292,21 @@ export default component$(() => {
           </div>
 
           {createAction.value?.error && (
-            <div class="mt-4 p-3 bg-red-100 border border-red-400 text-red-700 rounded">
+            <div class="p-3 rounded-lg" style="background-color: rgb(var(--color-danger) / 0.1); color: rgb(var(--color-danger))">
               {createAction.value.error}
             </div>
           )}
 
-          <div class="flex justify-end space-x-4 mt-6">
+          <div class="flex justify-end gap-3">
             <Link
               href="/workdays"
-              class="px-4 py-2 border border-gray-300 rounded-md text-gray-700 hover:bg-gray-50"
+              class="btn btn-ghost"
             >
               Cancel
             </Link>
             <button
               type="submit"
-              class="px-4 py-2 bg-blue-500 text-white rounded-md hover:bg-blue-600 focus:outline-none focus:ring-2 focus:ring-blue-500"
+              class="btn btn-primary"
             >
               Create Workday
             </button>
@@ -305,7 +314,7 @@ export default component$(() => {
         </Form>
 
         {createAction.value?.success && (
-          <div class="mt-4 p-3 bg-green-100 border border-green-400 text-green-700 rounded">
+          <div class="mt-4 p-3 rounded-lg" style="background-color: rgb(var(--color-success) / 0.1); color: rgb(var(--color-success))">
             Workday created successfully! Redirecting...
           </div>
         )}

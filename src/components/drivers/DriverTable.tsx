@@ -1,76 +1,89 @@
 import { component$ } from '@builder.io/qwik';
 import { useNavigate } from '@builder.io/qwik-city';
 import { useDeleteDriverAction } from '~/routes/drivers';
+import { EditIcon, DeleteIcon } from '../icons';
 
 export const DriverTable = component$(
   ({ drivers, highlightId }: { drivers: any[]; highlightId?: string }) => {
     const navigate = useNavigate();
     const deleteDriverAction = useDeleteDriverAction();
 
+    if (drivers.length === 0) {
+      return (
+        <div class="table-container">
+          <div class="p-8 text-center">
+            <p style="color: rgb(var(--color-text-secondary))">No drivers found</p>
+          </div>
+        </div>
+      );
+    }
+
     return (
-      <div class="overflow-x-auto shadow border border-gray-200 rounded-lg">
-        <table class="min-w-full text-sm text-left text-gray-800 bg-white">
-          <thead class="bg-gray-100 text-gray-600 uppercase text-xs tracking-wider">
+      <div class="table-container overflow-x-auto">
+        <table class="table-modern">
+          <thead>
             <tr>
-              <th class="px-4 py-3">Name</th>
-              <th class="px-4 py-3">Truck #</th>
-              <th class="px-4 py-3">End Dump</th>
-              <th class="px-4 py-3">Flatbed</th>
-              <th class="px-4 py-3">Non-Comm</th>
-              <th class="px-4 py-3">Hired</th>
-              <th class="px-4 py-3">Released</th>
-              <th class="px-4 py-3 text-center">Actions</th>
+              <th>Name</th>
+              <th>Truck #</th>
+              <th>End Dump</th>
+              <th>Flatbed</th>
+              <th>Non-Comm</th>
+              <th>Hired</th>
+              <th>Released</th>
+              <th class="text-center">Actions</th>
             </tr>
           </thead>
           <tbody>
             {drivers.map((driver) => {
-              const isNew = highlightId && String(driver.id) === highlightId;
+              const isHighlighted = highlightId && String(driver.id) === highlightId;
               return (
                 <tr
                   key={driver.id}
-                  class={`border-t border-gray-200 transition-colors ${isNew ? 'bg-yellow-100/50' : 'hover:bg-gray-100'}`}
+                  class={isHighlighted ? 'row-highlighted' : ''}
                 >
-                  <td class="px-4 py-3 font-medium">
+                  <td class="font-medium">
                     {driver.firstName} {driver.lastName}
                   </td>
-                  <td class="px-4 py-3">{driver.defaultTruck || '—'}</td>
-                  <td class="px-4 py-3">${driver.endDumpPayRate.toFixed(2)}</td>
-                  <td class="px-4 py-3">${driver.flatBedPayRate.toFixed(2)}</td>
-                  <td class="px-4 py-3">
-                    ${driver.nonCommissionRate.toFixed(2)}
-                  </td>
-                  <td class="px-4 py-3">
+                  <td>{driver.defaultTruck || '—'}</td>
+                  <td class="font-medium">${driver.endDumpPayRate.toFixed(2)}</td>
+                  <td class="font-medium">${driver.flatBedPayRate.toFixed(2)}</td>
+                  <td class="font-medium">${driver.nonCommissionRate.toFixed(2)}</td>
+                  <td>
                     {driver.dateHired
                       ? new Date(driver.dateHired).toLocaleDateString()
                       : '—'}
                   </td>
-                  <td class="px-4 py-3">
+                  <td>
                     {driver.dateReleased
                       ? new Date(driver.dateReleased).toLocaleDateString()
                       : '—'}
                   </td>
-                  <td class="px-4 py-3 text-center space-x-2">
-                    <button
-                      class="text-blue-600 hover:underline text-sm"
-                      onClick$={() => navigate(`/drivers/edit/${driver.id}`)}
-                    >
-                      Edit
-                    </button>
-                    <button
-                      class="text-red-500 hover:underline text-sm"
-                      onClick$={async () => {
-                        const confirmed = confirm(
-                          'Are you sure you want to delete this driver?',
-                        );
-                        if (!confirmed) return;
-                        await deleteDriverAction.submit({
-                          id: String(driver.id),
-                        });
-                        window.location.reload();
-                      }}
-                    >
-                      Delete
-                    </button>
+                  <td class="text-center">
+                    <div class="flex justify-center items-center gap-1">
+                      <button
+                        class="btn-icon btn-icon-primary"
+                        title="Edit driver"
+                        onClick$={() => navigate(`/drivers/edit/${driver.id}`)}
+                      >
+                        <EditIcon size={16} />
+                      </button>
+                      <button
+                        class="btn-icon btn-icon-danger"
+                        title="Delete driver"
+                        onClick$={async () => {
+                          const confirmed = confirm(
+                            'Are you sure you want to delete this driver?',
+                          );
+                          if (!confirmed) return;
+                          await deleteDriverAction.submit({
+                            id: String(driver.id),
+                          });
+                          window.location.reload();
+                        }}
+                      >
+                        <DeleteIcon size={16} />
+                      </button>
+                    </div>
                   </td>
                 </tr>
               );

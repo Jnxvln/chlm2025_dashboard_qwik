@@ -50,14 +50,14 @@ export default component$(() => {
       <div class="mb-6 flex gap-4">
         <NavLink
           href="/drivers/create"
-          class="font-semibold outline text-emerald-700 outline-emerald-700 rounded-3xl hover:bg-emerald-600 hover:outline-0 hover:text-white px-3 py-1.5 transition-colors duration-150 ease-in-out"
+          class="btn btn-accent"
         >
           + New Driver
         </NavLink>
 
         <NavLink
           href="/workdays"
-          class="font-semibold outline text-emerald-700 outline-emerald-700 rounded-3xl hover:bg-emerald-600 hover:outline-0 hover:text-white px-3 py-1.5 transition-colors duration-150 ease-in-out"
+          class="btn btn-accent"
         >
           Workdays
         </NavLink>

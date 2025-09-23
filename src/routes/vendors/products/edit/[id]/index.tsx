@@ -9,6 +9,7 @@ import {
 import { db } from '~/lib/db';
 import { useNavigate } from '@builder.io/qwik-city';
 import PageSubtitle from '~/components/PageSubtitle';
+import BackButton from '~/components/BackButton';
 
 export const useVendorProduct = routeLoader$(async ({ params }) => {
   const id = Number(params.id);
@@ -111,108 +112,123 @@ export default component$(() => {
   });
 
   return (
-    <section class="mx-auto px-4 py-6">
-      <PageSubtitle text="Edit Vendor Product" />
+    <div class="container mx-auto p-6">
+      <div class="mb-6">
+        <BackButton />
+        <PageSubtitle text="Edit Vendor Product" />
+      </div>
 
-      <Form
-        action={updateVendorProduct}
-        class="mt-4 flex flex-col gap-4 bg-white border border-gray-200 shadow p-6 rounded-lg"
-      >
-        <input
-          name="name"
-          type="text"
-          value={vendorProduct.value.name}
-          required
-          placeholder="Product Name"
-          class="w-full border border-gray-300 rounded p-2"
-        />
-
-        <input
-          name="productCost"
-          type="number"
-          step="0.01"
-          value={vendorProduct.value.productCost}
-          placeholder="Product Cost"
-          class="w-full border border-gray-300 rounded p-2"
-        />
-
-        <textarea
-          name="notes"
-          value={vendorProduct.value.notes}
-          placeholder="Notes"
-          class="w-full border border-gray-300 rounded p-2"
-          rows={3}
-        />
-
-        <select
-          name="vendorId"
-          // defaultValue={String(vendorProduct.value.vendorId)}
-          // value={selectedVendorId.value}
-          value={selectedVendorId.value ?? ''}
-          class="w-full border border-gray-300 rounded p-2"
-          required
-          onChange$={(e) => {
-            // const value = (e.target as HTMLSelectElement).value;
-            // selectedVendorId.value = Number(value);
-            selectedVendorId.value = Number(
-              (e.target as HTMLSelectElement).value,
-            );
-          }}
+      <div class="card">
+        <Form
+          action={updateVendorProduct}
+          class="space-y-6"
         >
-          <option value="">Select Vendor *</option>
-          {vendors.value.map((vendor) => (
-            <option key={vendor.id} value={vendor.id}>
-              {vendor.name} ({vendor.shortName})
-            </option>
-          ))}
-        </select>
-
-        {availableLocations.value.length > 0 && (
-          <select
-            name="vendorLocationId"
-            // value={vendorProduct.value.vendorLocationId}
-            value={vendorProduct.value.vendorLocation?.id}
-            class="w-full border border-gray-300 rounded p-2"
+        <div>
+          <label class="block text-sm font-medium mb-2" style="color: rgb(var(--color-text-secondary))">Product Name *</label>
+          <input
+            name="name"
+            type="text"
+            value={vendorProduct.value.name}
             required
+            class="w-full"
+          />
+        </div>
+
+        <div>
+          <label class="block text-sm font-medium mb-2" style="color: rgb(var(--color-text-secondary))">Product Cost</label>
+          <input
+            name="productCost"
+            type="number"
+            step="0.01"
+            value={vendorProduct.value.productCost}
+            class="w-full"
+          />
+        </div>
+
+        <div>
+          <label class="block text-sm font-medium mb-2" style="color: rgb(var(--color-text-secondary))">Notes</label>
+          <textarea
+            name="notes"
+            value={vendorProduct.value.notes}
+            class="w-full"
+            rows={3}
+          />
+        </div>
+
+        <div>
+          <label class="block text-sm font-medium mb-2" style="color: rgb(var(--color-text-secondary))">Vendor *</label>
+          <select
+            name="vendorId"
+            value={selectedVendorId.value ?? ''}
+            class="w-full"
+            required
+            onChange$={(e) => {
+              selectedVendorId.value = Number(
+                (e.target as HTMLSelectElement).value,
+              );
+            }}
           >
-            <option value="">Select Location *</option>
-            {availableLocations.value.map((location) => (
-              <option key={location.id} value={location.id}>
-                {location.name}
+            <option value="">Select Vendor *</option>
+            {vendors.value.map((vendor) => (
+              <option key={vendor.id} value={vendor.id}>
+                {vendor.name} ({vendor.shortName})
               </option>
             ))}
           </select>
+        </div>
+
+        {availableLocations.value.length > 0 && (
+          <div>
+            <label class="block text-sm font-medium mb-2" style="color: rgb(var(--color-text-secondary))">Location *</label>
+            <select
+              name="vendorLocationId"
+              value={vendorProduct.value.vendorLocation?.id}
+              class="w-full"
+              required
+            >
+              <option value="">Select Location *</option>
+              {availableLocations.value.map((location) => (
+                <option key={location.id} value={location.id}>
+                  {location.name}
+                </option>
+              ))}
+            </select>
+          </div>
         )}
 
-        <label class="inline-flex items-center gap-2 mt-2">
+        <div class="flex items-center gap-2">
           <input
             name="isActive"
             type="checkbox"
             value="true"
             checked={vendorProduct.value.isActive}
-            class="accent-emerald-600"
+            style="accent-color: rgb(var(--color-primary))"
           />
-          <span>Is Active</span>
-        </label>
-
-        <button
-          type="submit"
-          class="bg-emerald-600 text-white px-6 py-2 rounded hover:bg-emerald-700 transition-colors"
-        >
-          Update Vendor Product
-        </button>
+          <label class="text-sm font-medium" style="color: rgb(var(--color-text-primary))">Is Active</label>
+        </div>
 
         {updateVendorProduct.value?.error && (
-          <p class="text-red-600 font-medium">
+          <div class="p-3 rounded-lg" style="background-color: rgb(var(--color-danger) / 0.1); color: rgb(var(--color-danger))">
             {updateVendorProduct.value.error}
-          </p>
+          </div>
         )}
         {success.value && (
-          <p class="text-green-600 font-medium">
+          <div class="p-3 rounded-lg" style="background-color: rgb(var(--color-success) / 0.1); color: rgb(var(--color-success))">
             Vendor product updated! Redirecting...
-          </p>
+          </div>
         )}
+
+        <div class="flex justify-end gap-3">
+          <a href="/vendors/products" class="btn btn-ghost">Cancel</a>
+          <button
+            type="submit"
+            class="btn btn-primary"
+          >
+            Update Vendor Product
+          </button>
+        </div>
       </Form>
-    </section>
+      </div>
+    </div>
   );
 });

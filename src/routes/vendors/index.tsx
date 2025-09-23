@@ -46,7 +46,7 @@ export default component$(() => {
       <div class="mb-4">
         <NavLink
           href="/vendors/create"
-          class="font-semibold outline text-emerald-700 outline-emerald-700 rounded-3xl hover:bg-emerald-600 hover:outline-0 hover:text-white px-3 py-1.5 transition-colors duration-150 ease-in-out"
+          class="btn btn-accent"
         >
           + New Vendor
         </NavLink>

@@ -48,23 +48,34 @@ export default component$(() => {
   });
 
   return (
-    <section>
-      <PageSubtitle text="Vendor Products" />
-      <p class="mb-4">List of all products available from vendor locations.</p>
-
-      <div class="mb-6">
+    <div class="container mx-auto p-6">
+      <div class="flex justify-between items-center mb-6">
+        <PageSubtitle text="Vendor Products" />
         <NavLink
           href="/vendors/products/create"
-          class="font-semibold outline text-emerald-700 outline-emerald-700 rounded-3xl hover:bg-emerald-600 hover:outline-0 hover:text-white px-3 py-1.5 transition-colors duration-150 ease-in-out"
+          class="btn btn-primary"
         >
           + New Vendor Product
         </NavLink>
       </div>
 
+      <div class="flex gap-4 mb-6">
+        <NavLink
+          href="/vendors"
+          class="btn btn-ghost"
+        >
+          ← Vendors
+        </NavLink>
+      </div>
+
+      <p class="mb-6" style="color: rgb(var(--color-text-secondary))">
+        List of all products available from vendor locations.
+      </p>
+
       <VendorProductTable
         vendorProducts={data.value.vendorProducts}
         highlightId={data.value.highlightedId ?? undefined}
       />
-    </section>
+    </div>
   );
 });

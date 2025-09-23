@@ -1,10 +1,11 @@
 import { component$ } from '@builder.io/qwik';
 import { routeLoader$, routeAction$, Form, Link } from '@builder.io/qwik-city';
 import { db } from '~/lib/db';
+import BackButton from '~/components/BackButton';
 
 export const useMaterialDeleteLoader = routeLoader$(async ({ params }) => {
   const id = parseInt(params.id);
-  const material = await prisma.material.findUnique({
+  const material = await db.material.findUnique({
     where: { id },
     include: {
       category: true,
@@ -24,7 +25,7 @@ export const useDeleteMaterialAction = routeAction$(
 
     try {
       // Soft delete by setting isActive to false
-      await prisma.material.update({
+      await db.material.update({
         where: { id },
         data: {
           isActive: false,
@@ -49,13 +50,11 @@ export default component$(() => {
   return (
     <div class="container mx-auto p-6 max-w-2xl">
       <div class="mb-6">
-        <Link href="/materials" class="text-blue-500 hover:text-blue-700">
-          ← Back to Materials
-        </Link>
-        <h1 class="text-3xl font-bold mt-2">Delete Material</h1>
+        <BackButton />
+        <h1 class="text-3xl font-bold" style="color: rgb(var(--color-text-primary))">Delete Material</h1>
       </div>
 
-      <div class="bg-white shadow-md rounded-lg overflow-hidden">
+      <div class="card overflow-hidden">
         {/* Material Preview */}
         <div class="md:flex">
           <div class="md:w-1/3">

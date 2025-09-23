@@ -98,7 +98,8 @@ export default component$(() => {
 
   return (
     <div class="p-6 max-w-3xl mx-auto">
-      <Form action={action} class="space-y-4">
+      <div class="card">
+        <Form action={action} class="space-y-4">
         <input type="hidden" name="workdayId" value={data.value.workdayId} />
         <input
           type="hidden"
@@ -109,23 +110,23 @@ export default component$(() => {
 
         {/* Row 1: Date Only */}
         <div>
-          <label class="block text-sm font-medium mb-1">Haul Date</label>
+          <label class="block text-sm font-medium mb-2" style="color: rgb(var(--color-text-secondary))">Haul Date</label>
           <input
             name="dateHaul"
             type="date"
             value={data.value.haulDate}
             required
-            class="input w-full"
+            class="w-full"
           />
         </div>
 
         {/* Row 2: Driver, Load Type, Truck # */}
         <div class="grid grid-cols-3 gap-4">
           <div>
-            <label class="block text-sm font-medium mb-1">Driver</label>
-            <select 
-              name="driverId" 
-              class="input w-full" 
+            <label class="block text-sm font-medium mb-2" style="color: rgb(var(--color-text-secondary))">Driver</label>
+            <select
+              name="driverId"
+              class="w-full"
               required
               onChange$={(_, el) => {
                 selectedDriverId.value = el.value;
@@ -148,10 +149,10 @@ export default component$(() => {
           </div>
 
           <div>
-            <label class="block text-sm font-medium mb-1">Load Type</label>
+            <label class="block text-sm font-medium mb-2" style="color: rgb(var(--color-text-secondary))">Load Type</label>
             <select
               name="loadType"
-              class="input w-full"
+              class="w-full"
               required
               onChange$={(e) =>
                 (selectedLoadType.value = e.target.value as
@@ -165,10 +166,10 @@ export default component$(() => {
           </div>
 
           <div>
-            <label class="block text-sm font-medium mb-1">Truck #</label>
-            <input 
-              name="truck" 
-              class="input w-full" 
+            <label class="block text-sm font-medium mb-2" style="color: rgb(var(--color-text-secondary))">Truck #</label>
+            <input
+              name="truck"
+              class="w-full"
               required 
               value={truckNumber.value}
               onInput$={(_, el) => {
@@ -181,17 +182,17 @@ export default component$(() => {
         {/* Row 3: Customer, Load/Ref #, CH Invoice (conditional) */}
         <div class={selectedLoadType.value === 'flatbed' ? "grid grid-cols-3 gap-4" : "grid grid-cols-2 gap-4"}>
           <div>
-            <label class="block text-sm font-medium mb-1">Customer</label>
-            <input name="customer" type="text" class="input w-full" />
+            <label class="block text-sm font-medium mb-2" style="color: rgb(var(--color-text-secondary))">Customer</label>
+            <input name="customer" type="text" class="w-full" />
           </div>
           <div>
-            <label class="block text-sm font-medium mb-1">Load/Ref #</label>
-            <input name="loadRefNum" type="text" class="input w-full" />
+            <label class="block text-sm font-medium mb-2" style="color: rgb(var(--color-text-secondary))">Load/Ref #</label>
+            <input name="loadRefNum" type="text" class="w-full" />
           </div>
           {selectedLoadType.value === 'flatbed' && (
             <div>
-              <label class="block text-sm font-medium mb-1">CH Invoice #</label>
-              <input name="chInvoice" type="text" class="input w-full" />
+              <label class="block text-sm font-medium mb-2" style="color: rgb(var(--color-text-secondary))">CH Invoice #</label>
+              <input name="chInvoice" type="text" class="w-full" />
             </div>
           )}
         </div>
@@ -199,10 +200,10 @@ export default component$(() => {
         {/* Row 4: Vendor, Location, Route */}
         <div class="grid grid-cols-3 gap-4">
           <div>
-            <label class="block text-sm font-medium mb-1">From (Vendor)</label>
+            <label class="block text-sm font-medium mb-2" style="color: rgb(var(--color-text-secondary))">From (Vendor)</label>
             <select
               name="vendorId"
-              class="input w-full"
+              class="w-full"
               required
               onChange$={(e) => {
                 selectedVendorId.value = e.target.value;
@@ -220,10 +221,10 @@ export default component$(() => {
           </div>
 
           <div>
-            <label class="block text-sm font-medium mb-1">Location</label>
+            <label class="block text-sm font-medium mb-2" style="color: rgb(var(--color-text-secondary))">Location</label>
             <select
               name="vendorLocationId"
-              class="input w-full"
+              class="w-full"
               required
               onChange$={(e) => {
                 selectedLocationId.value = e.target.value;
@@ -240,10 +241,10 @@ export default component$(() => {
           </div>
 
           <div>
-            <label class="block text-sm font-medium mb-1">To (Route)</label>
+            <label class="block text-sm font-medium mb-2" style="color: rgb(var(--color-text-secondary))">To (Route)</label>
             <select
               name="freightRouteId"
-              class="input w-full"
+              class="w-full"
               required
               onChange$={(e) => {
                 const fr = data.value.freightRoutes.find(
@@ -264,11 +265,11 @@ export default component$(() => {
 
         {/* Row 5: Material */}
         <div>
-          <label class="block text-sm font-medium mb-1">Material</label>
+          <label class="block text-sm font-medium mb-2" style="color: rgb(var(--color-text-secondary))">Material</label>
           <select
             name="vendorProductId"
             required
-            class="input w-full"
+            class="w-full"
             disabled={!selectedVendorId.value || !selectedLocationId.value}
           >
             <option value="">Select Material</option>
@@ -284,30 +285,30 @@ export default component$(() => {
         {/* Row 6: Rate Metric, Quantity, Rate */}
         <div class="grid grid-cols-3 gap-4">
           <div>
-            <label class="block text-sm font-medium mb-1">Rate Metric</label>
-            <select name="rateMetric" class="input w-full" required>
+            <label class="block text-sm font-medium mb-2" style="color: rgb(var(--color-text-secondary))">Rate Metric</label>
+            <select name="rateMetric" class="w-full" required>
               <option value="ton">Tons</option>
               <option value="mile">Miles</option>
               <option value="hour">Hours</option>
             </select>
           </div>
           <div>
-            <label class="block text-sm font-medium mb-1">Quantity</label>
+            <label class="block text-sm font-medium mb-2" style="color: rgb(var(--color-text-secondary))">Quantity</label>
             <input
               name="quantity"
               type="number"
               step="0.01"
-              class="input w-full"
+              class="w-full"
               required
             />
           </div>
           <div>
-            <label class="block text-sm font-medium mb-1">Rate</label>
+            <label class="block text-sm font-medium mb-2" style="color: rgb(var(--color-text-secondary))">Rate</label>
             <input
               name="rate"
               type="number"
               step="0.01"
-              class="input w-full"
+              class="w-full"
               required
               value={selectedRate.value ?? ''}
             />
@@ -320,13 +321,13 @@ export default component$(() => {
           <div class="flex gap-4">
             <a
               href={returnTo || fallbackUrl}
-              class="px-4 py-2 border rounded text-gray-600 hover:bg-gray-100"
+              class="btn btn-ghost"
             >
               Cancel
             </a>
             <button
               type="submit"
-              class="px-4 py-2 bg-blue-600 text-white rounded hover:bg-blue-700"
+              class="btn btn-primary"
             >
               Save
             </button>
@@ -335,12 +336,13 @@ export default component$(() => {
 
         {/* Messages */}
         {action.value?.error && (
-          <div class="text-red-600">{action.value.error}</div>
+          <div class="p-3 rounded-lg" style="background-color: rgb(var(--color-danger) / 0.1); color: rgb(var(--color-danger))">{action.value.error}</div>
         )}
         {action.value?.success && (
-          <div class="text-green-600">Haul created! Redirecting…</div>
+          <div class="p-3 rounded-lg" style="background-color: rgb(var(--color-success) / 0.1); color: rgb(var(--color-success))">Haul created! Redirecting…</div>
         )}
       </Form>
+      </div>
     </div>
   );
 });
