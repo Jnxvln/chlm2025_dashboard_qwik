@@ -1,4 +1,4 @@
-import { component$, $ } from '@builder.io/qwik';
+import { component$, $, useVisibleTask$ } from '@builder.io/qwik';
 import { useNavigate } from '@builder.io/qwik-city';
 export { useHaulsSummaryLoader } from './loader';
 import { useHaulsSummaryLoader } from './loader';
@@ -27,16 +27,60 @@ export default component$(() => {
   const data = useHaulsSummaryLoader();
   const nav = useNavigate();
 
+  // Handle error states by redirecting
+  useVisibleTask$(({ track }) => {
+    const result = track(() => data.value);
+    if (result && 'error' in result) {
+      console.log('HAULS REPORT ERROR:', result.error);
+      // Show error message briefly then redirect
+      setTimeout(() => {
+        nav(result.error.redirectTo);
+      }, 3000); // 3 second delay to show the message
+    }
+  });
+
   const handlePrint = $(() => {
     window.print();
   });
 
   const handleBack = $(() => {
+    if ('error' in data.value) return; // Prevent access if error state
     const returnUrl = `/hauls?driver=${data.value.driver.id}&startDate=${data.value.startDate}&endDate=${data.value.endDate}`;
     nav(returnUrl);
   });
 
-  // Calculate totals
+  // Handle error states first
+  if ('error' in data.value) {
+    return (
+      <div class="container mx-auto p-6">
+        <div class="max-w-2xl mx-auto">
+          <div class="card text-center">
+            <div class="mb-6">
+              <h1 class="text-2xl font-bold mb-4" style="color: rgb(var(--color-danger))">
+                Report Error
+              </h1>
+              <p class="text-lg mb-4" style="color: rgb(var(--color-text-secondary))">
+                {data.value.error.message}
+              </p>
+              <p class="text-sm" style="color: rgb(var(--color-text-tertiary))">
+                Redirecting back to hauls page in 3 seconds...
+              </p>
+            </div>
+            <div class="flex justify-center gap-4">
+              <button
+                class="btn btn-primary"
+                onClick$={() => nav(data.value.error.redirectTo)}
+              >
+                Go Back Now
+              </button>
+            </div>
+          </div>
+        </div>
+      </div>
+    );
+  }
+
+  // Calculate totals for success state
   let totalFreightPay = 0;
   let totalDriverPay = 0;
 

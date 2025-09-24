@@ -5,8 +5,15 @@ import { db } from '~/lib/db';
 export const useNewHaulLoader = routeLoader$(async (event) => {
   const url = event.url;
   const driverId = parseInt(url.searchParams.get('driver') || '', 10);
-  const rawDate =
-    url.searchParams.get('date') || url.searchParams.get('startDate') || new Date().toISOString().split('T')[0]; // fallback to today
+  const duplicateId = parseInt(url.searchParams.get('duplicateId') || '', 10);
+  const preselectedDate = url.searchParams.get('date'); // date from workday-specific links
+
+  console.log('NEW HAUL LOADER - Starting:', {
+    driverId: driverId || 'none',
+    duplicateId: duplicateId || 'none',
+    preselectedDate: preselectedDate || 'none',
+    hasDriver: !!driverId && !isNaN(driverId)
+  });
 
   // Fetch all drivers
   const drivers = await db.driver.findMany({
@@ -15,81 +22,73 @@ export const useNewHaulLoader = routeLoader$(async (event) => {
   });
 
   // Match with specific driver (if provided)
-  const driver = drivers.find((d) => d.id === driverId);
-  if (!driver) {
+  const driver = driverId && !isNaN(driverId) ? drivers.find((d) => d.id === driverId) : null;
+
+  // Redirect if specific driver requested but not found
+  if (driverId && !isNaN(driverId) && !driver) {
     throw event.redirect(302, '/hauls');
   }
-
-  console.log('loader running:', {
-    driverId,
-    rawDate,
-    dateParam: url.searchParams.get('date'),
-    startDateParam: url.searchParams.get('startDate'),
-    actualDateUsed: rawDate
-  });
-
-  if (!driverId || !rawDate) {
-    throw event.redirect(302, '/hauls');
-  }
-
-  const parsedDate = new Date(rawDate);
-  const dateStr = parsedDate.toISOString().split('T')[0];
 
   const user = await db.user.findFirst(); // Simplified auth for now
 
-  const workday = await db.workday.upsert({
-    where: {
-      driverId_date: {
-        driverId,
-        date: new Date(dateStr),
+  // Load form data
+  const [vendors, vendorProducts, freightRoutes, duplicateHaul] = await Promise.all([
+    db.vendor.findMany({
+      where: { isActive: true },
+      include: {
+        vendorLocations: {
+          where: { isActive: true },
+          orderBy: { name: 'asc' },
+        },
       },
-    },
-    update: {}, // no-op if exists
-    create: {
-      date: new Date(dateStr),
-      chHours: 0,
-      ncHours: 0,
-      driverId,
-      createdById: user?.id || 1,
-    },
-    select: { id: true },
-  });
+      orderBy: { name: 'asc' },
+    }),
 
-  const vendors = await db.vendor.findMany({
-    where: { isActive: true },
-    include: {
-      vendorLocations: {
-        where: { isActive: true },
-        orderBy: { name: 'asc' },
+    db.vendorProduct.findMany({
+      where: { isActive: true },
+      include: {
+        vendor: true,
+        vendorLocation: true,
       },
-    },
-    orderBy: { name: 'asc' },
-  });
+      orderBy: [{ name: 'asc' }],
+    }),
 
-  const vendorProducts = await db.vendorProduct.findMany({
-    where: { isActive: true },
-    include: {
-      vendor: true,
-      vendorLocation: true,
-    },
-    orderBy: [{ name: 'asc' }],
-  });
+    db.freightRoute.findMany({
+      where: { isActive: true },
+      include: { vendorLocation: true },
+      orderBy: [{ destination: 'asc' }],
+    }),
 
-  const freightRoutes = await db.freightRoute.findMany({
-    where: { isActive: true },
-    include: { vendorLocation: true },
-    orderBy: [{ destination: 'asc' }],
+    // Optionally load haul to duplicate
+    duplicateId && !isNaN(duplicateId)
+      ? db.haul.findUnique({
+          where: { id: duplicateId },
+          include: {
+            vendorProduct: true,
+            freightRoute: true,
+          }
+        })
+      : null
+  ]);
+
+  console.log('NEW HAUL LOADER - Data loaded:', {
+    vendorCount: vendors.length,
+    productCount: vendorProducts.length,
+    routeCount: freightRoutes.length,
+    duplicateHaul: duplicateHaul ? duplicateHaul.id : 'none'
   });
 
   return {
-    workdayId: workday.id,
+    // No workday handling at load time - user will pick date first (unless preselected)
     createdById: user?.id || 1,
     vendors,
     vendorProducts,
     freightRoutes,
-    haulDate: dateStr,
-    driverId,
+    haulDate: preselectedDate || '', // Use preselected date if available
+    driverId: driverId && !isNaN(driverId) ? driverId : null,
     drivers,
     driver,
+    duplicateHaul,
+    hasPreselectedDate: !!preselectedDate,
   };
 });

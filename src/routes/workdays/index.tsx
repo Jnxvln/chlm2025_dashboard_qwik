@@ -1,5 +1,5 @@
 // src/routes/workdays/index.tsx
-import { component$, useVisibleTask$ } from '@builder.io/qwik';
+import { component$, useVisibleTask$, $ } from '@builder.io/qwik';
 import {
   useNavigate,
   routeLoader$,
@@ -12,6 +12,37 @@ import {
 import { db } from '~/lib/db';
 import { NavLink } from '~/components/NavLink';
 import PageTitle from '~/components/PageTitle';
+
+const WORKDAYS_STORAGE_KEYS = {
+  driver: 'workdays-filter-driver',
+  startDate: 'workdays-filter-startDate',
+  endDate: 'workdays-filter-endDate',
+};
+
+function saveToLocalStorage(key: string, value: string) {
+  if (typeof window !== 'undefined') {
+    if (value) {
+      localStorage.setItem(key, value);
+    } else {
+      localStorage.removeItem(key);
+    }
+  }
+}
+
+function getFromLocalStorage(key: string): string | null {
+  if (typeof window !== 'undefined') {
+    return localStorage.getItem(key);
+  }
+  return null;
+}
+
+// Safe date formatting to avoid timezone issues
+function formatDateSafe(dateString: string | Date): string {
+  const date = new Date(dateString);
+  // Add timezone offset to ensure we display the correct local date
+  const offsetDate = new Date(date.getTime() + date.getTimezoneOffset() * 60000);
+  return offsetDate.toLocaleDateString();
+}
 
 function toValidDate(dateStr: string | null, fallback: Date): Date {
   if (!dateStr) return fallback;
@@ -97,13 +128,61 @@ export default component$(() => {
 
   const backUrl = `/workdays${loc.url.search}`; // preserves ?driver=...&startDate=...&endDate=...
 
-  // Clear highlight parameter after page load
-  // eslint-disable-next-line qwik/no-use-visible-task
+  const updateUrl = $((driver?: string, startDate?: string, endDate?: string) => {
+    const url = new URL(window.location.href);
+
+    if (driver) {
+      url.searchParams.set('driver', driver);
+    } else {
+      url.searchParams.delete('driver');
+    }
+
+    if (startDate) {
+      url.searchParams.set('startDate', startDate);
+    } else {
+      url.searchParams.delete('startDate');
+    }
+
+    if (endDate) {
+      url.searchParams.set('endDate', endDate);
+    } else {
+      url.searchParams.delete('endDate');
+    }
+
+    window.location.href = url.toString();
+  });
+
+  // Initialize from localStorage and clear highlight parameter
   useVisibleTask$(() => {
     const url = new URL(window.location.href);
+
+    // Clear highlight parameter
     if (url.searchParams.has('highlight')) {
       url.searchParams.delete('highlight');
       history.replaceState(null, '', url.toString());
+    }
+
+    // Load from localStorage if no URL params present
+    if (!url.searchParams.has('driver') && !url.searchParams.has('startDate') && !url.searchParams.has('endDate')) {
+      const savedDriver = getFromLocalStorage(WORKDAYS_STORAGE_KEYS.driver);
+      const savedStartDate = getFromLocalStorage(WORKDAYS_STORAGE_KEYS.startDate);
+      const savedEndDate = getFromLocalStorage(WORKDAYS_STORAGE_KEYS.endDate);
+
+      if (savedDriver || savedStartDate || savedEndDate) {
+        updateUrl(savedDriver || undefined, savedStartDate || undefined, savedEndDate || undefined);
+        return;
+      }
+    }
+
+    // Save current URL params to localStorage
+    if (data.value.currentDriver) {
+      saveToLocalStorage(WORKDAYS_STORAGE_KEYS.driver, data.value.currentDriver.toString());
+    }
+    if (data.value.currentStartDate) {
+      saveToLocalStorage(WORKDAYS_STORAGE_KEYS.startDate, data.value.currentStartDate);
+    }
+    if (data.value.currentEndDate) {
+      saveToLocalStorage(WORKDAYS_STORAGE_KEYS.endDate, data.value.currentEndDate);
     }
   });
 
@@ -149,13 +228,9 @@ export default component$(() => {
                 value={data.value.currentDriver?.toString() || ''}
                 class="w-full"
                 onChange$={(_, el) => {
-                  const url = new URL(window.location.href);
-                  if (el.value) {
-                    url.searchParams.set('driver', el.value);
-                  } else {
-                    url.searchParams.delete('driver');
-                  }
-                  nav(url.pathname + '?' + url.searchParams.toString());
+                  const driverValue = el.value || '';
+                  saveToLocalStorage(WORKDAYS_STORAGE_KEYS.driver, driverValue);
+                  updateUrl(driverValue || undefined, data.value.currentStartDate || undefined, data.value.currentEndDate || undefined);
                 }}
               >
                 <option value="">All Drivers</option>
@@ -182,9 +257,9 @@ export default component$(() => {
               value={data.value.currentStartDate}
               class="w-full"
               onChange$={(_, el) => {
-                const url = new URL(window.location.href);
-                url.searchParams.set('startDate', el.value);
-                window.location.href = url.toString();
+                const startDateValue = el.value;
+                saveToLocalStorage(WORKDAYS_STORAGE_KEYS.startDate, startDateValue);
+                updateUrl(data.value.currentDriver?.toString() || undefined, startDateValue || undefined, data.value.currentEndDate || undefined);
               }}
             />
           </div>
@@ -203,9 +278,9 @@ export default component$(() => {
               value={data.value.currentEndDate}
               class="w-full"
               onChange$={(_, el) => {
-                const url = new URL(window.location.href);
-                url.searchParams.set('endDate', el.value);
-                window.location.href = url.toString();
+                const endDateValue = el.value;
+                saveToLocalStorage(WORKDAYS_STORAGE_KEYS.endDate, endDateValue);
+                updateUrl(data.value.currentDriver?.toString() || undefined, data.value.currentStartDate || undefined, endDateValue || undefined);
               }}
             />
           </div>
@@ -245,7 +320,7 @@ export default component$(() => {
               {data.value.workdays.map((workday) => (
                 <tr key={workday.id}>
                   <td class="whitespace-nowrap font-medium">
-                    {new Date(workday.date).toLocaleDateString()}
+                    {formatDateSafe(workday.date)}
                   </td>
                   <td class="whitespace-nowrap">
                     <div class="font-medium">

@@ -13,7 +13,13 @@ export const useHaulsSummaryLoader = routeLoader$(async (event) => {
 
   // Validate required parameters
   if (isNaN(driverId) || !isValidDate(startDateStr) || !isValidDate(endDateStr)) {
-    throw new Error('Missing required parameters: driverId, startDate, endDate');
+    return {
+      error: {
+        type: 'missing_parameters',
+        message: 'Missing required parameters: driver, start date, and end date are required.',
+        redirectTo: '/hauls'
+      }
+    };
   }
 
   const startDate = new Date(startDateStr!);
@@ -22,7 +28,13 @@ export const useHaulsSummaryLoader = routeLoader$(async (event) => {
   // Validate date range (max 7 days)
   const daysDiff = Math.ceil((endDate.getTime() - startDate.getTime()) / (1000 * 60 * 60 * 24));
   if (daysDiff > 7) {
-    throw new Error('Date range cannot exceed 7 days');
+    return {
+      error: {
+        type: 'date_range_exceeded',
+        message: `Date range is ${daysDiff} days, but reports are limited to 7 days maximum. Please select a shorter date range.`,
+        redirectTo: `/hauls?driver=${driverId}&startDate=${startDateStr}&endDate=${endDateStr}`
+      }
+    };
   }
 
   // Load driver info
@@ -31,7 +43,13 @@ export const useHaulsSummaryLoader = routeLoader$(async (event) => {
   });
 
   if (!driver) {
-    throw new Error('Driver not found');
+    return {
+      error: {
+        type: 'driver_not_found',
+        message: 'Driver not found. Please select a valid driver.',
+        redirectTo: '/hauls'
+      }
+    };
   }
 
   // Load all workdays in the date range for this driver
@@ -93,6 +111,7 @@ export const useHaulsSummaryLoader = routeLoader$(async (event) => {
     });
 
   return {
+    success: true,
     driver,
     workdays,
     allHauls,

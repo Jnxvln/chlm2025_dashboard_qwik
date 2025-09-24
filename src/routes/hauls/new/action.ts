@@ -4,6 +4,10 @@ import { db } from '~/lib/db';
 export const useNewHaulAction = routeAction$(
   async (data, event) => {
     try {
+      // Validate workdayId exists
+      if (!data.workdayId) {
+        return { success: false, error: 'Workday is required to create a haul' };
+      }
       const haul = await db.haul.create({
         data: {
           dateHaul: new Date(data.dateHaul),

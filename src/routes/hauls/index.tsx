@@ -379,10 +379,6 @@ export default component$(() => {
                   ? (() => {
                       const url = new URLSearchParams();
                       url.set('driver', data.value.currentDriverId!.toString());
-                      if (data.value.currentStartDate)
-                        url.set('startDate', data.value.currentStartDate);
-                      if (data.value.currentEndDate)
-                        url.set('endDate', data.value.currentEndDate);
                       url.set(
                         'returnTo',
                         encodeURIComponent(
@@ -419,6 +415,18 @@ export default component$(() => {
               onClick$={(e) => {
                 if (!isSummaryEnabled) {
                   e.preventDefault();
+                  return;
+                }
+
+                // Validate date range (max 7 days)
+                const startDate = new Date(data.value.currentStartDate!);
+                const endDate = new Date(data.value.currentEndDate!);
+                const daysDiff = Math.ceil((endDate.getTime() - startDate.getTime()) / (1000 * 60 * 60 * 24));
+
+                if (daysDiff > 7) {
+                  e.preventDefault();
+                  alert(`Date range is ${daysDiff} days, but reports are limited to 7 days maximum. Please select a shorter date range.`);
+                  return;
                 }
               }}
             >
@@ -592,7 +600,7 @@ export default component$(() => {
                       <td class="text-center">
                         {haulCount === 0 ? (
                           <a
-                            href={`/hauls/new?driver=${data.value.currentDriverId}&date=${dateStr}&startDate=${data.value.currentStartDate}&endDate=${data.value.currentEndDate}&returnTo=${encodeURIComponent(`/hauls?driver=${data.value.currentDriverId}&startDate=${data.value.currentStartDate}&endDate=${data.value.currentEndDate}`)}`}
+                            href={`/hauls/new?driver=${data.value.currentDriverId}&date=${dateStr}&returnTo=${encodeURIComponent(`/hauls?driver=${data.value.currentDriverId}&startDate=${data.value.currentStartDate}&endDate=${data.value.currentEndDate}`)}`}
                             class="btn btn-sm btn-primary"
                           >
                             <AddIcon size={14} />
@@ -618,7 +626,7 @@ export default component$(() => {
                           </a>
                           {haulCount > 0 && (
                             <a
-                              href={`/hauls/new?driver=${data.value.currentDriverId}&date=${dateStr}&startDate=${data.value.currentStartDate}&endDate=${data.value.currentEndDate}&returnTo=${encodeURIComponent(`/hauls?driver=${data.value.currentDriverId}&startDate=${data.value.currentStartDate}&endDate=${data.value.currentEndDate}`)}`}
+                              href={`/hauls/new?driver=${data.value.currentDriverId}&date=${dateStr}&returnTo=${encodeURIComponent(`/hauls?driver=${data.value.currentDriverId}&startDate=${data.value.currentStartDate}&endDate=${data.value.currentEndDate}`)}`}
                               title="Add Haul"
                               class="btn-icon"
                               style="color: rgb(var(--color-success))"
@@ -679,7 +687,7 @@ export default component$(() => {
                                             <EditIcon size={14} />
                                           </a>
                                           <a
-                                            href={`/hauls/new?duplicateId=${haul.id}&driver=${data.value.currentDriverId}&date=${dateStr}&startDate=${data.value.currentStartDate}&endDate=${data.value.currentEndDate}&returnTo=${encodeURIComponent(`/hauls?driver=${data.value.currentDriverId}&startDate=${data.value.currentStartDate}&endDate=${data.value.currentEndDate}`)}`}
+                                            href={`/hauls/new?duplicateId=${haul.id}&driver=${data.value.currentDriverId}&date=${dateStr}&returnTo=${encodeURIComponent(`/hauls?driver=${data.value.currentDriverId}&startDate=${data.value.currentStartDate}&endDate=${data.value.currentEndDate}`)}`}
                                             title="Duplicate Haul"
                                             class="btn-icon"
                                             style="color: rgb(var(--color-secondary))"
