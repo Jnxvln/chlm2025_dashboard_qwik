@@ -1,4 +1,4 @@
-import { component$, useSignal, useVisibleTask$, $ } from '@builder.io/qwik';
+import { component$, useSignal, useVisibleTask$, $, useComputed$ } from '@builder.io/qwik';
 export { useHaulsLoader } from './loader';
 import { useNavigate, routeAction$, zod$, z } from '@builder.io/qwik-city';
 import { useHaulsLoader } from './loader';
@@ -32,6 +32,8 @@ const STORAGE_KEYS = {
   driver: 'hauls-filter-driver',
   startDate: 'hauls-filter-startDate',
   endDate: 'hauls-filter-endDate',
+  pageSize: 'hauls-page-size',
+  sortOrder: 'hauls-sort-order',
 };
 
 function saveToLocalStorage(key: string, value: string) {
@@ -51,27 +53,45 @@ function getFromLocalStorage(key: string): string | null {
   return null;
 }
 
-function updateUrl(nav: any, driver?: string, startDate?: string, endDate?: string) {
+function updateUrl(nav: any, driver?: string, startDate?: string, endDate?: string, page?: number, limit?: number, sort?: string) {
   const url = new URL(window.location.href);
-  
+
   if (driver) {
     url.searchParams.set('driver', driver);
   } else {
     url.searchParams.delete('driver');
   }
-  
+
   if (startDate) {
     url.searchParams.set('startDate', startDate);
   } else {
     url.searchParams.delete('startDate');
   }
-  
+
   if (endDate) {
     url.searchParams.set('endDate', endDate);
   } else {
     url.searchParams.delete('endDate');
   }
-  
+
+  if (page && page > 1) {
+    url.searchParams.set('page', page.toString());
+  } else {
+    url.searchParams.delete('page');
+  }
+
+  if (limit && limit !== 7) {
+    url.searchParams.set('limit', limit.toString());
+  } else {
+    url.searchParams.delete('limit');
+  }
+
+  if (sort && sort !== 'desc') {
+    url.searchParams.set('sort', sort);
+  } else {
+    url.searchParams.delete('sort');
+  }
+
   nav(url.pathname + '?' + url.searchParams.toString());
 }
 
@@ -80,24 +100,59 @@ export default component$(() => {
   const nav = useNavigate();
   const deleteAction = useDeleteHaulAction();
   const expandedRows = useSignal<Set<number>>(new Set());
+  const currentPage = useSignal(1);
+  const pageSize = useSignal(7);
+  const sortOrder = useSignal('desc');
 
   useVisibleTask$(({ track }) => {
     track(() => data.value);
-    
+
     if (typeof window !== 'undefined') {
       const urlParams = new URLSearchParams(window.location.search);
-      
+
+      // Initialize pagination and sorting from URL or localStorage
+      const urlPage = parseInt(urlParams.get('page') || '1', 10);
+      const urlLimit = parseInt(urlParams.get('limit') || '7', 10);
+      const urlSort = urlParams.get('sort') || 'desc';
+
+      if (urlPage > 0) currentPage.value = urlPage;
+      if ([7, 14, 21, 28, 35].includes(urlLimit)) pageSize.value = urlLimit;
+      if (['asc', 'desc'].includes(urlSort)) sortOrder.value = urlSort;
+
       if (!urlParams.has('driver') && !urlParams.has('startDate') && !urlParams.has('endDate')) {
         const savedDriver = getFromLocalStorage(STORAGE_KEYS.driver);
         const savedStartDate = getFromLocalStorage(STORAGE_KEYS.startDate);
         const savedEndDate = getFromLocalStorage(STORAGE_KEYS.endDate);
-        
+        const savedPageSize = getFromLocalStorage(STORAGE_KEYS.pageSize);
+        const savedSortOrder = getFromLocalStorage(STORAGE_KEYS.sortOrder);
+
+        if (savedPageSize && [7, 14, 21, 28, 35].includes(parseInt(savedPageSize))) {
+          pageSize.value = parseInt(savedPageSize);
+        }
+        if (savedSortOrder && ['asc', 'desc'].includes(savedSortOrder)) {
+          sortOrder.value = savedSortOrder;
+        }
+
         if (savedDriver || savedStartDate || savedEndDate) {
-          updateUrl(nav, savedDriver || undefined, savedStartDate || undefined, savedEndDate || undefined);
+          updateUrl(nav, savedDriver || undefined, savedStartDate || undefined, savedEndDate || undefined, currentPage.value, pageSize.value, sortOrder.value);
           return;
         }
+      } else {
+        // Load from localStorage if not in URL
+        if (!urlParams.has('limit')) {
+          const savedPageSize = getFromLocalStorage(STORAGE_KEYS.pageSize);
+          if (savedPageSize && [7, 14, 21, 28, 35].includes(parseInt(savedPageSize))) {
+            pageSize.value = parseInt(savedPageSize);
+          }
+        }
+        if (!urlParams.has('sort')) {
+          const savedSortOrder = getFromLocalStorage(STORAGE_KEYS.sortOrder);
+          if (savedSortOrder && ['asc', 'desc'].includes(savedSortOrder)) {
+            sortOrder.value = savedSortOrder;
+          }
+        }
       }
-      
+
       if (data.value.currentDriverId) {
         saveToLocalStorage(STORAGE_KEYS.driver, data.value.currentDriverId.toString());
       }
@@ -110,6 +165,25 @@ export default component$(() => {
     }
   });
 
+  const sortedWorkdays = useComputed$(() => {
+    const workdays = [...data.value.workdays];
+    if (sortOrder.value === 'asc') {
+      return workdays.sort((a, b) => new Date(a.date).getTime() - new Date(b.date).getTime());
+    } else {
+      return workdays.sort((a, b) => new Date(b.date).getTime() - new Date(a.date).getTime());
+    }
+  });
+
+  const paginatedWorkdays = useComputed$(() => {
+    const startIndex = (currentPage.value - 1) * pageSize.value;
+    const endIndex = startIndex + pageSize.value;
+    return sortedWorkdays.value.slice(startIndex, endIndex);
+  });
+
+  const totalPages = useComputed$(() => {
+    return Math.ceil(sortedWorkdays.value.length / pageSize.value);
+  });
+
   const toggleRowExpansion = $((workdayId: number) => {
     const currentExpanded = new Set(expandedRows.value);
     if (currentExpanded.has(workdayId)) {
@@ -120,6 +194,39 @@ export default component$(() => {
     expandedRows.value = currentExpanded;
   });
 
+  const handlePageSizeChange = $((newSize: number) => {
+    pageSize.value = newSize;
+    currentPage.value = 1;
+    saveToLocalStorage(STORAGE_KEYS.pageSize, newSize.toString());
+    updateUrl(nav,
+      data.value.currentDriverId?.toString() || undefined,
+      data.value.currentStartDate || undefined,
+      data.value.currentEndDate || undefined,
+      1, newSize, sortOrder.value
+    );
+  });
+
+  const handleSortChange = $((newSort: string) => {
+    sortOrder.value = newSort;
+    saveToLocalStorage(STORAGE_KEYS.sortOrder, newSort);
+    updateUrl(nav,
+      data.value.currentDriverId?.toString() || undefined,
+      data.value.currentStartDate || undefined,
+      data.value.currentEndDate || undefined,
+      currentPage.value, pageSize.value, newSort
+    );
+  });
+
+  const handlePageChange = $((newPage: number) => {
+    currentPage.value = newPage;
+    updateUrl(nav,
+      data.value.currentDriverId?.toString() || undefined,
+      data.value.currentStartDate || undefined,
+      data.value.currentEndDate || undefined,
+      newPage, pageSize.value, sortOrder.value
+    );
+  });
+
   const handleDeleteHaul = $((haulId: number, customer: string) => {
     const confirmed = confirm(`Are you sure you want to delete this haul for ${customer}?\n\nThis action cannot be undone.`);
     if (confirmed) {
@@ -127,12 +234,24 @@ export default component$(() => {
     }
   });
 
-  // Handle delete success - reload the page to refresh data
+  // Handle delete success - reload the page to refresh data and adjust pagination
   useVisibleTask$(({ track }) => {
     const result = track(() => deleteAction.value);
     if (result?.success) {
-      // Reload the current page to refresh the hauls data
-      window.location.reload();
+      // Check if we need to adjust the current page after deletion
+      const newTotalPages = Math.ceil((sortedWorkdays.value.length - 1) / pageSize.value);
+      if (currentPage.value > newTotalPages && newTotalPages > 0) {
+        currentPage.value = newTotalPages;
+        updateUrl(nav,
+          data.value.currentDriverId?.toString() || undefined,
+          data.value.currentStartDate || undefined,
+          data.value.currentEndDate || undefined,
+          newTotalPages, pageSize.value, sortOrder.value
+        );
+      } else {
+        // Reload the current page to refresh the hauls data
+        window.location.reload();
+      }
     }
   });
 
@@ -168,7 +287,8 @@ export default component$(() => {
                 onChange$={(_, el) => {
                   const driverValue = el.value || '';
                   saveToLocalStorage(STORAGE_KEYS.driver, driverValue);
-                  updateUrl(nav, driverValue || undefined, data.value.currentStartDate || undefined, data.value.currentEndDate || undefined);
+                  currentPage.value = 1;
+                  updateUrl(nav, driverValue || undefined, data.value.currentStartDate || undefined, data.value.currentEndDate || undefined, 1, pageSize.value, sortOrder.value);
                 }}
               >
                 <option
@@ -207,13 +327,15 @@ export default component$(() => {
               onChange$={(_, el) => {
                 const startDateValue = el.value;
                 saveToLocalStorage(STORAGE_KEYS.startDate, startDateValue);
-                updateUrl(nav, data.value.currentDriverId?.toString() || undefined, startDateValue || undefined, data.value.currentEndDate || undefined);
+                currentPage.value = 1;
+                updateUrl(nav, data.value.currentDriverId?.toString() || undefined, startDateValue || undefined, data.value.currentEndDate || undefined, 1, pageSize.value, sortOrder.value);
               }}
               onBlur$={(_, el) => {
                 const startDateValue = el.value;
                 if (startDateValue !== data.value.currentStartDate) {
                   saveToLocalStorage(STORAGE_KEYS.startDate, startDateValue);
-                  updateUrl(nav, data.value.currentDriverId?.toString() || undefined, startDateValue || undefined, data.value.currentEndDate || undefined);
+                  currentPage.value = 1;
+                  updateUrl(nav, data.value.currentDriverId?.toString() || undefined, startDateValue || undefined, data.value.currentEndDate || undefined, 1, pageSize.value, sortOrder.value);
                 }
               }}
             />
@@ -235,13 +357,15 @@ export default component$(() => {
               onChange$={(_, el) => {
                 const endDateValue = el.value;
                 saveToLocalStorage(STORAGE_KEYS.endDate, endDateValue);
-                updateUrl(nav, data.value.currentDriverId?.toString() || undefined, data.value.currentStartDate || undefined, endDateValue || undefined);
+                currentPage.value = 1;
+                updateUrl(nav, data.value.currentDriverId?.toString() || undefined, data.value.currentStartDate || undefined, endDateValue || undefined, 1, pageSize.value, sortOrder.value);
               }}
               onBlur$={(_, el) => {
                 const endDateValue = el.value;
                 if (endDateValue !== data.value.currentEndDate) {
                   saveToLocalStorage(STORAGE_KEYS.endDate, endDateValue);
-                  updateUrl(nav, data.value.currentDriverId?.toString() || undefined, data.value.currentStartDate || undefined, endDateValue || undefined);
+                  currentPage.value = 1;
+                  updateUrl(nav, data.value.currentDriverId?.toString() || undefined, data.value.currentStartDate || undefined, endDateValue || undefined, 1, pageSize.value, sortOrder.value);
                 }
               }}
             />
@@ -304,6 +428,114 @@ export default component$(() => {
         </div>
       </div>
 
+      {/* Pagination and Sorting Controls */}
+      {data.value.workdays.length > 0 && (
+        <div class="card mb-6">
+          <div class="flex flex-wrap gap-4 items-center justify-between">
+            <div class="flex flex-wrap gap-4 items-center">
+              {/* Results Per Page */}
+              <div>
+                <label
+                  for="pageSize"
+                  class="block text-sm font-medium mb-1"
+                  style="color: rgb(var(--color-text-secondary))"
+                >
+                  Results
+                </label>
+                <select
+                  id="pageSize"
+                  value={pageSize.value}
+                  onChange$={(_, el) => {
+                    handlePageSizeChange(parseInt(el.value, 10));
+                  }}
+                >
+                  <option value={7}>7 (1 week)</option>
+                  <option value={14}>14 (2 weeks)</option>
+                  <option value={21}>21 (3 weeks)</option>
+                  <option value={28}>28 (4 weeks)</option>
+                  <option value={35}>35 (5 weeks)</option>
+                </select>
+              </div>
+
+              {/* Sort Order */}
+              <div>
+                <label
+                  for="sortOrder"
+                  class="block text-sm font-medium mb-1"
+                  style="color: rgb(var(--color-text-secondary))"
+                >
+                  Sort by Date
+                </label>
+                <select
+                  id="sortOrder"
+                  value={sortOrder.value}
+                  onChange$={(_, el) => {
+                    handleSortChange(el.value);
+                  }}
+                >
+                  <option value="desc">Newest First</option>
+                  <option value="asc">Oldest First</option>
+                </select>
+              </div>
+            </div>
+
+            {/* Pagination Info and Controls */}
+            <div class="flex items-center gap-4">
+              <span class="text-sm" style="color: rgb(var(--color-text-secondary))">
+                Showing {Math.min((currentPage.value - 1) * pageSize.value + 1, sortedWorkdays.value.length)} - {Math.min(currentPage.value * pageSize.value, sortedWorkdays.value.length)} of {sortedWorkdays.value.length} workdays
+              </span>
+
+              {totalPages.value > 1 && (
+                <div class="flex items-center gap-2">
+                  <button
+                    class="btn btn-sm"
+                    disabled={currentPage.value === 1}
+                    onClick$={() => handlePageChange(currentPage.value - 1)}
+                  >
+                    Previous
+                  </button>
+
+                  <span class="flex items-center gap-1">
+                    {Array.from({ length: totalPages.value }, (_, i) => i + 1)
+                      .filter(page => {
+                        const current = currentPage.value;
+                        return page === 1 || page === totalPages.value ||
+                               (page >= current - 2 && page <= current + 2);
+                      })
+                      .map((page, index, array) => {
+                        const prevPage = array[index - 1];
+                        const showEllipsis = prevPage && page > prevPage + 1;
+                        return (
+                          <>
+                            {showEllipsis && <span class="px-2">...</span>}
+                            <button
+                              key={page}
+                              class={`btn btn-sm ${
+                                page === currentPage.value ? 'btn-primary' : 'btn-ghost'
+                              }`}
+                              onClick$={() => handlePageChange(page)}
+                            >
+                              {page}
+                            </button>
+                          </>
+                        );
+                      })}
+                  </span>
+
+                  <button
+                    class="btn btn-sm"
+                    disabled={currentPage.value === totalPages.value}
+                    onClick$={() => handlePageChange(currentPage.value + 1)}
+                  >
+                    Next
+                  </button>
+                </div>
+              )}
+            </div>
+          </div>
+        </div>
+      )}
+
       {data.value.workdays.length === 0 ? (
         <div class="card text-center">
           <p style="color: rgb(var(--color-text-secondary))">No workdays found for selected filters.</p>
@@ -322,7 +554,7 @@ export default component$(() => {
               </tr>
             </thead>
             <tbody>
-              {data.value.workdays.map((workday) => {
+              {paginatedWorkdays.value.map((workday) => {
                 const dateStr = formatDate(workday.date);
                 const isExpanded = expandedRows.value.has(workday.id);
                 const haulCount = workday._count.hauls;
@@ -415,7 +647,7 @@ export default component$(() => {
                                   </tr>
                                 </thead>
                                 <tbody>
-                                  {workday.hauls.map((haul) => (
+                                  {workday.hauls.map((haul: any) => (
                                     <tr key={haul.id}>
                                       <td>
                                         <div class="font-medium">{haul.customer}</div>

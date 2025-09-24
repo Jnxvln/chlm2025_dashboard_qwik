@@ -4,7 +4,9 @@
       "WebFetch(domain:docs.claude.com)",
       "Bash(npm run dev:*)",
       "Bash(npm run build.types:*)",
-      "Bash(npm run build:*)"
+      "Bash(npm run build:*)",
+      "Bash(npm run typecheck:*)",
+      "Bash(npm run:*)"
     ],
     "defaultMode": "acceptEdits"
   }
