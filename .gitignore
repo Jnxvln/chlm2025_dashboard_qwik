@@ -1,6 +1,7 @@
 # Custom
 *.stackdump
 *.db
+DEV_NOTES.txt
 
 # Build
 /dist

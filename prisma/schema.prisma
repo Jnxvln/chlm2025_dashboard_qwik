@@ -1,192 +1,170 @@
-// This is your Prisma schema file,
-// learn more about it in the docs: https://pris.ly/d/prisma-schema
-
 generator client {
   provider = "prisma-client-js"
 }
 
 datasource db {
-  provider = "sqlite"
-  url      = "file:./dev.db"
+  provider = "postgresql"
+  url      = env("DATABASE_URL")
 }
 
 model User {
-  id                  Int                 @id @default(autoincrement())
-  email               String              @unique
-  name                String?
-
-  workdays            Workday[]
-  hauls               Haul[]
+  id       Int       @id @default(autoincrement())
+  email    String    @unique
+  name     String?
+  hauls    Haul[]
+  workdays Workday[]
 }
 
 model Driver {
-  id                  Int                 @id @default(autoincrement())
-  firstName           String
-  lastName            String
-  defaultTruck        String?
-  endDumpPayRate      Float
-  flatBedPayRate      Float
-  nonCommissionRate   Float
-  dateHired           DateTime?
-  dateReleased        DateTime?
-  isActive            Boolean             @default(true)
-
-  createdAt           DateTime            @default(now())
-  updatedAt           DateTime            @default(now())
-
-  workdays            Workday[]
+  id                Int       @id @default(autoincrement())
+  firstName         String
+  lastName          String
+  defaultTruck      String?
+  endDumpPayRate    Float
+  flatBedPayRate    Float
+  nonCommissionRate Float
+  dateHired         DateTime?
+  dateReleased      DateTime?
+  isActive          Boolean   @default(true)
+  createdAt         DateTime  @default(now())
+  updatedAt         DateTime  @default(now())
+  workdays          Workday[]
 }
 
 model Vendor {
-  id                    Int               @id @default(autoincrement())
-  name                  String
-  shortName             String
-  chtFuelSurcharge      Float
-  vendorFuelSurcharge   Float
-  isActive              Boolean           @default(true)
-  createdAt             DateTime          @default(now())
-  updatedAt             DateTime          @default(now())
-
-  vendorProducts        VendorProduct[]
-  vendorLocations       VendorLocation[]
+  id                  Int              @id @default(autoincrement())
+  name                String
+  shortName           String
+  chtFuelSurcharge    Float
+  vendorFuelSurcharge Float
+  isActive            Boolean          @default(true)
+  createdAt           DateTime         @default(now())
+  updatedAt           DateTime         @default(now())
+  vendorLocations     VendorLocation[]
+  vendorProducts      VendorProduct[]
 }
 
 model VendorProduct {
-  id                    Int               @id @default(autoincrement())
-  name                  String
-  productCost           Float
-  notes                 String
-  isActive              Boolean           @default(true)
-  createdAt             DateTime          @default(now())
-  updatedAt             DateTime          @default(now())
-  
-  vendor                Vendor            @relation(fields: [vendorId], references: [id])
-  vendorId              Int
-  vendorLocation        VendorLocation    @relation(fields: [vendorLocationId], references: [id])
-  vendorLocationId      Int
-
-  hauls                 Haul[]
+  id               Int            @id @default(autoincrement())
+  name             String
+  productCost      Float
+  notes            String
+  isActive         Boolean        @default(true)
+  createdAt        DateTime       @default(now())
+  updatedAt        DateTime       @default(now())
+  vendorId         Int
+  vendorLocationId Int
+  hauls            Haul[]
+  vendor           Vendor         @relation(fields: [vendorId], references: [id])
+  vendorLocation   VendorLocation @relation(fields: [vendorLocationId], references: [id])
 }
 
 model VendorLocation {
-  id                    Int               @id @default(autoincrement())
-  name                  String            
-  isActive              Boolean           @default(true)
-  createdAt             DateTime          @default(now())
-  updatedAt             DateTime          @default(now())
-  vendorProducts        VendorProduct[]
-  freightRoutes         FreightRoute[]
-
-  vendor                Vendor            @relation(fields: [vendorId], references: [id])
-  vendorId              Int
+  id             Int             @id @default(autoincrement())
+  name           String
+  isActive       Boolean         @default(true)
+  createdAt      DateTime        @default(now())
+  updatedAt      DateTime        @default(now())
+  vendorId       Int
+  freightRoutes  FreightRoute[]
+  vendor         Vendor          @relation(fields: [vendorId], references: [id])
+  vendorProducts VendorProduct[]
 }
 
 model MaterialCategory {
-  id                  Int                 @id @default(autoincrement())
-  name                String
-  isActive            Boolean             @default(true)
-  createdAt           DateTime            @default(now())
-  updatedAt           DateTime            @default(now())
-
-  materials           Material[]
+  id        Int        @id @default(autoincrement())
+  name      String
+  isActive  Boolean    @default(true)
+  createdAt DateTime   @default(now())
+  updatedAt DateTime   @default(now())
+  materials Material[]
 }
 
 model Material {
-  id                  Int                 @id @default(autoincrement())
-  name                String
-  stock               String
-  image               String?
-  bin                 String?
-  size                String?
-  description         String?
-  notes               String?
-  isFeatured          Boolean             @default(false)
-  isTruckable         Boolean             @default(false)
-  
-  isActive            Boolean             @default(true)
-  createdAt           DateTime            @default(now())
-  updatedAt           DateTime            @default(now())
-
-  category            MaterialCategory    @relation(fields: [categoryId], references: [id])
-  categoryId          Int
+  id          Int              @id @default(autoincrement())
+  name        String
+  stock       String
+  image       String?
+  bin         String?
+  size        String?
+  description String?
+  notes       String?
+  isFeatured  Boolean          @default(false)
+  isTruckable Boolean          @default(false)
+  isActive    Boolean          @default(true)
+  createdAt   DateTime         @default(now())
+  updatedAt   DateTime         @default(now())
+  categoryId  Int
+  category    MaterialCategory @relation(fields: [categoryId], references: [id])
 }
 
 model Workday {
-  id                  Int                  @id @default(autoincrement())
-  date                DateTime
-  chHours             Float
-  ncHours             Float
-  ncReasons           String?
-  notes               String?
-  offDuty             Boolean              @default(false)
-  offDutyReason       String?
-  hauls               Haul[]
-  createdAt           DateTime             @default(now())
-  updatedAt           DateTime             @default(now())
-
-  driver              Driver               @relation(fields: [driverId], references: [id])
-  driverId            Int
-
-  createdBy           User                 @relation(fields: [createdById], references: [id])
-  createdById         Int
+  id            Int      @id @default(autoincrement())
+  date          DateTime
+  chHours       Float
+  ncHours       Float
+  ncReasons     String?
+  notes         String?
+  offDuty       Boolean  @default(false)
+  offDutyReason String?
+  createdAt     DateTime @default(now())
+  updatedAt     DateTime @default(now())
+  driverId      Int
+  createdById   Int
+  hauls         Haul[]
+  createdBy     User     @relation(fields: [createdById], references: [id])
+  driver        Driver   @relation(fields: [driverId], references: [id])
 
   @@unique([driverId, date])
 }
 
 model Haul {
-  id                    Int                 @id @default(autoincrement())
-  dateHaul              DateTime
-  truck                 String
-  customer              String              // i.e. "C&H", "SRM", "RRR", etc. Usually 3 letters, but not always
-  chInvoice             String?
-  loadType              String              // choose: "enddump" OR "flatbed"
-  loadRefNum            String?
-  
-  vendorProduct         VendorProduct       @relation(fields: [vendorProductId], references: [id])
-  vendorProductId       Int
-  
-  freightRoute          FreightRoute        @relation(fields: [freightRouteId], references: [id])
-  freightRouteId        Int
-  
-  rateMetric            String              // choose: "ton", "mile", or "hour"
-  rate                  Float               // rate per ton, mile, or hour
-  quantity              Float               // quantity of tons, miles, or hours
-
-  createdAt             DateTime            @default(now())
-  updatedAt             DateTime            @default(now())
-
-  workday               Workday             @relation(fields: [workdayId], references: [id])
-  workdayId             Int
-  createdBy             User                @relation(fields: [createdById], references: [id])
-  createdById           Int
+  id              Int           @id @default(autoincrement())
+  dateHaul        DateTime
+  truck           String
+  customer        String
+  chInvoice       String?
+  loadType        String
+  loadRefNum      String?
+  vendorProductId Int
+  freightRouteId  Int
+  rateMetric      String
+  rate            Float
+  quantity        Float
+  createdAt       DateTime      @default(now())
+  updatedAt       DateTime      @default(now())
+  workdayId       Int
+  createdById     Int
+  createdBy       User          @relation(fields: [createdById], references: [id])
+  freightRoute    FreightRoute  @relation(fields: [freightRouteId], references: [id])
+  vendorProduct   VendorProduct @relation(fields: [vendorProductId], references: [id])
+  workday         Workday       @relation(fields: [workdayId], references: [id])
 }
 
 model FreightRoute {
-  id                    Int                 @id @default(autoincrement())
-  destination           String              // "C&H Yard", "COSS-Airport", "JWick-Texarkana, TX, etc."
-  freightCost           Float               // cost per mile
-  notes                 String?
-  isActive              Boolean             @default(true)
-  createdAt             DateTime            @default(now())
-  updatedAt             DateTime            @default(now())
-  
-  hauls                 Haul[]
-  vendorLocation        VendorLocation      @relation(fields: [vendorLocationId], references: [id])
-  vendorLocationId      Int
+  id               Int            @id @default(autoincrement())
+  destination      String
+  freightCost      Float
+  notes            String?
+  isActive         Boolean        @default(true)
+  createdAt        DateTime       @default(now())
+  updatedAt        DateTime       @default(now())
+  vendorLocationId Int
+  vendorLocation   VendorLocation @relation(fields: [vendorLocationId], references: [id])
+  hauls            Haul[]
 }
 
-// TODO: Real customer data, please encrypt (don't forget to decrypt when reading)
 model WaitlistEntry {
-  id                    Int                 @id @default(autoincrement())
-  firstName             String              // (`firstName` should be encrypted)
-  lastName              String              // (`lastName` should be encrypted)
-  phone                 String              // Required to contact customer upon resource arrival. (`phone` should be encrypted)
-  email                 String?             // Optional. (`email` should be encrypted)
-  resource              String              // The thing(s) being waited on (i.e. product, service, etc.) - Does NOT need to be encrypted
-  quantity              String?             // Quantity needed (i.e. "2 yards", "1 pallet", etc.)
-  status                String              @default("waiting") // "waiting", "contacted", "fulfilled", "cancelled"
-  contactedAt           DateTime?           // When customer was last contacted
-  notes                 String?             // Any additional notes (`notes` should be encrypted) 
-  createdAt             DateTime            @default(now())
-  updatedAt             DateTime            @default(now())
+  id          Int       @id @default(autoincrement())
+  firstName   String
+  lastName    String
+  phone       String
+  email       String?
+  resource    String
+  quantity    String?
+  status      String    @default("waiting")
+  contactedAt DateTime?
+  notes       String?
+  createdAt   DateTime  @default(now())
+  updatedAt   DateTime  @default(now())
 }
