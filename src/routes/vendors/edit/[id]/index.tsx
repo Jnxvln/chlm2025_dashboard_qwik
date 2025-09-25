@@ -33,7 +33,7 @@ export const useUpdateVendor = routeAction$(
         },
       });
 
-      return { success: true, vendorId: data.id };
+      return { success: true, vendorId: id };
     } catch (err) {
       console.error('Update failed', err);
       return { success: false, error: 'Update failed' };

@@ -1,7 +1,7 @@
 // src/routes/workdays/index.tsx
 import { component$, useVisibleTask$, $ } from '@builder.io/qwik';
 import {
-  useNavigate,
+  // useNavigate,
   routeLoader$,
   routeAction$,
   Link,
@@ -121,12 +121,12 @@ export const useDeleteWorkdayAction = routeAction$(
 );
 
 export default component$(() => {
-  const nav = useNavigate();
+  // const nav = useNavigate();
   const data = useWorkdaysLoader();
   const deleteAction = useDeleteWorkdayAction();
   const loc = useLocation();
 
-  const backUrl = `/workdays${loc.url.search}`; // preserves ?driver=...&startDate=...&endDate=...
+  // const backUrl = `/workdays${loc.url.search}`; // preserves ?driver=...&startDate=...&endDate=...
 
   const updateUrl = $((driver?: string, startDate?: string, endDate?: string) => {
     const url = new URL(window.location.href);

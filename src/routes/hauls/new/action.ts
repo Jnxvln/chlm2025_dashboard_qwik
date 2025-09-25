@@ -2,7 +2,7 @@ import { routeAction$, zod$, z } from '@builder.io/qwik-city';
 import { db } from '~/lib/db';
 
 export const useNewHaulAction = routeAction$(
-  async (data, event) => {
+  async (data) => {
     try {
       // Validate workdayId exists
       if (!data.workdayId) {

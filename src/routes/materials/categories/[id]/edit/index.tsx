@@ -38,7 +38,7 @@ export const useUpdateCategoryAction = routeAction$(
       });
 
       throw redirect(302, '/materials/categories');
-    } catch (error) {
+    } catch {
       return {
         success: false,
         error: 'Failed to update category',

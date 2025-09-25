@@ -1,7 +1,7 @@
 // src/routes/hauls/loader.ts
 import { routeLoader$ } from '@builder.io/qwik-city';
 import { db } from '~/lib/db';
-import { z } from 'zod';
+// import { z } from 'zod';
 
 export const useHaulsLoader = routeLoader$(async (event) => {
   const { url } = event;
@@ -25,7 +25,7 @@ export const useHaulsLoader = routeLoader$(async (event) => {
     orderBy: [{ lastName: 'asc' }],
   });
 
-  let workdays = [];
+  let workdays: any[] = [];
 
   if (filters.driverId && filters.startDate && filters.endDate) {
     // Load workdays with nested hauls

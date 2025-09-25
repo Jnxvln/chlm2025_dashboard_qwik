@@ -1,4 +1,4 @@
-import { component$, Slot } from '@builder.io/qwik';
+import { component$, $, QRL } from '@builder.io/qwik';
 import { EditIcon, DeleteIcon, ViewIcon, MoreIcon } from './icons';
 
 export interface TableColumn {
@@ -12,7 +12,7 @@ export interface TableColumn {
 export interface TableAction {
   type: 'edit' | 'delete' | 'view' | 'custom';
   label: string;
-  onClick: (item: any) => void;
+  href?: string;
   icon?: any;
   variant?: 'primary' | 'danger' | 'secondary';
   confirmMessage?: string;
@@ -22,6 +22,7 @@ export interface ModernTableProps {
   columns: TableColumn[];
   data: any[];
   actions?: TableAction[];
+  onAction?: QRL<(actionType: string, item: any) => void>;
   highlightId?: string;
   emptyMessage?: string;
   loading?: boolean;
@@ -31,10 +32,19 @@ export const ModernTable = component$<ModernTableProps>(({
   columns,
   data,
   actions = [],
+  onAction,
   highlightId,
   emptyMessage = 'No data available',
   loading = false
 }) => {
+  // Create a serializable action handler
+  const handleAction = $((actionType: string, item: any, confirmMessage?: string) => {
+    if (confirmMessage) {
+      const confirmed = confirm(confirmMessage);
+      if (!confirmed) return;
+    }
+    onAction?.(actionType, item);
+  });
   const getActionIcon = (type: string) => {
     switch (type) {
       case 'edit':
@@ -127,13 +137,7 @@ export const ModernTable = component$<ModernTableProps>(({
                             key={actionIndex}
                             class={getActionClass(action.variant)}
                             title={action.label}
-                            onClick$={async () => {
-                              if (action.confirmMessage) {
-                                const confirmed = confirm(action.confirmMessage);
-                                if (!confirmed) return;
-                              }
-                              await action.onClick(item);
-                            }}
+                            onClick$={() => handleAction(action.type, item, action.confirmMessage)}
                           >
                             <IconComponent size={16} />
                           </button>

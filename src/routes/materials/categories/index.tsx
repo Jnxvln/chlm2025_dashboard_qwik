@@ -1,5 +1,5 @@
 import { component$ } from '@builder.io/qwik';
-import { routeLoader$, Link } from '@builder.io/qwik-city';
+import { routeLoader$ } from '@builder.io/qwik-city';
 import { db } from '~/lib/db';
 import { EditIcon, DeleteIcon } from '~/components/icons';
 import { NavLink } from '~/components/NavLink';

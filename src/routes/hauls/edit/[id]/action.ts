@@ -2,7 +2,7 @@ import { routeAction$, zod$, z } from '@builder.io/qwik-city';
 import { db } from '~/lib/db';
 
 export const useEditHaulAction = routeAction$(
-  async (data, event) => {
+  async (data) => {
     try {
       const haul = await db.haul.update({
         where: { id: data.haulId },

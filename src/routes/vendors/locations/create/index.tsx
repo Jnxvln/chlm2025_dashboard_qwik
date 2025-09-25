@@ -92,7 +92,7 @@ export default component$(() => {
           <option value="">Select Vendor *</option>
           {vendors.value.map((vendor) => (
             <option key={vendor.id} value={vendor.id}>
-              {vendor.name} ({vendor.shortName})
+              {`${vendor.name} (${vendor.shortName})`}
             </option>
           ))}
           </select>

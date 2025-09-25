@@ -34,7 +34,7 @@ export default component$(() => {
       console.log('HAULS REPORT ERROR:', result.error);
       // Show error message briefly then redirect
       setTimeout(() => {
-        nav(result.error.redirectTo);
+        nav(result.error?.redirectTo || '/hauls');
       }, 3000); // 3 second delay to show the message
     }
   });
@@ -60,7 +60,7 @@ export default component$(() => {
                 Report Error
               </h1>
               <p class="text-lg mb-4" style="color: rgb(var(--color-text-secondary))">
-                {data.value.error.message}
+                {data.value.error?.message || 'An error occurred'}
               </p>
               <p class="text-sm" style="color: rgb(var(--color-text-tertiary))">
                 Redirecting back to hauls page in 3 seconds...
@@ -69,7 +69,7 @@ export default component$(() => {
             <div class="flex justify-center gap-4">
               <button
                 class="btn btn-primary"
-                onClick$={() => nav(data.value.error.redirectTo)}
+                onClick$={() => nav(data.value.error?.redirectTo || '/hauls')}
               >
                 Go Back Now
               </button>
@@ -89,11 +89,11 @@ export default component$(() => {
   let totalChHours = 0;
   let totalNcHours = 0;
 
-  const haulsWithCalculations = data.value.allHauls.map((haul, index) => {
+  const haulsWithCalculations = (data.value.allHauls || []).map((haul, index) => {
     const freightPay = haul.quantity * haul.rate;
     const driverPayRate = haul.loadType === 'enddump'
-      ? data.value.driver.endDumpPayRate
-      : data.value.driver.flatBedPayRate;
+      ? data.value.driver?.endDumpPayRate || 0
+      : data.value.driver?.flatBedPayRate || 0;
     const driverPay = freightPay * driverPayRate;
 
     totalFreightPay += freightPay;
@@ -108,7 +108,7 @@ export default component$(() => {
 
     // Determine if this is the first haul of the day
     const isFirstHaulOfDay = index === 0 ||
-      formatDate(data.value.allHauls[index - 1].dateHaul) !== formatDate(haul.dateHaul);
+      formatDate((data.value.allHauls || [])[index - 1]?.dateHaul || '') !== formatDate(haul.dateHaul);
 
     return {
       ...haul,
@@ -293,7 +293,7 @@ export default component$(() => {
                   <td class="number">{formatCurrency(haul.driverPay)}</td>
                   <td class="no-print text-center">
                     <a
-                      href={`/hauls/edit/${haul.id}?returnTo=${encodeURIComponent(`/reports/hauls?driverId=${data.value.driver.id}&startDate=${data.value.startDate}&endDate=${data.value.endDate}`)}`}
+                      href={`/hauls/edit/${haul.id}?returnTo=${encodeURIComponent(`/reports/hauls?driverId=${data.value.driver?.id}&startDate=${data.value.startDate}&endDate=${data.value.endDate}`)}`}
                       title="Edit Haul"
                       class="btn-icon btn-icon-primary"
                     >

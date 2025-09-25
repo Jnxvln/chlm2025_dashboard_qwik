@@ -122,8 +122,7 @@ export default component$(() => {
               {Array.isArray(data.value?.drivers) &&
                 data.value.drivers.map((v) => (
                   <option key={v.id} value={v.id} selected={v.id === haul.workday.driverId}>
-                    {v.firstName} {v.lastName}{' '}
-                    {v.defaultTruck ? `(${v.defaultTruck})` : ''}
+                    {`${v.firstName} ${v.lastName}${v.defaultTruck ? ` (${v.defaultTruck})` : ''}`}
                   </option>
                 ))}
             </select>
@@ -136,7 +135,7 @@ export default component$(() => {
               class="w-full"
               required
               onChange$={(e) =>
-                (selectedLoadType.value = e.target.value as
+                (selectedLoadType.value = (e.target as HTMLSelectElement).value as
                   | 'enddump'
                   | 'flatbed')
               }
@@ -183,7 +182,7 @@ export default component$(() => {
               class="w-full"
               required
               onChange$={(e) => {
-                selectedVendorId.value = e.target.value;
+                selectedVendorId.value = (e.target as HTMLSelectElement).value;
                 selectedLocationId.value = null;
               }}
             >
@@ -204,7 +203,7 @@ export default component$(() => {
               class="w-full"
               required
               onChange$={(e) => {
-                selectedLocationId.value = e.target.value;
+                selectedLocationId.value = (e.target as HTMLSelectElement).value;
               }}
             >
               <option value="">Select Location</option>
@@ -225,7 +224,7 @@ export default component$(() => {
               required
               onChange$={(e) => {
                 const fr = data.value.freightRoutes.find(
-                  (r) => r.id.toString() === e.target.value,
+                  (r) => r.id.toString() === (e.target as HTMLSelectElement).value,
                 );
                 if (fr) selectedRate.value = fr.freightCost;
               }}

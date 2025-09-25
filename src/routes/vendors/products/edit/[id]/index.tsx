@@ -50,7 +50,7 @@ export const useUpdateVendorProduct = routeAction$(
         },
       });
 
-      return { success: true, vendorProductId: data.id };
+      return { success: true, vendorProductId: id };
     } catch (err) {
       console.error('Update failed', err);
       return { success: false, error: 'Update failed' };
@@ -171,7 +171,7 @@ export default component$(() => {
             <option value="">Select Vendor *</option>
             {vendors.value.map((vendor) => (
               <option key={vendor.id} value={vendor.id}>
-                {vendor.name} ({vendor.shortName})
+                {`${vendor.name} (${vendor.shortName})`}
               </option>
             ))}
           </select>

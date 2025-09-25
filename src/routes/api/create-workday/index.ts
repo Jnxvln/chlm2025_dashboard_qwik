@@ -4,7 +4,7 @@ import { db } from '~/lib/db';
 
 export const onPost: RequestHandler = async ({ parseBody, json }) => {
   const body = await parseBody();
-  const { driverId, date } = body;
+  const { driverId, date } = body as { driverId: string; date: string };
 
   if (!driverId || !date) {
     throw json(400, { error: 'Missing driverId or date' });

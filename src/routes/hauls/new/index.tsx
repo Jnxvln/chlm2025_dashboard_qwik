@@ -95,7 +95,7 @@ export default component$(() => {
       }
       selectedVendorId.value = haul.vendorProduct.vendorId.toString();
       selectedLocationId.value = haul.vendorProduct.vendorLocationId.toString();
-      selectedLoadType.value = haul.loadType;
+      selectedLoadType.value = haul.loadType as 'enddump' | 'flatbed';
       selectedRate.value = haul.rate;
       truckNumber.value = haul.truck;
     }
@@ -397,8 +397,7 @@ export default component$(() => {
                     <option value="">Select Driver</option>
                     {data.value.drivers.map((driver) => (
                       <option key={driver.id} value={driver.id}>
-                        {driver.firstName} {driver.lastName}{' '}
-                        {driver.defaultTruck ? `(${driver.defaultTruck})` : ''}
+                        {`${driver.firstName} ${driver.lastName}${driver.defaultTruck ? ` (${driver.defaultTruck})` : ''}`}
                       </option>
                     ))}
                   </select>

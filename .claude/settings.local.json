@@ -10,7 +10,9 @@
       "Bash(npx prisma migrate dev:*)",
       "Bash(dir prisma)",
       "Bash(npx prisma migrate:*)",
-      "Bash(npx prisma:*)"
+      "Bash(npx prisma:*)",
+      "Bash(npx tsc:*)",
+      "Bash(npx eslint:*)"
     ],
     "defaultMode": "acceptEdits"
   }

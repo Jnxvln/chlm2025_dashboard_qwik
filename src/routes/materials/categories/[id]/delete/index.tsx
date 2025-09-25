@@ -47,7 +47,7 @@ export const useDeleteCategoryAction = routeAction$(
       });
 
       throw redirect(302, '/materials/categories');
-    } catch (error) {
+    } catch {
       return {
         success: false,
         error: 'Failed to delete category',

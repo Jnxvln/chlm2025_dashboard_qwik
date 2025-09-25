@@ -7,7 +7,7 @@ import { AddIcon, EditIcon, DeleteIcon } from '~/components/icons';
 import { db } from '~/lib/db';
 
 export const useDeleteHaulAction = routeAction$(
-  async (data, event) => {
+  async (data) => {
     try {
       await db.haul.delete({
         where: { id: data.haulId },
@@ -304,7 +304,7 @@ export default component$(() => {
                     value={String(driver.id)}
                     selected={data.value.currentDriverId === driver.id}
                   >
-                    {driver.firstName} {driver.lastName}
+                    {`${driver.firstName} ${driver.lastName}`}
                   </option>
                 ))}
               </select>

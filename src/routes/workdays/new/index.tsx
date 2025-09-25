@@ -1,7 +1,7 @@
 // src/routes/workdays/new/index.tsx
 import { component$, useSignal, useVisibleTask$ } from '@builder.io/qwik';
 import {
-  routeLoader$,
+  // routeLoader$,
   routeAction$,
   Form,
   Link,

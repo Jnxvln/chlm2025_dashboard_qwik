@@ -44,7 +44,7 @@ export const useCreateMaterialAction = routeAction$(
       });
 
       throw redirect(302, '/materials');
-    } catch (error) {
+    } catch {
       return { success: false, error: 'Failed to create material' };
     }
   },

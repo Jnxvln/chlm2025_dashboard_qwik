@@ -11,7 +11,7 @@ import {
 } from '@builder.io/qwik-city';
 import { db } from '~/lib/db';
 import PageTitle from '~/components/PageTitle';
-import { useDriversLoader, useCurrentUserLoader } from '../../layout';
+import { useDriversLoader } from '../../layout';
 
 export const useWorkdayLoader = routeLoader$(async ({ params, redirect }) => {
   const workday = await db.workday.findUnique({
@@ -72,7 +72,7 @@ export const useUpdateWorkdayAction = routeAction$(
 export default component$(() => {
   const workday = useWorkdayLoader();
   const drivers = useDriversLoader();
-  const currentUser = useCurrentUserLoader();
+  // const currentUser = useCurrentUserLoader();
   const updateAction = useUpdateWorkdayAction();
   const nav = useNavigate();
   const loc = useLocation();
