@@ -4,6 +4,7 @@
 DEV_NOTES.txt
 chlm2023*.json
 _BUILD_ERRORS.txt
+/.claude*
 
 # Build
 /dist
