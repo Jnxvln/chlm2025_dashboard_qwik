@@ -10,6 +10,7 @@
   "scripts": {
     "build": "qwik build",
     "build.client": "vite build",
+    "build.server": "vite build --ssr src/entry.ssr.tsx --outDir dist/server",
     "build.preview": "vite build --ssr src/entry.preview.tsx",
     "build.types": "tsc --incremental --noEmit",
     "deploy": "echo 'Run \"npm run qwik add\" to install a server adapter'",
@@ -19,11 +20,11 @@
     "fmt.check": "prettier --check .",
     "lint": "eslint \"src/**/*.ts*\"",
     "postinstall": "prisma generate",
-    "preview": "qwik build preview && vite preview --open",
+    "preview": "npm run build && node server.js",
     "prisma:generate": "prisma generate",
     "prisma:migrate": "prisma migrate dev",
     "prisma:migrate:prod": "prisma migrate deploy",
-    "start": "vite --host 0.0.0.0 --port $PORT --mode ssr",
+    "start": "NODE_ENV=production node server.js",
     "start:dev": "vite --open --mode ssr",
     "qwik": "qwik"
   },
