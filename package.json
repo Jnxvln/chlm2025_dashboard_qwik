@@ -23,7 +23,8 @@
     "prisma:generate": "prisma generate",
     "prisma:migrate": "prisma migrate dev",
     "prisma:migrate:prod": "prisma migrate deploy",
-    "start": "vite --open --mode ssr",
+    "start": "vite --host 0.0.0.0 --port $PORT --mode ssr",
+    "start:dev": "vite --open --mode ssr",
     "qwik": "qwik"
   },
   "devDependencies": {
@@ -45,6 +46,8 @@
   },
   "dependencies": {
     "@tailwindcss/vite": "^4.1.10",
+    "compression": "^1.8.1",
+    "express": "^5.1.0",
     "tailwindcss": "^4.1.10",
     "zod": "^4.0.5"
   },

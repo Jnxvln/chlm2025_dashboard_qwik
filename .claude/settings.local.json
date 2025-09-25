@@ -12,7 +12,11 @@
       "Bash(npx prisma migrate:*)",
       "Bash(npx prisma:*)",
       "Bash(npx tsc:*)",
-      "Bash(npx eslint:*)"
+      "Bash(npx eslint:*)",
+      "Bash(npx qwik:*)",
+      "Bash(npm install:*)",
+      "Bash(pnpm add:*)",
+      "Bash(git add:*)"
     ],
     "defaultMode": "acceptEdits"
   }
