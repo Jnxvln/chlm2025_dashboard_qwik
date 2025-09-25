@@ -24,7 +24,7 @@
     "prisma:generate": "prisma generate",
     "prisma:migrate": "prisma migrate dev",
     "prisma:migrate:prod": "prisma migrate deploy",
-    "start": "npm run build.preview && vite preview --host 0.0.0.0 --port $PORT",
+    "start": "npm run build && vite preview --host 0.0.0.0 --port $PORT",
     "start:dev": "vite --open --mode ssr",
     "qwik": "qwik"
   },
