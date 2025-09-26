@@ -11,59 +11,47 @@ import PageTitle from '~/components/PageTitle';
 import BackButton from '~/components/BackButton';
 import StatusMessage from '~/components/notifications/StatusMessage';
 
-export const useCreateDriverAction = routeAction$(
-  async (data) => {
-    console.log('🚀 DRIVER ACTION CALLED!');
-    console.log('\nIncoming form data:', data);
+export const useCreateDriverAction = routeAction$(async (data) => {
+  console.log('🚀 DRIVER ACTION CALLED!');
+  console.log('\nIncoming form data:', data);
 
-    const { dateHired, dateReleased, ...rest } = data;
+  try {
+    // Basic validation
+    if (!data.firstName || !data.lastName) {
+      return { success: false, error: 'First name and last name are required' };
+    }
 
-    try {
-      // Convert date strings to Date objects
-      const processedDateHired = dateHired ? new Date(dateHired) : null;
-      const processedDateReleased = dateReleased ? new Date(dateReleased) : null;
+    // Convert date strings to Date objects
+    const processedDateHired = data.dateHired && typeof data.dateHired === 'string' ? new Date(data.dateHired) : null;
+    const processedDateReleased = data.dateReleased && typeof data.dateReleased === 'string' ? new Date(data.dateReleased) : null;
 
-      console.log('🔧 About to create driver with data:', {
-        ...rest,
+    const driver = await db.driver.create({
+      data: {
+        firstName: String(data.firstName),
+        lastName: String(data.lastName),
+        defaultTruck: data.defaultTruck ? String(data.defaultTruck) : null,
+        endDumpPayRate: Number(data.endDumpPayRate),
+        flatBedPayRate: Number(data.flatBedPayRate),
+        nonCommissionRate: Number(data.nonCommissionRate),
         dateHired: processedDateHired,
         dateReleased: processedDateReleased,
-      });
+        isActive: data.isActive === 'true' || data.isActive === true,
+      },
+    });
 
-      const driver = await db.driver.create({
-        data: {
-          ...rest,
-          dateHired: processedDateHired,
-          dateReleased: processedDateReleased,
-        },
-      });
-
-      console.log('✅ Driver created successfully:', driver);
-      return { success: true, driverId: driver.id };
-    } catch (error) {
-      console.error('\n❌ Driver creation failed:');
-      console.error('Error type:', typeof error);
-      console.error('Error message:', error instanceof Error ? error.message : 'Unknown error');
-      console.error('Full error:', error);
-      console.error('Stack trace:', error instanceof Error ? error.stack : 'No stack trace');
-      
-      return { 
-        success: false, 
-        error: `Driver creation failed: ${error instanceof Error ? error.message : JSON.stringify(error)}` 
-      };
-    }
-  },
-  zod$({
-    firstName: z.string(),
-    lastName: z.string(),
-    defaultTruck: z.string().optional(),
-    endDumpPayRate: z.coerce.number(),
-    flatBedPayRate: z.coerce.number(),
-    nonCommissionRate: z.coerce.number(),
-    dateHired: z.string().optional(),
-    dateReleased: z.string().optional(),
-    isActive: z.coerce.boolean().optional().default(false),
-  }),
-);
+    console.log('✅ Driver created successfully:', driver);
+    return { success: true, driverId: driver.id };
+  } catch (error) {
+    console.error('\n❌ Driver creation failed:');
+    console.error('Error message:', error instanceof Error ? error.message : 'Unknown error');
+    console.error('Full error:', error);
+    
+    return { 
+      success: false, 
+      error: `Driver creation failed: ${error instanceof Error ? error.message : 'Database error'}` 
+    };
+  }
+});
 
 export default component$(() => {
   const createDriverAction = useCreateDriverAction();
