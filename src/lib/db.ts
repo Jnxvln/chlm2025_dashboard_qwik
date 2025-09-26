@@ -13,9 +13,19 @@ if (!process.env.DATABASE_URL) {
 
 console.log('🔗 Database connection:', process.env.DATABASE_URL.substring(0, 50) + '...');
 
-export const db = globalForPrisma.prisma ?? new PrismaClient({
-  log: process.env.NODE_ENV === 'production' ? ['error'] : ['query', 'info', 'warn', 'error'],
-});
+let db: PrismaClient;
+
+try {
+  db = globalForPrisma.prisma ?? new PrismaClient({
+    log: process.env.NODE_ENV === 'production' ? ['error'] : ['query', 'info', 'warn', 'error'],
+  });
+  console.log('✅ Prisma client initialized successfully');
+} catch (error) {
+  console.error('❌ Failed to initialize Prisma client:', error);
+  throw error;
+}
+
+export { db };
 
 if (process.env.NODE_ENV !== 'production')
   globalForPrisma.prisma = db;

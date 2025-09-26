@@ -18,6 +18,12 @@ export const useCreateDriverAction = routeAction$(
     const { dateHired, dateReleased, ...rest } = data;
 
     try {
+      console.log('🔧 About to create driver with data:', {
+        ...rest,
+        dateHired: dateHired || null,
+        dateReleased: dateReleased || null,
+      });
+
       const driver = await db.driver.create({
         data: {
           ...rest,
@@ -27,12 +33,18 @@ export const useCreateDriverAction = routeAction$(
         },
       });
 
+      console.log('✅ Driver created successfully:', driver);
       return { success: true, driverId: driver.id };
     } catch (error) {
-      console.error('\nDriver creation failed:', error);
+      console.error('\n❌ Driver creation failed:');
+      console.error('Error type:', typeof error);
+      console.error('Error message:', error instanceof Error ? error.message : 'Unknown error');
+      console.error('Full error:', error);
+      console.error('Stack trace:', error instanceof Error ? error.stack : 'No stack trace');
+      
       return { 
         success: false, 
-        error: `Driver creation failed: ${error instanceof Error ? error.message : 'Unknown error'}` 
+        error: `Driver creation failed: ${error instanceof Error ? error.message : JSON.stringify(error)}` 
       };
     }
   },
