@@ -13,6 +13,7 @@ import StatusMessage from '~/components/notifications/StatusMessage';
 
 export const useCreateDriverAction = routeAction$(
   async (data) => {
+    console.log('🚀 DRIVER ACTION CALLED!');
     console.log('\nIncoming form data:', data);
 
     const { dateHired, dateReleased, ...rest } = data;
@@ -70,8 +71,12 @@ export default component$(() => {
 
   useVisibleTask$(({ track }) => {
     const result = track(() => createDriverAction.value);
+    console.log('🎯 Driver action result:', result);
     if (createDriverAction.value?.success && result?.driverId) {
+      console.log('✅ Driver created successfully, redirecting...');
       setTimeout(() => nav(`/drivers?highlight=${result.driverId}`), 1000);
+    } else if (createDriverAction.value?.error) {
+      console.log('❌ Driver creation failed:', createDriverAction.value.error);
     }
   });
 
