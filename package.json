@@ -25,7 +25,7 @@
     "prisma:generate": "prisma generate",
     "prisma:migrate": "prisma migrate dev",
     "prisma:migrate:prod": "prisma migrate deploy",
-    "start": "node server.js",
+    "start": "npm run prisma:migrate:prod && node server.js",
     "start:dev": "vite --open --mode ssr",
     "qwik": "qwik"
   },
