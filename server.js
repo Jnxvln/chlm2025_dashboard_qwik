@@ -105,10 +105,16 @@ const server = createServer(async (req, res) => {
       }
     }
 
+    // Log request details before handling
+    console.log(`🌐 Processing request: ${req.method} ${req.url}`);
+    
     // Use Qwik handler for all other requests
     await qwikHandler(req, res);
+    
+    console.log(`✅ Request completed: ${req.method} ${req.url}`);
   } catch (error) {
-    console.error(`❌ Request error for ${req.url}:`, error);
+    console.error(`❌ Request error for ${req.method} ${req.url}:`, error);
+    console.error('❌ Error details:', error.stack);
     if (!res.headersSent) {
       res.statusCode = 500;
       res.setHeader('Content-Type', 'text/plain');
