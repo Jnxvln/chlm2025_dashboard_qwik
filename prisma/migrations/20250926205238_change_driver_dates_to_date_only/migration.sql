@@ -1,0 +1,3 @@
+-- AlterTable
+ALTER TABLE "Driver" ALTER COLUMN "dateHired" SET DATA TYPE DATE,
+ALTER COLUMN "dateReleased" SET DATA TYPE DATE;

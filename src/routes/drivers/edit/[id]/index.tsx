@@ -13,6 +13,11 @@ import BackButton from '~/components/BackButton';
 
 export const useDriver = routeLoader$(async ({ params }) => {
   const id = Number(params.id);
+  
+  if (!db) {
+    throw new Error('Database connection not available');
+  }
+  
   const driver = await db.driver.findUnique({
     where: { id },
   });
@@ -24,6 +29,15 @@ export const useDriver = routeLoader$(async ({ params }) => {
 export const useUpdateDriver = routeAction$(
   async (data, { params }) => {
     const id = Number(params.id);
+    
+    if (!db) {
+      console.error('❌ Database not available - DATABASE_URL not configured');
+      return { 
+        success: false, 
+        error: 'Database connection not available. Please contact administrator.' 
+      };
+    }
+    
     const { dateHired, dateReleased, ...rest } = data;
 
     try {
@@ -39,7 +53,10 @@ export const useUpdateDriver = routeAction$(
       return { success: true, driverId: id };
     } catch (err) {
       console.error('Update failed', err);
-      return { success: false, error: 'Update failed' };
+      return { 
+        success: false, 
+        error: `Driver update failed: ${err instanceof Error ? err.message : 'Unknown error'}` 
+      };
     }
   },
   zod$(
@@ -161,10 +178,10 @@ export default component$(() => {
             <label class="block text-sm font-medium mb-2" style="color: rgb(var(--color-text-secondary))">Date Hired</label>
             <input
               name="dateHired"
-              type="datetime-local"
+              type="date"
               value={
                 driver.value.dateHired
-                  ? new Date(driver.value.dateHired).toISOString().slice(0, 16)
+                  ? new Date(driver.value.dateHired).toISOString().slice(0, 10)
                   : ''
               }
               class="w-full"
@@ -174,10 +191,10 @@ export default component$(() => {
             <label class="block text-sm font-medium mb-2" style="color: rgb(var(--color-text-secondary))">Date Released</label>
             <input
               name="dateReleased"
-              type="datetime-local"
+              type="date"
               value={
                 driver.value.dateReleased
-                  ? new Date(driver.value.dateReleased).toISOString().slice(0, 16)
+                  ? new Date(driver.value.dateReleased).toISOString().slice(0, 10)
                   : ''
               }
               class="w-full"

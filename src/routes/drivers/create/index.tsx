@@ -148,7 +148,7 @@ export default component$(() => {
             <label class="block text-sm font-medium mb-2" style="color: rgb(var(--color-text-secondary))">Date Hired</label>
             <input
               name="dateHired"
-              type="datetime-local"
+              type="date"
               class="w-full"
             />
           </div>
@@ -156,7 +156,7 @@ export default component$(() => {
             <label class="block text-sm font-medium mb-2" style="color: rgb(var(--color-text-secondary))">Date Released</label>
             <input
               name="dateReleased"
-              type="datetime-local"
+              type="date"
               class="w-full"
             />
           </div>
