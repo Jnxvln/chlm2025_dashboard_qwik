@@ -8,7 +8,7 @@
   "private": true,
   "type": "module",
   "scripts": {
-    "build": "npm run prisma:migrate:prod && qwik build && npm run build.preview && npm run copy-server",
+    "build": "qwik build && npm run build.preview && npm run copy-server",
     "build.client": "vite build",
     "build.server": "vite build --ssr src/entry.ssr.tsx --outDir dist/server",
     "build.preview": "vite build --ssr src/entry.preview.tsx --outDir dist/server",
@@ -25,7 +25,7 @@
     "prisma:generate": "prisma generate",
     "prisma:migrate": "prisma migrate dev",
     "prisma:migrate:prod": "prisma migrate deploy",
-    "start": "node server.js",
+    "start": "npm run prisma:migrate:prod && node server.js",
     "start:dev": "vite --open --mode ssr",
     "qwik": "qwik"
   },
