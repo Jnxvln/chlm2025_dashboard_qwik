@@ -70,9 +70,7 @@ export const RouterHead = component$(() => {
         <style
           key={s.key}
           {...s.props}
-          {...(s.props?.dangerouslySetInnerHTML
-            ? {}
-            : { dangerouslySetInnerHTML: s.style })}
+          dangerouslySetInnerHTML={s.props?.dangerouslySetInnerHTML || s.style}
         />
       ))}
 
