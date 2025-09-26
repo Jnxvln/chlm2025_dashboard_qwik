@@ -1,0 +1,9 @@
+# Internal employee dashboard - Do not index
+User-agent: *
+Disallow: /
+
+# Block all crawlers from all content
+User-agent: *
+Crawl-delay: 86400
+
+# No sitemap provided for internal tools

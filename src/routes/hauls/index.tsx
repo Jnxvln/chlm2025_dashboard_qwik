@@ -1,6 +1,6 @@
 import { component$, useSignal, useVisibleTask$, $, useComputed$ } from '@builder.io/qwik';
 export { useHaulsLoader } from './loader';
-import { useNavigate, routeAction$, zod$, z } from '@builder.io/qwik-city';
+import { useNavigate, routeAction$, zod$, z, type DocumentHead } from '@builder.io/qwik-city';
 import { useHaulsLoader } from './loader';
 import PageTitle from '~/components/PageTitle';
 import { AddIcon, EditIcon, DeleteIcon } from '~/components/icons';
@@ -722,3 +722,13 @@ export default component$(() => {
     </section>
   );
 });
+
+export const head: DocumentHead = {
+  title: 'CHLM25 | Hauls',
+  meta: [
+    {
+      name: 'description',
+      content: 'Manage and track landscape material deliveries, hauls, and driver assignments for mulch, gravel, and other materials.',
+    },
+  ],
+};

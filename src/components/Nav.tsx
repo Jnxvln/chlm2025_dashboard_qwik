@@ -22,10 +22,11 @@ export const Nav = component$(() => {
 
   return (
     <nav style="background-color: rgb(var(--color-bg-tertiary)); color: rgb(var(--color-text-primary)); border-bottom: 1px solid rgb(var(--color-border))" class="px-4 py-3 shadow-sm">
-      <div class="max-w-6xl mx-auto flex justify-between items-center">
+      <div class="max-w-7xl mx-auto">
+        <div class="flex items-center justify-between">
         {/* Logo */}
         <NavLink href="/" class="text-xl font-bold" style="color: rgb(var(--color-accent))">
-          CHLM
+          <img src="/favicon.png" class="h-8" alt="CHLM Logo" />
         </NavLink>
 
         {/* Desktop Links */}
@@ -73,6 +74,7 @@ export const Nav = component$(() => {
               />
             </svg>
           </button>
+        </div>
         </div>
       </div>
 

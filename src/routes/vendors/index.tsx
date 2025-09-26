@@ -1,5 +1,5 @@
 import { component$, useVisibleTask$ } from '@builder.io/qwik';
-import { routeLoader$ } from '@builder.io/qwik-city';
+import { routeLoader$, type DocumentHead } from '@builder.io/qwik-city';
 import { PrismaClient } from '@prisma/client';
 import { VendorTable } from '~/components/vendors/VendorTable';
 import { routeAction$, zod$, z } from '@builder.io/qwik-city';
@@ -59,3 +59,13 @@ export default component$(() => {
     </section>
   );
 });
+
+export const head: DocumentHead = {
+  title: 'CHLM25 | Vendors',
+  meta: [
+    {
+      name: 'description',
+      content: 'Manage vendor relationships, material suppliers, quarry locations, and product sourcing for landscape materials.',
+    },
+  ],
+};
