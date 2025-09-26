@@ -27,12 +27,16 @@ export const useUpdateDriver = routeAction$(
     const { dateHired, dateReleased, ...rest } = data;
 
     try {
+      // Convert date strings to Date objects
+      const processedDateHired = dateHired ? new Date(dateHired) : null;
+      const processedDateReleased = dateReleased ? new Date(dateReleased) : null;
+
       await db.driver.update({
         where: { id },
         data: {
           ...rest,
-          dateHired: dateHired || null,
-          dateReleased: dateReleased || null,
+          dateHired: processedDateHired,
+          dateReleased: processedDateReleased,
         },
       });
 
@@ -53,14 +57,8 @@ export const useUpdateDriver = routeAction$(
       endDumpPayRate: z.coerce.number(),
       flatBedPayRate: z.coerce.number(),
       nonCommissionRate: z.coerce.number(),
-      dateHired: z
-        .string()
-        .optional()
-        .transform((s) => (s ? new Date(s) : null)),
-      dateReleased: z
-        .string()
-        .optional()
-        .transform((s) => (s ? new Date(s) : null)),
+      dateHired: z.string().optional(),
+      dateReleased: z.string().optional(),
       isActive: z.coerce.boolean().optional().default(false),
     }),
   ),
