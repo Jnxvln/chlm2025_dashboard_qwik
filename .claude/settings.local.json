@@ -19,7 +19,11 @@
       "Bash(git add:*)",
       "Bash(git commit:*)",
       "Bash(pnpm install:*)",
-      "Bash(git push:*)"
+      "Bash(git push:*)",
+      "Bash(node:*)",
+      "Bash(PORT=3000 node dist/server/entry.preview.js)",
+      "Bash(npm start)",
+      "Bash(PORT=3000 npm start)"
     ],
     "defaultMode": "acceptEdits"
   }
