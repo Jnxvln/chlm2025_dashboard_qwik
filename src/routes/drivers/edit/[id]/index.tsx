@@ -13,11 +13,6 @@ import BackButton from '~/components/BackButton';
 
 export const useDriver = routeLoader$(async ({ params }) => {
   const id = Number(params.id);
-  
-  if (!db) {
-    throw new Error('Database connection not available');
-  }
-  
   const driver = await db.driver.findUnique({
     where: { id },
   });
@@ -29,15 +24,6 @@ export const useDriver = routeLoader$(async ({ params }) => {
 export const useUpdateDriver = routeAction$(
   async (data, { params }) => {
     const id = Number(params.id);
-    
-    if (!db) {
-      console.error('❌ Database not available - DATABASE_URL not configured');
-      return { 
-        success: false, 
-        error: 'Database connection not available. Please contact administrator.' 
-      };
-    }
-    
     const { dateHired, dateReleased, ...rest } = data;
 
     try {

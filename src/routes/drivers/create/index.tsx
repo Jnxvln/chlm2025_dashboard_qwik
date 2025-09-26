@@ -15,14 +15,6 @@ export const useCreateDriverAction = routeAction$(
   async (data) => {
     console.log('\nIncoming form data:', data);
 
-    if (!db) {
-      console.error('❌ Database not available - DATABASE_URL not configured');
-      return { 
-        success: false, 
-        error: 'Database connection not available. Please contact administrator.' 
-      };
-    }
-
     const { dateHired, dateReleased, ...rest } = data;
 
     try {

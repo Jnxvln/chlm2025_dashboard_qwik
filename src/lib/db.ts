@@ -8,23 +8,14 @@ const globalForPrisma = globalThis as unknown as {
 if (!process.env.DATABASE_URL) {
   console.error('❌ DATABASE_URL environment variable is not set');
   console.error('Please set DATABASE_URL in Railway environment variables');
+  throw new Error('DATABASE_URL must be configured');
 }
 
-console.log('🔗 Database connection status:', process.env.DATABASE_URL ? 'configured' : 'missing');
+console.log('🔗 Database connection:', process.env.DATABASE_URL.substring(0, 50) + '...');
 
-let prismaClient: PrismaClient | null = null;
-
-try {
-  if (process.env.DATABASE_URL) {
-    prismaClient = globalForPrisma.prisma ?? new PrismaClient({
-      log: process.env.NODE_ENV === 'production' ? ['error'] : ['query', 'info', 'warn', 'error'],
-    });
-  }
-} catch (error) {
-  console.error('❌ Failed to initialize Prisma client:', error);
-}
-
-export const db = prismaClient;
+export const db = globalForPrisma.prisma ?? new PrismaClient({
+  log: process.env.NODE_ENV === 'production' ? ['error'] : ['query', 'info', 'warn', 'error'],
+});
 
 if (process.env.NODE_ENV !== 'production')
   globalForPrisma.prisma = db;
