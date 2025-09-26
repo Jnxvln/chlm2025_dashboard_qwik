@@ -34,7 +34,21 @@ try {
   const fileUrl = `file://${serverPath.replace(/\\/g, '/')}`;
   console.log('🔗 Loading from URL:', fileUrl);
   const module = await import(fileUrl);
-  qwikHandler = module.default;
+  
+  // QwikCity createQwikCity returns an object with router and notFound
+  const defaultExport = module.default;
+  
+  if (defaultExport && typeof defaultExport === 'object' && defaultExport.router) {
+    qwikHandler = defaultExport.router;
+  } else {
+    qwikHandler = defaultExport || module.handler || module;
+  }
+  
+  if (typeof qwikHandler !== 'function') {
+    console.error('❌ Qwik handler is not a function.');
+    process.exit(1);
+  }
+  
   console.log('✅ Qwik handler loaded successfully');
 } catch (error) {
   console.error('❌ Failed to load Qwik handler:', error);
