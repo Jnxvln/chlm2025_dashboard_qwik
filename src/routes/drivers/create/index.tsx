@@ -9,10 +9,19 @@ import {
 import { db } from '~/lib/db';
 import PageTitle from '~/components/PageTitle';
 import BackButton from '~/components/BackButton';
+import StatusMessage from '~/components/notifications/StatusMessage';
 
 export const useCreateDriverAction = routeAction$(
   async (data) => {
     console.log('\nIncoming form data:', data);
+
+    if (!db) {
+      console.error('❌ Database not available - DATABASE_URL not configured');
+      return { 
+        success: false, 
+        error: 'Database connection not available. Please contact administrator.' 
+      };
+    }
 
     const { dateHired, dateReleased, ...rest } = data;
 
@@ -29,7 +38,10 @@ export const useCreateDriverAction = routeAction$(
       return { success: true, driverId: driver.id };
     } catch (error) {
       console.error('\nDriver creation failed:', error);
-      return { success: false, error: 'Driver creation failed' };
+      return { 
+        success: false, 
+        error: `Driver creation failed: ${error instanceof Error ? error.message : 'Unknown error'}` 
+      };
     }
   },
   zod$({
@@ -174,14 +186,20 @@ export default component$(() => {
       </div>
 
       {createDriverAction.value?.error && (
-        <div class="mt-4 p-3 rounded-lg" style="background-color: rgb(var(--color-danger) / 0.1); color: rgb(var(--color-danger))">
-          Error: {createDriverAction.value.error}
-        </div>
+        <StatusMessage 
+          type="error" 
+          title="Driver Creation Failed"
+          message={createDriverAction.value.error}
+          class="mt-4"
+        />
       )}
       {createDriverAction.value?.success && (
-        <div class="mt-4 p-3 rounded-lg" style="background-color: rgb(var(--color-success) / 0.1); color: rgb(var(--color-success))">
-          Driver created! Redirecting...
-        </div>
+        <StatusMessage 
+          type="success" 
+          title="Success!"
+          message="Driver created successfully! Redirecting..."
+          class="mt-4"
+        />
       )}
     </section>
   );
