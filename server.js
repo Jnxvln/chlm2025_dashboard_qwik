@@ -16,6 +16,11 @@ const __dirname = dirname(__filename);
 const port = process.env.PORT || 3000;
 const host = process.env.HOST || '0.0.0.0';
 
+// Set environment variables for Qwik to detect HTTPS properly
+process.env.ORIGIN = process.env.ORIGIN || `https://${process.env.RAILWAY_PUBLIC_DOMAIN || 'dashboard.chlandscapematerials.com'}`;
+process.env.PROTOCOL_HEADER = 'x-forwarded-proto';
+process.env.HOST_HEADER = 'x-forwarded-host';
+
 console.log('🚀 Starting Qwik server...');
 console.log('📁 Current directory:', __dirname);
 
@@ -113,6 +118,25 @@ const server = createServer(async (req, res) => {
     res.setHeader('Access-Control-Allow-Methods', 'GET, POST, PUT, DELETE, OPTIONS');
     res.setHeader('Access-Control-Allow-Headers', 'Content-Type, Authorization, X-Requested-With');
     res.setHeader('Access-Control-Allow-Credentials', 'true');
+
+    // Fix HTTPS/HTTP origin mismatch for Railway
+    // Railway serves on HTTPS but Qwik might detect HTTP internally
+    const originalUrl = req.url;
+    const host = req.headers.host;
+    const protocol = req.headers['x-forwarded-proto'] || (req.headers['x-forwarded-ssl'] === 'on' ? 'https' : 'http');
+
+    // Set proper origin headers for Qwik CSRF protection
+    if (!req.headers.origin && host) {
+      req.headers.origin = `${protocol}://${host}`;
+    }
+
+    // Ensure x-forwarded-proto is set for Railway HTTPS
+    if (!req.headers['x-forwarded-proto']) {
+      req.headers['x-forwarded-proto'] = 'https';
+    }
+
+    console.log(`🔍 Request details: ${req.method} ${req.url}`);
+    console.log(`🔍 Protocol: ${protocol}, Host: ${host}, Origin: ${req.headers.origin}`);
 
     // Handle preflight OPTIONS requests
     if (req.method === 'OPTIONS') {
