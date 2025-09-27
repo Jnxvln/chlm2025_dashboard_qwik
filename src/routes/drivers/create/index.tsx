@@ -208,11 +208,23 @@ export default component$(() => {
         </div>
 
         <button
-          type="submit"
+          type="button"
           class="btn btn-primary"
-          onClick$={() => {
+          onClick$={async () => {
             console.log('🎯 CLIENT-SIDE: Submit button clicked!');
-            console.log('🎯 CLIENT-SIDE: About to submit form...');
+            console.log('🎯 CLIENT-SIDE: About to call action directly...');
+
+            // Prevent default form submission and call action directly
+            const formElement = document.querySelector('form');
+            if (formElement) {
+              const formData = new FormData(formElement);
+              const data = Object.fromEntries(formData.entries());
+              console.log('🎯 CLIENT-SIDE: Form data:', data);
+
+              console.log('🎯 CLIENT-SIDE: Calling createDriverAction.submit()...');
+              await createDriverAction.submit(data);
+              console.log('🎯 CLIENT-SIDE: Action submitted!');
+            }
           }}
         >
           Create Driver
