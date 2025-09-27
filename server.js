@@ -107,10 +107,24 @@ const server = createServer(async (req, res) => {
 
     // Log request details before handling
     console.log(`🌐 Processing request: ${req.method} ${req.url}`);
-    
+
+    // Set essential headers for Qwik actions and CORS
+    res.setHeader('Access-Control-Allow-Origin', req.headers.origin || '*');
+    res.setHeader('Access-Control-Allow-Methods', 'GET, POST, PUT, DELETE, OPTIONS');
+    res.setHeader('Access-Control-Allow-Headers', 'Content-Type, Authorization, X-Requested-With');
+    res.setHeader('Access-Control-Allow-Credentials', 'true');
+
+    // Handle preflight OPTIONS requests
+    if (req.method === 'OPTIONS') {
+      res.statusCode = 200;
+      res.end();
+      console.log(`✅ OPTIONS request completed: ${req.url}`);
+      return;
+    }
+
     // Use Qwik handler for all other requests
     await qwikHandler(req, res);
-    
+
     console.log(`✅ Request completed: ${req.method} ${req.url}`);
   } catch (error) {
     console.error(`❌ Request error for ${req.method} ${req.url}:`, error);
