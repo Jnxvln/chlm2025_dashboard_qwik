@@ -82,6 +82,10 @@ export default component$(() => {
   const createDriverAction = useCreateDriverAction();
   const nav = useNavigate();
 
+  console.log('🎯 CLIENT-SIDE: Component mounted');
+  console.log('🎯 CLIENT-SIDE: createDriverAction type:', typeof createDriverAction);
+  console.log('🎯 CLIENT-SIDE: createDriverAction keys:', Object.keys(createDriverAction));
+
   useVisibleTask$(({ track }) => {
     const result = track(() => createDriverAction.value);
     console.log('🎯 Driver action result:', result);
@@ -102,7 +106,15 @@ export default component$(() => {
       </div>
 
       <div class="card mt-4 max-w-xl">
-        <Form action={createDriverAction} class="flex flex-col gap-4">
+        <Form
+          action={createDriverAction}
+          class="flex flex-col gap-4"
+          onSubmit$={() => {
+            console.log('🎯 CLIENT-SIDE: Form onSubmit$ triggered');
+            console.log('🎯 CLIENT-SIDE: createDriverAction:', createDriverAction);
+          }}
+          preventdefault:submit
+        >
         <div class="grid grid-cols-2 gap-4">
           <div>
             <label class="block text-sm font-medium mb-2" style="color: rgb(var(--color-text-secondary))">First Name *</label>
@@ -198,6 +210,10 @@ export default component$(() => {
         <button
           type="submit"
           class="btn btn-primary"
+          onClick$={() => {
+            console.log('🎯 CLIENT-SIDE: Submit button clicked!');
+            console.log('🎯 CLIENT-SIDE: About to submit form...');
+          }}
         >
           Create Driver
         </button>
