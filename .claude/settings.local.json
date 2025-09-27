@@ -24,7 +24,9 @@
       "Bash(PORT=3000 node dist/server/entry.preview.js)",
       "Bash(npm start)",
       "Bash(PORT=3000 npm start)",
-      "Bash(PORT=8080 npm start)"
+      "Bash(PORT=8080 npm start)",
+      "Bash(pnpm run lint:*)",
+      "Bash(pnpm run:*)"
     ],
     "defaultMode": "acceptEdits"
   }
