@@ -18,6 +18,17 @@ export const useCreateDriverAction = routeAction$(
     console.log('🔍 Incoming form data:', JSON.stringify(data, null, 2));
 
     try {
+      // Manual validation to avoid Zod instanceof issues
+      if (!data.firstName || data.firstName.trim().length === 0) {
+        return { success: false, error: 'First name is required' };
+      }
+      if (!data.lastName || data.lastName.trim().length === 0) {
+        return { success: false, error: 'Last name is required' };
+      }
+      if (data.endDumpPayRate < 0 || data.flatBedPayRate < 0 || data.nonCommissionRate < 0) {
+        return { success: false, error: 'Pay rates must be non-negative' };
+      }
+
       // Convert date strings to Date objects
       const processedDateHired = data.dateHired ? new Date(data.dateHired) : null;
       const processedDateReleased = data.dateReleased ? new Date(data.dateReleased) : null;
@@ -50,15 +61,15 @@ export const useCreateDriverAction = routeAction$(
     }
   },
   zod$({
-    firstName: z.string().min(1, 'First name is required'),
-    lastName: z.string().min(1, 'Last name is required'),
+    firstName: z.string(),
+    lastName: z.string(),
     defaultTruck: z.string().optional(),
-    endDumpPayRate: z.coerce.number().min(0),
-    flatBedPayRate: z.coerce.number().min(0),
-    nonCommissionRate: z.coerce.number().min(0),
+    endDumpPayRate: z.coerce.number(),
+    flatBedPayRate: z.coerce.number(),
+    nonCommissionRate: z.coerce.number(),
     dateHired: z.string().optional(),
     dateReleased: z.string().optional(),
-    isActive: z.coerce.boolean().optional().default(true),
+    isActive: z.coerce.boolean().optional(),
   }),
 );
 

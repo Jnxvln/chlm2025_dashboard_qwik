@@ -91,13 +91,13 @@ const server = createServer(async (req, res) => {
     }
 
     // Handle favicon and other root assets
-    if (req.url === '/favicon.svg' || req.url === '/favicon.png' || req.url === '/manifest.json' || req.url === '/robots.txt') {
+    if (req.url === '/favicon.svg' || req.url === '/favicon.png' || req.url === '/favicon.ico' || req.url === '/manifest.json' || req.url === '/robots.txt') {
       const filePath = join(__dirname, 'dist', req.url);
       if (existsSync(filePath)) {
         const content = readFileSync(filePath);
         if (req.url.endsWith('.svg')) {
           res.setHeader('Content-Type', 'image/svg+xml');
-        } else if (req.url.endsWith('.png')) {
+        } else if (req.url.endsWith('.png') || req.url.endsWith('.ico')) {
           res.setHeader('Content-Type', 'image/png');
         } else if (req.url.endsWith('.json')) {
           res.setHeader('Content-Type', 'application/json');
@@ -106,6 +106,12 @@ const server = createServer(async (req, res) => {
         }
         res.setHeader('Cache-Control', 'public, max-age=86400'); // Cache for 1 day
         res.end(content);
+        return;
+      } else {
+        // Return 404 for missing favicon instead of passing to Qwik
+        res.statusCode = 404;
+        res.setHeader('Content-Type', 'text/plain');
+        res.end('Not Found');
         return;
       }
     }
