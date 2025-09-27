@@ -17,6 +17,11 @@ export const useCreateDriverAction = routeAction$(
     console.log('🔍 Environment:', process.env.NODE_ENV);
     console.log('🔍 Incoming form data:', JSON.stringify(data, null, 2));
 
+    // Add 4 second delay for debugging
+    console.log('⏱️ Waiting 4 seconds for debugging...');
+    await new Promise(resolve => setTimeout(resolve, 4000));
+    console.log('⏱️ Delay complete, continuing with driver creation...');
+
     try {
       // Manual validation to avoid Zod instanceof issues
       if (!data.firstName || data.firstName.trim().length === 0) {
