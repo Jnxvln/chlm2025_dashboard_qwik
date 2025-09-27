@@ -13,8 +13,9 @@ import StatusMessage from '~/components/notifications/StatusMessage';
 
 export const useCreateDriverAction = routeAction$(
   async (data) => {
-    console.log('🚀 DRIVER ACTION CALLED!');
-    console.log('\nIncoming form data:', data);
+    console.log('🚀 DRIVER ACTION CALLED! - ACTION IS EXECUTING');
+    console.log('🔍 Environment:', process.env.NODE_ENV);
+    console.log('🔍 Incoming form data:', JSON.stringify(data, null, 2));
 
     try {
       // Convert date strings to Date objects
