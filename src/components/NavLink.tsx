@@ -16,6 +16,18 @@ export const NavLink = component$(({ activeClass, activeStyle, exact, ...props }
     ? currentPath === targetPath
     : currentPath === targetPath || (targetPath !== '/' && currentPath.startsWith(targetPath + '/'));
 
+  // Debug logging (remove in production)
+  if (targetPath.includes('/vendors') || targetPath.includes('/materials')) {
+    console.log('NavLink Debug:', {
+      href: targetPath,
+      currentPath,
+      exact,
+      isActive,
+      exactMatch: currentPath === targetPath,
+      startsWithMatch: targetPath !== '/' && currentPath.startsWith(targetPath + '/')
+    });
+  }
+
   return (
     <Link
       {...props}
