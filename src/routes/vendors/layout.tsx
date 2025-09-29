@@ -28,21 +28,21 @@ export default component$(() => {
         </NavLink>
 
         <NavLink
-          href="/vendors/routes"
-          class="btn btn-accent btn-sm"
-          activeStyle="background-color: rgb(var(--color-warning)); color: rgb(var(--color-text-inverse)); border-color: rgb(var(--color-warning));"
-          exact
-        >
-          Freight Routes
-        </NavLink>
-
-        <NavLink
           href="/vendors/products"
           class="btn btn-accent btn-sm"
           activeStyle="background-color: rgb(var(--color-warning)); color: rgb(var(--color-text-inverse)); border-color: rgb(var(--color-warning));"
           exact
         >
           Products
+        </NavLink>
+
+        <NavLink
+          href="/vendors/routes"
+          class="btn btn-accent btn-sm"
+          activeStyle="background-color: rgb(var(--color-warning)); color: rgb(var(--color-text-inverse)); border-color: rgb(var(--color-warning));"
+          exact
+        >
+          Freight Routes
         </NavLink>
       </div>
       <main>
