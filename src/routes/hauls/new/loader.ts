@@ -1,6 +1,7 @@
 // src/routes/hauls/new/loader.ts
 import { routeLoader$ } from '@builder.io/qwik-city';
 import { db } from '~/lib/db';
+import { getOrCreateSystemUser } from '~/lib/user-utils';
 
 export const useNewHaulLoader = routeLoader$(async (event) => {
   const url = event.url;
@@ -29,7 +30,7 @@ export const useNewHaulLoader = routeLoader$(async (event) => {
     throw event.redirect(302, '/hauls');
   }
 
-  const user = await db.user.findFirst(); // Simplified auth for now
+  const user = await getOrCreateSystemUser(); // Get or create system user
 
   // Load form data
   const [vendors, vendorProducts, freightRoutes, duplicateHaul] = await Promise.all([
@@ -80,7 +81,7 @@ export const useNewHaulLoader = routeLoader$(async (event) => {
 
   return {
     // No workday handling at load time - user will pick date first (unless preselected)
-    createdById: user?.id || 1,
+    createdById: user.id,
     vendors,
     vendorProducts,
     freightRoutes,
