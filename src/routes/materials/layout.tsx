@@ -13,6 +13,7 @@ export default component$(() => {
           href="/materials"
           class="btn btn-accent btn-sm"
           activeStyle="background-color: rgb(var(--color-warning)); color: rgb(var(--color-text-inverse)); border-color: rgb(var(--color-warning));"
+          exact
         >
           Materials
         </NavLink>
@@ -21,6 +22,7 @@ export default component$(() => {
           href="/materials/categories"
           class="btn btn-accent btn-sm"
           activeStyle="background-color: rgb(var(--color-warning)); color: rgb(var(--color-text-inverse)); border-color: rgb(var(--color-warning));"
+          exact
         >
           Categories
         </NavLink>

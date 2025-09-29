@@ -4,16 +4,17 @@ import { Link, useLocation, type LinkProps } from '@builder.io/qwik-city';
 type NavLinkProps = LinkProps & {
   activeClass?: string;
   activeStyle?: string;
+  exact?: boolean;
 };
 
-export const NavLink = component$(({ activeClass, activeStyle, ...props }: NavLinkProps) => {
+export const NavLink = component$(({ activeClass, activeStyle, exact, ...props }: NavLinkProps) => {
   const location = useLocation();
   const currentPath = location.url.pathname;
   const targetPath = props.href ?? '';
 
-  const isActive =
-    currentPath === targetPath ||
-    (targetPath !== '/' && currentPath.startsWith(targetPath + '/'));
+  const isActive = exact
+    ? currentPath === targetPath
+    : currentPath === targetPath || (targetPath !== '/' && currentPath.startsWith(targetPath + '/'));
 
   return (
     <Link
