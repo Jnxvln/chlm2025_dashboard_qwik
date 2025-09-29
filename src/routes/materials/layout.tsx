@@ -12,6 +12,7 @@ export default component$(() => {
         <NavLink
           href="/materials"
           class="btn btn-accent btn-sm"
+          activeStyle="background-color: rgb(var(--color-warning)); color: rgb(var(--color-text-inverse)); border-color: rgb(var(--color-warning));"
         >
           Materials
         </NavLink>
@@ -19,6 +20,7 @@ export default component$(() => {
         <NavLink
           href="/materials/categories"
           class="btn btn-accent btn-sm"
+          activeStyle="background-color: rgb(var(--color-warning)); color: rgb(var(--color-text-inverse)); border-color: rgb(var(--color-warning));"
         >
           Categories
         </NavLink>

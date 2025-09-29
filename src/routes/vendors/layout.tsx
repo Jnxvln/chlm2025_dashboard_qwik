@@ -12,6 +12,7 @@ export default component$(() => {
         <NavLink
           href="/vendors"
           class="btn btn-accent btn-sm"
+          activeStyle="background-color: rgb(var(--color-warning)); color: rgb(var(--color-text-inverse)); border-color: rgb(var(--color-warning));"
         >
           Vendors
         </NavLink>
@@ -19,6 +20,7 @@ export default component$(() => {
         <NavLink
           href="/vendors/locations"
           class="btn btn-accent btn-sm"
+          activeStyle="background-color: rgb(var(--color-warning)); color: rgb(var(--color-text-inverse)); border-color: rgb(var(--color-warning));"
         >
           Locations
         </NavLink>
@@ -26,6 +28,7 @@ export default component$(() => {
         <NavLink
           href="/vendors/routes"
           class="btn btn-accent btn-sm"
+          activeStyle="background-color: rgb(var(--color-warning)); color: rgb(var(--color-text-inverse)); border-color: rgb(var(--color-warning));"
         >
           Freight Routes
         </NavLink>
@@ -33,6 +36,7 @@ export default component$(() => {
         <NavLink
           href="/vendors/products"
           class="btn btn-accent btn-sm"
+          activeStyle="background-color: rgb(var(--color-warning)); color: rgb(var(--color-text-inverse)); border-color: rgb(var(--color-warning));"
         >
           Products
         </NavLink>
