@@ -222,7 +222,7 @@ export default component$(() => {
               console.log('🎯 CLIENT-SIDE: Form data:', data);
 
               console.log('🎯 CLIENT-SIDE: Calling createDriverAction.submit()...');
-              await createDriverAction.submit(data);
+              await createDriverAction.submit(data as any);
               console.log('🎯 CLIENT-SIDE: Action submitted!');
             }
           }}
