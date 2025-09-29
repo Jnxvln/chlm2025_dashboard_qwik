@@ -12,21 +12,14 @@ export const NavLink = component$(({ activeClass, activeStyle, exact, ...props }
   const currentPath = location.url.pathname;
   const targetPath = props.href ?? '';
 
-  const isActive = exact
-    ? currentPath === targetPath
-    : currentPath === targetPath || (targetPath !== '/' && currentPath.startsWith(targetPath + '/'));
+  // Normalize paths by removing trailing slashes (except for root '/')
+  const normalizeePath = (path: string) => path === '/' ? '/' : path.replace(/\/$/, '');
+  const normalizedCurrentPath = normalizeePath(currentPath);
+  const normalizedTargetPath = normalizeePath(targetPath);
 
-  // Debug logging (remove in production)
-  if (targetPath.includes('/vendors') || targetPath.includes('/materials')) {
-    console.log('NavLink Debug:', {
-      href: targetPath,
-      currentPath,
-      exact,
-      isActive,
-      exactMatch: currentPath === targetPath,
-      startsWithMatch: targetPath !== '/' && currentPath.startsWith(targetPath + '/')
-    });
-  }
+  const isActive = exact
+    ? normalizedCurrentPath === normalizedTargetPath
+    : normalizedCurrentPath === normalizedTargetPath || (normalizedTargetPath !== '/' && normalizedCurrentPath.startsWith(normalizedTargetPath + '/'));
 
   return (
     <Link
