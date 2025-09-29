@@ -37,7 +37,7 @@ export const useNewHaulAction = routeAction$(
     }
   },
   zod$({
-    dateHaul: z.string().transform((s) => new Date(s)),
+    dateHaul: z.string().transform((s) => new Date(s + 'T12:00:00Z')),
     truck: z.string(),
     customer: z.string(),
     chInvoice: z.string().optional(),

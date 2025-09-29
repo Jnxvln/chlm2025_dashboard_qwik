@@ -50,12 +50,12 @@ export const DriverTable = component$(
                   <td class="font-medium">${driver.nonCommissionRate.toFixed(2)}</td>
                   <td>
                     {driver.dateHired
-                      ? new Date(driver.dateHired).toLocaleDateString()
+                      ? new Date(driver.dateHired).toLocaleDateString('en-US', { timeZone: 'UTC' })
                       : '—'}
                   </td>
                   <td>
                     {driver.dateReleased
-                      ? new Date(driver.dateReleased).toLocaleDateString()
+                      ? new Date(driver.dateReleased).toLocaleDateString('en-US', { timeZone: 'UTC' })
                       : '—'}
                   </td>
                   <td class="text-center">

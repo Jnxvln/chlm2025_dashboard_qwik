@@ -175,7 +175,7 @@ export const CurrencyCell = component$(({ value }: { value: number }) => (
 
 export const DateCell = component$(({ date }: { date: string | Date | null }) => (
   <span>
-    {date ? new Date(date).toLocaleDateString() : '—'}
+    {date ? new Date(date).toLocaleDateString('en-US', { timeZone: 'UTC' }) : '—'}
   </span>
 ));
 

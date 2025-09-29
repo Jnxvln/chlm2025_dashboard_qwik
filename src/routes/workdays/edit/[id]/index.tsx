@@ -57,7 +57,7 @@ export const useUpdateWorkdayAction = routeAction$(
   },
   zod$({
     id: z.coerce.number(),
-    date: z.string().transform((s) => new Date(s)),
+    date: z.string().transform((s) => new Date(s + 'T12:00:00Z')),
     chHours: z.coerce.number().min(0),
     ncHours: z.coerce.number().min(0),
     ncReasons: z.string().optional(),

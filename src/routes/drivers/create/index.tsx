@@ -34,9 +34,9 @@ export const useCreateDriverAction = routeAction$(
         return { success: false, error: 'Pay rates must be non-negative' };
       }
 
-      // Convert date strings to Date objects
-      const processedDateHired = data.dateHired ? new Date(data.dateHired) : null;
-      const processedDateReleased = data.dateReleased ? new Date(data.dateReleased) : null;
+      // Convert date strings to Date objects (use UTC to avoid timezone shifts)
+      const processedDateHired = data.dateHired ? new Date(data.dateHired + 'T12:00:00Z') : null;
+      const processedDateReleased = data.dateReleased ? new Date(data.dateReleased + 'T12:00:00Z') : null;
 
       const driver = await db.driver.create({
         data: {

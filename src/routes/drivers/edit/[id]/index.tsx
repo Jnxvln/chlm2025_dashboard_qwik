@@ -27,9 +27,9 @@ export const useUpdateDriver = routeAction$(
     const { dateHired, dateReleased, ...rest } = data;
 
     try {
-      // Convert date strings to Date objects
-      const processedDateHired = dateHired ? new Date(dateHired) : null;
-      const processedDateReleased = dateReleased ? new Date(dateReleased) : null;
+      // Convert date strings to Date objects (use UTC to avoid timezone shifts)
+      const processedDateHired = dateHired ? new Date(dateHired + 'T12:00:00Z') : null;
+      const processedDateReleased = dateReleased ? new Date(dateReleased + 'T12:00:00Z') : null;
 
       await db.driver.update({
         where: { id },
