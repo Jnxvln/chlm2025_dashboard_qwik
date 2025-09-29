@@ -3,8 +3,7 @@
 *.db
 DEV_NOTES.txt
 chlm2023*.json
-_BUILD_ERRORS.txt
-_RAILWAY_ERRORS.txt
+_ISSUES.txt
 /.claude*
 
 # Build
