@@ -103,6 +103,7 @@ export default component$(() => {
   const currentPage = useSignal(1);
   const pageSize = useSignal(7);
   const sortOrder = useSignal('desc');
+  const showNewHaulMessage = useSignal(false);
 
   useVisibleTask$(({ track }) => {
     track(() => data.value);
@@ -234,6 +235,14 @@ export default component$(() => {
     }
   });
 
+  const handleDisabledNewHaulClick = $(() => {
+    showNewHaulMessage.value = true;
+    // Auto-hide the message after 4 seconds
+    setTimeout(() => {
+      showNewHaulMessage.value = false;
+    }, 4000);
+  });
+
   // Handle delete success - reload the page to refresh data and adjust pagination
   useVisibleTask$(({ track }) => {
     const result = track(() => deleteAction.value);
@@ -270,35 +279,35 @@ export default component$(() => {
       {/* Filters */}
       <div class="card mb-6">
         <div class="flex flex-wrap gap-4 items-end">
-          {/* Driver Dropdown */}
-          {data.value.drivers.length > 0 && (
-            <div>
-              <label
-                for="driver"
-                class="block text-sm font-medium mb-1"
-                style="color: rgb(var(--color-text-secondary))"
-              >
-                Filter by Driver
-              </label>
+          {/* Driver Dropdown - Always visible */}
+          <div>
+            <label
+              for="driver"
+              class="block text-sm font-medium mb-1"
+              style="color: rgb(var(--color-text-secondary))"
+            >
+              Filter by Driver
+            </label>
 
-              <select
-                id="driver"
-                name="driver"
-                onChange$={(_, el) => {
-                  const driverValue = el.value || '';
-                  saveToLocalStorage(STORAGE_KEYS.driver, driverValue);
-                  currentPage.value = 1;
-                  updateUrl(nav, driverValue || undefined, data.value.currentStartDate || undefined, data.value.currentEndDate || undefined, 1, pageSize.value, sortOrder.value);
-                }}
+            <select
+              id="driver"
+              name="driver"
+              onChange$={(_, el) => {
+                const driverValue = el.value || '';
+                saveToLocalStorage(STORAGE_KEYS.driver, driverValue);
+                currentPage.value = 1;
+                updateUrl(nav, driverValue || undefined, data.value.currentStartDate || undefined, data.value.currentEndDate || undefined, 1, pageSize.value, sortOrder.value);
+              }}
+            >
+              <option
+                value=""
+                selected={data.value.currentDriverId === undefined}
               >
-                <option
-                  value=""
-                  selected={data.value.currentDriverId === undefined}
-                >
-                  All Drivers
-                </option>
+                All Drivers
+              </option>
 
-                {data.value.drivers.map((driver) => (
+              {data.value.drivers && data.value.drivers.length > 0 ? (
+                data.value.drivers.map((driver) => (
                   <option
                     key={driver.id}
                     value={String(driver.id)}
@@ -306,10 +315,20 @@ export default component$(() => {
                   >
                     {`${driver.firstName} ${driver.lastName}`}
                   </option>
-                ))}
-              </select>
-            </div>
-          )}
+                ))
+              ) : (
+                <option value="" disabled>
+                  No active drivers available
+                </option>
+              )}
+            </select>
+
+            {(!data.value.drivers || data.value.drivers.length === 0) && (
+              <p class="text-xs mt-1" style="color: rgb(var(--color-warning))">
+                No active drivers found. <a href="/drivers/create" class="underline hover:no-underline" style="color: rgb(var(--color-primary))">Create a new driver</a> first or <a href="/drivers" class="underline hover:no-underline" style="color: rgb(var(--color-primary))">activate existing drivers</a>.
+              </p>
+            )}
+          </div>
 
           {/* Start Date */}
           <div>
@@ -372,32 +391,62 @@ export default component$(() => {
           </div>
 
           {/* Action Buttons */}
-          <div class="ml-auto flex gap-2">
-            <a
-              href={
-                hasDriverSelected
-                  ? (() => {
-                      const url = new URLSearchParams();
-                      url.set('driver', data.value.currentDriverId!.toString());
-                      url.set(
-                        'returnTo',
-                        encodeURIComponent(
-                          `/hauls?driver=${data.value.currentDriverId}&startDate=${data.value.currentStartDate || ''}&endDate=${data.value.currentEndDate || ''}`,
-                        ),
-                      );
-                      return `/hauls/new?${url.toString()}`;
-                    })()
-                  : '#'
-              }
-              onClick$={(e) => {
-                if (!hasDriverSelected) {
-                  e.preventDefault();
-                }
-              }}
-              class={hasDriverSelected ? 'btn btn-primary' : 'btn btn-ghost'}
-            >
-              New Haul
-            </a>
+          <div class="ml-auto flex gap-2 relative">
+            {hasDriverSelected && data.value.drivers && data.value.drivers.length > 0 ? (
+              <a
+                href={(() => {
+                  const url = new URLSearchParams();
+                  url.set('driver', data.value.currentDriverId!.toString());
+                  url.set(
+                    'returnTo',
+                    encodeURIComponent(
+                      `/hauls?driver=${data.value.currentDriverId}&startDate=${data.value.currentStartDate || ''}&endDate=${data.value.currentEndDate || ''}`,
+                    ),
+                  );
+                  return `/hauls/new?${url.toString()}`;
+                })()}
+                class="btn btn-primary"
+                title="Create new haul for selected driver"
+              >
+                New Haul
+              </a>
+            ) : (
+              <>
+                <button
+                  type="button"
+                  class="btn btn-ghost cursor-not-allowed opacity-50"
+                  title={
+                    !data.value.drivers || data.value.drivers.length === 0
+                      ? 'Create or activate a driver first'
+                      : 'Select a driver first'
+                  }
+                  onClick$={handleDisabledNewHaulClick}
+                >
+                  New Haul
+                </button>
+
+                {/* Flash message */}
+                {showNewHaulMessage.value && (
+                  <div class="absolute top-full mt-2 right-0 bg-yellow-50 border border-yellow-200 rounded-lg p-3 shadow-lg z-10 min-w-64">
+                    <div class="flex items-start gap-2">
+                      <div class="text-yellow-600 text-sm">⚠️</div>
+                      <div class="text-sm">
+                        <div class="font-medium text-yellow-800 mb-1">Cannot create haul</div>
+                        <div class="text-yellow-700">
+                          {!data.value.drivers || data.value.drivers.length === 0 ? (
+                            <>
+                              No active drivers available. <a href="/drivers/create" class="underline hover:no-underline font-medium">Create a new driver</a> or <a href="/drivers" class="underline hover:no-underline font-medium">activate existing drivers</a> first.
+                            </>
+                          ) : (
+                            'Please select a driver from the dropdown above first.'
+                          )}
+                        </div>
+                      </div>
+                    </div>
+                  </div>
+                )}
+              </>
+            )}
 
             <a
               href={
@@ -685,14 +734,6 @@ export default component$(() => {
                                         <div class="flex justify-center items-center gap-1">
                                           <a href={`/hauls/edit/${haul.id}?returnTo=${encodeURIComponent(`/hauls?driver=${data.value.currentDriverId}&startDate=${data.value.currentStartDate}&endDate=${data.value.currentEndDate}`)}`} title="Edit Haul" class="btn-icon btn-icon-primary">
                                             <EditIcon size={14} />
-                                          </a>
-                                          <a
-                                            href={`/hauls/new?duplicateId=${haul.id}&driver=${data.value.currentDriverId}&date=${dateStr}&returnTo=${encodeURIComponent(`/hauls?driver=${data.value.currentDriverId}&startDate=${data.value.currentStartDate}&endDate=${data.value.currentEndDate}`)}`}
-                                            title="Duplicate Haul"
-                                            class="btn-icon"
-                                            style="color: rgb(var(--color-secondary))"
-                                          >
-                                            📋
                                           </a>
                                           <button
                                             title="Delete Haul"

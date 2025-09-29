@@ -6,12 +6,10 @@ import { getOrCreateSystemUser } from '~/lib/user-utils';
 export const useNewHaulLoader = routeLoader$(async (event) => {
   const url = event.url;
   const driverId = parseInt(url.searchParams.get('driver') || '', 10);
-  const duplicateId = parseInt(url.searchParams.get('duplicateId') || '', 10);
   const preselectedDate = url.searchParams.get('date'); // date from workday-specific links
 
   console.log('NEW HAUL LOADER - Starting:', {
     driverId: driverId || 'none',
-    duplicateId: duplicateId || 'none',
     preselectedDate: preselectedDate || 'none',
     hasDriver: !!driverId && !isNaN(driverId)
   });
@@ -33,7 +31,7 @@ export const useNewHaulLoader = routeLoader$(async (event) => {
   const user = await getOrCreateSystemUser(); // Get or create system user
 
   // Load form data
-  const [vendors, vendorProducts, freightRoutes, duplicateHaul] = await Promise.all([
+  const [vendors, vendorProducts, freightRoutes] = await Promise.all([
     db.vendor.findMany({
       where: { isActive: true },
       include: {
@@ -59,24 +57,12 @@ export const useNewHaulLoader = routeLoader$(async (event) => {
       include: { vendorLocation: true },
       orderBy: [{ destination: 'asc' }],
     }),
-
-    // Optionally load haul to duplicate
-    duplicateId && !isNaN(duplicateId)
-      ? db.haul.findUnique({
-          where: { id: duplicateId },
-          include: {
-            vendorProduct: true,
-            freightRoute: true,
-          }
-        })
-      : null
   ]);
 
   console.log('NEW HAUL LOADER - Data loaded:', {
     vendorCount: vendors.length,
     productCount: vendorProducts.length,
-    routeCount: freightRoutes.length,
-    duplicateHaul: duplicateHaul ? duplicateHaul.id : 'none'
+    routeCount: freightRoutes.length
   });
 
   return {
@@ -89,7 +75,6 @@ export const useNewHaulLoader = routeLoader$(async (event) => {
     driverId: driverId && !isNaN(driverId) ? driverId : null,
     drivers,
     driver,
-    duplicateHaul,
     hasPreselectedDate: !!preselectedDate,
   };
 });

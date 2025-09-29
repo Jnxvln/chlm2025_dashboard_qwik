@@ -87,18 +87,6 @@ export default component$(() => {
       selectedDate.value = data.value.haulDate;
     }
 
-    // If duplicating, populate form
-    if (data.value.duplicateHaul) {
-      const haul = data.value.duplicateHaul;
-      if (!data.value.hasPreselectedDate) {
-        selectedDate.value = new Date(haul.dateHaul).toISOString().split('T')[0];
-      }
-      selectedVendorId.value = haul.vendorProduct.vendorId.toString();
-      selectedLocationId.value = haul.vendorProduct.vendorLocationId.toString();
-      selectedLoadType.value = haul.loadType as 'enddump' | 'flatbed';
-      selectedRate.value = haul.rate;
-      truckNumber.value = haul.truck;
-    }
 
     // Auto-proceed if we have a preselected date (from Add Haul/Create Haul buttons)
     if (data.value.hasPreselectedDate && selectedDate.value && selectedDriverId.value) {
@@ -574,7 +562,13 @@ export default component$(() => {
               <div class="flex justify-end items-center mt-4">
                 <div class="flex gap-4">
                   <a href={returnTo} class="btn btn-ghost">Cancel</a>
-                  <button type="submit" class="btn btn-primary">Save Haul</button>
+                  <button
+                    type="submit"
+                    class="btn btn-primary"
+                    disabled={action.isRunning}
+                  >
+                    {action.isRunning ? 'Saving...' : 'Save Haul'}
+                  </button>
                 </div>
               </div>
             </>

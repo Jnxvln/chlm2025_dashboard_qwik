@@ -223,8 +223,9 @@ export default component$(() => {
           <button
             type="submit"
             class="btn btn-primary"
+            disabled={updateVendorProduct.isRunning || success.value}
           >
-            Update Vendor Product
+            {updateVendorProduct.isRunning ? 'Updating...' : 'Update Vendor Product'}
           </button>
         </div>
       </Form>

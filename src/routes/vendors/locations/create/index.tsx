@@ -115,8 +115,9 @@ export default component$(() => {
         <button
           type="submit"
           class="btn btn-primary"
+          disabled={createVendorLocationAction.isRunning}
         >
-          Create Vendor Location
+          {createVendorLocationAction.isRunning ? 'Creating...' : 'Create Vendor Location'}
         </button>
       </Form>
       </div>

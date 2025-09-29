@@ -177,8 +177,9 @@ export default component$(() => {
         <button
           type="submit"
           class="btn btn-primary"
+          disabled={createVendorProductAction.isRunning}
         >
-          Create Vendor Product
+          {createVendorProductAction.isRunning ? 'Creating...' : 'Create Vendor Product'}
         </button>
       </Form>
       </div>

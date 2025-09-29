@@ -183,8 +183,12 @@ export default component$(() => {
 
           <div class="flex justify-end gap-3">
             <a href="/vendors" class="btn btn-ghost">Cancel</a>
-            <button type="submit" class="btn btn-primary">
-              Update Vendor
+            <button
+              type="submit"
+              class="btn btn-primary"
+              disabled={updateVendor.isRunning || success.value}
+            >
+              {updateVendor.isRunning ? 'Updating...' : 'Update Vendor'}
             </button>
           </div>
         </Form>

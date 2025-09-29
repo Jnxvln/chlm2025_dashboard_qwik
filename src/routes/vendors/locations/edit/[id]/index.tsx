@@ -138,8 +138,9 @@ export default component$(() => {
         <button
           type="submit"
           class="btn btn-primary"
+          disabled={updateVendorLocation.isRunning || success.value}
         >
-          Update Vendor Location
+          {updateVendorLocation.isRunning ? 'Updating...' : 'Update Vendor Location'}
         </button>
 
         {updateVendorLocation.value?.error && (

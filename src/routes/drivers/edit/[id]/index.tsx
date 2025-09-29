@@ -200,8 +200,9 @@ export default component$(() => {
         <button
           type="submit"
           class="btn btn-primary"
+          disabled={updateDriver.isRunning || success.value}
         >
-          Update Driver
+          {updateDriver.isRunning ? 'Updating...' : 'Update Driver'}
         </button>
 
         {updateDriver.value?.error && (

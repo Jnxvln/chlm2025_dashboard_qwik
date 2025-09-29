@@ -25,6 +25,7 @@ export const useHaulsLoader = routeLoader$(async (event) => {
     orderBy: [{ lastName: 'asc' }],
   });
 
+
   let workdays: any[] = [];
 
   if (filters.driverId && filters.startDate && filters.endDate) {

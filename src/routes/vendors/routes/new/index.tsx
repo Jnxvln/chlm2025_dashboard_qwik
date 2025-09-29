@@ -176,8 +176,9 @@ export default component$(() => {
         <button
           type="submit"
           class="btn btn-primary"
+          disabled={action.isRunning}
         >
-          Save Freight Route
+          {action.isRunning ? 'Saving...' : 'Save Freight Route'}
         </button>
       </Form>
       </div>

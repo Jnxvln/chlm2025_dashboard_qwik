@@ -312,8 +312,9 @@ export default component$(() => {
             <button
               type="submit"
               class="btn btn-primary"
+              disabled={action.isRunning}
             >
-              Update Haul
+              {action.isRunning ? 'Updating...' : 'Update Haul'}
             </button>
           </div>
         </div>

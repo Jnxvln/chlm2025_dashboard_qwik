@@ -210,6 +210,7 @@ export default component$(() => {
         <button
           type="button"
           class="btn btn-primary"
+          disabled={createDriverAction.isRunning}
           onClick$={async () => {
             console.log('🎯 CLIENT-SIDE: Submit button clicked!');
             console.log('🎯 CLIENT-SIDE: About to call action directly...');
@@ -227,7 +228,7 @@ export default component$(() => {
             }
           }}
         >
-          Create Driver
+          {createDriverAction.isRunning ? 'Creating...' : 'Create Driver'}
         </button>
       </Form>
       </div>
