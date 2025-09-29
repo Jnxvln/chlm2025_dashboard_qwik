@@ -15,7 +15,7 @@ export const onGet: RequestHandler = async ({ url, json }) => {
       where: {
         driverId_date: {
           driverId,
-          date: new Date(date),
+          date: new Date(date + 'T12:00:00Z'), // Use UTC to match workday creation
         },
       },
       select: {
@@ -33,9 +33,11 @@ export const onGet: RequestHandler = async ({ url, json }) => {
 
     console.log('WORKDAY CHECK API:', {
       driverId,
-      date,
+      dateInput: date,
+      dateUsedForLookup: new Date(date + 'T12:00:00Z').toISOString(),
       workdayExists: !!workday,
-      workdayId: workday?.id
+      workdayId: workday?.id,
+      foundWorkdayDate: workday?.date?.toISOString()
     });
 
     json(200, {
