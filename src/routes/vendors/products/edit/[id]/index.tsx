@@ -25,8 +25,15 @@ export const useVendorProduct = routeLoader$(async ({ params }) => {
   return vendorProduct;
 });
 
-export const useGetVendorsAndLocations = routeLoader$(async () => {
-  const vendors = await db.vendor.findMany({
+export const useGetVendorsAndLocations = routeLoader$(async ({ params }) => {
+  const productId = Number(params.id);
+  const product = await db.vendorProduct.findUnique({
+    where: { id: productId },
+    select: { vendorId: true, vendorLocationId: true },
+  });
+
+  // Get all active vendors
+  const activeVendors = await db.vendor.findMany({
     where: { isActive: true },
     include: {
       vendorLocations: {
@@ -35,7 +42,23 @@ export const useGetVendorsAndLocations = routeLoader$(async () => {
     },
     orderBy: { name: 'asc' },
   });
-  return vendors;
+
+  // If product has an inactive vendor, include it as well
+  if (product) {
+    const currentVendor = await db.vendor.findUnique({
+      where: { id: product.vendorId },
+      include: {
+        vendorLocations: true,
+      },
+    });
+
+    // Add current vendor if it's not already in the list
+    if (currentVendor && !activeVendors.find(v => v.id === currentVendor.id)) {
+      activeVendors.push(currentVendor);
+    }
+  }
+
+  return activeVendors;
 });
 
 export const useUpdateVendorProduct = routeAction$(
@@ -60,7 +83,7 @@ export const useUpdateVendorProduct = routeAction$(
     z.object({
       name: z.string(),
       productCost: z.coerce.number(),
-      notes: z.string(),
+      notes: z.string().optional().default(''),
       vendorId: z.coerce.number(),
       vendorLocationId: z.coerce.number(),
       isActive: z.coerce.boolean().optional().default(false),
@@ -149,11 +172,20 @@ export default component$(() => {
           <label class="block text-sm font-medium mb-2" style="color: rgb(var(--color-text-secondary))">Notes</label>
           <textarea
             name="notes"
-            value={vendorProduct.value.notes}
             class="w-full"
             rows={3}
-          />
+          >{vendorProduct.value.notes || ''}</textarea>
         </div>
+
+        {vendorProduct.value.deactivatedByParent && (
+          <div class="p-4 rounded-lg mb-4" style="background-color: rgb(var(--color-warning) / 0.1); border: 1px solid rgb(var(--color-warning) / 0.3);">
+            <p class="text-sm" style="color: rgb(var(--color-text-primary))">
+              <strong>Note:</strong> This product was deactivated because its parent vendor was deactivated.
+              The vendor and location cannot be changed while in this state.
+              Reactivate the parent vendor first, or mark this product as active to enable editing.
+            </p>
+          </div>
+        )}
 
         <div>
           <label class="block text-sm font-medium mb-2" style="color: rgb(var(--color-text-secondary))">Vendor *</label>
@@ -162,6 +194,7 @@ export default component$(() => {
             value={selectedVendorId.value ?? ''}
             class="w-full"
             required
+            disabled={vendorProduct.value.deactivatedByParent}
             onChange$={(e) => {
               selectedVendorId.value = Number(
                 (e.target as HTMLSelectElement).value,
@@ -171,7 +204,7 @@ export default component$(() => {
             <option value="">Select Vendor *</option>
             {vendors.value.map((vendor) => (
               <option key={vendor.id} value={vendor.id}>
-                {`${vendor.name} (${vendor.shortName})`}
+                {`${vendor.name} (${vendor.shortName})${!vendor.isActive ? ' (Inactive)' : ''}`}
               </option>
             ))}
           </select>
@@ -185,11 +218,12 @@ export default component$(() => {
               value={vendorProduct.value.vendorLocation?.id}
               class="w-full"
               required
+              disabled={vendorProduct.value.deactivatedByParent}
             >
               <option value="">Select Location *</option>
               {availableLocations.value.map((location) => (
                 <option key={location.id} value={location.id}>
-                  {location.name}
+                  {`${location.name}${!location.isActive ? ' (Inactive)' : ''}`}
                 </option>
               ))}
             </select>

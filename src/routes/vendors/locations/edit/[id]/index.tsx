@@ -22,12 +22,32 @@ export const useVendorLocation = routeLoader$(async ({ params }) => {
   return vendorLocation;
 });
 
-export const useGetVendors = routeLoader$(async () => {
-  const vendors = await db.vendor.findMany({
+export const useGetVendors = routeLoader$(async ({ params }) => {
+  const locationId = Number(params.id);
+  const location = await db.vendorLocation.findUnique({
+    where: { id: locationId },
+    select: { vendorId: true },
+  });
+
+  // Get all active vendors
+  const activeVendors = await db.vendor.findMany({
     where: { isActive: true },
     orderBy: { name: 'asc' },
   });
-  return vendors;
+
+  // If location has an inactive vendor, include it as well
+  if (location) {
+    const currentVendor = await db.vendor.findUnique({
+      where: { id: location.vendorId },
+    });
+
+    // Add current vendor if it's not already in the list
+    if (currentVendor && !activeVendors.find(v => v.id === currentVendor.id)) {
+      activeVendors.push(currentVendor);
+    }
+  }
+
+  return activeVendors;
 });
 
 export const useUpdateVendorLocation = routeAction$(
@@ -91,6 +111,16 @@ export default component$(() => {
           action={updateVendorLocation}
           class="flex flex-col gap-4"
         >
+        {vendorLocation.value.deactivatedByParent && (
+          <div class="p-4 rounded-lg mb-4" style="background-color: rgb(var(--color-warning) / 0.1); border: 1px solid rgb(var(--color-warning) / 0.3);">
+            <p class="text-sm" style="color: rgb(var(--color-text-primary))">
+              <strong>Note:</strong> This location was deactivated because its parent vendor was deactivated.
+              The vendor cannot be changed while in this state.
+              Reactivate the parent vendor first, or mark this location as active to enable editing.
+            </p>
+          </div>
+        )}
+
         <div>
           <label class="block text-sm font-medium mb-2" style="color: rgb(var(--color-text-secondary))">Location Name *</label>
           <input
@@ -109,6 +139,7 @@ export default component$(() => {
             value={selectedVendorId.value ?? ''}
             class="w-full"
             required
+            disabled={vendorLocation.value.deactivatedByParent}
             onChange$={(e) => {
               selectedVendorId.value = Number(
                 (e.target as HTMLSelectElement).value,
@@ -118,7 +149,7 @@ export default component$(() => {
           <option value="">Select Vendor *</option>
           {vendors.value.map((vendor) => (
             <option key={vendor.id} value={vendor.id}>
-              {`${vendor.name} (${vendor.shortName})`}
+              {`${vendor.name} (${vendor.shortName})${!vendor.isActive ? ' (Inactive)' : ''}`}
             </option>
           ))}
           </select>

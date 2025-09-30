@@ -31,7 +31,12 @@ export const useEditFreightRouteLoader = routeLoader$(async (event) => {
     },
   });
 
-  const vendors = await db.vendor.findMany({
+  if (!freightRoute) {
+    throw event.error(404, 'Freight route not found');
+  }
+
+  // Get all active vendors
+  const activeVendors = await db.vendor.findMany({
     where: { isActive: true },
     include: {
       vendorLocations: {
@@ -42,13 +47,25 @@ export const useEditFreightRouteLoader = routeLoader$(async (event) => {
     orderBy: [{ name: 'asc' }],
   });
 
-  if (!freightRoute) {
-    throw event.error(404, 'Freight route not found');
+  // If freight route has an inactive vendor or location, include them as well
+  const currentVendorId = freightRoute.vendorLocation.vendor.id;
+  const currentLocationId = freightRoute.vendorLocation.id;
+
+  const currentVendor = await db.vendor.findUnique({
+    where: { id: currentVendorId },
+    include: {
+      vendorLocations: true,
+    },
+  });
+
+  // Add current vendor if it's not already in the list
+  if (currentVendor && !activeVendors.find(v => v.id === currentVendor.id)) {
+    activeVendors.push(currentVendor);
   }
 
   return {
     freightRoute,
-    vendors,
+    vendors: activeVendors,
   };
 });
 
@@ -131,6 +148,16 @@ export default component$(() => {
           action={action}
           class="space-y-4"
         >
+        {route.deactivatedByParent && (
+          <div class="p-4 rounded-lg mb-4" style="background-color: rgb(var(--color-warning) / 0.1); border: 1px solid rgb(var(--color-warning) / 0.3);">
+            <p class="text-sm" style="color: rgb(var(--color-text-primary))">
+              <strong>Note:</strong> This freight route was deactivated because its parent vendor or location was deactivated.
+              The vendor and location cannot be changed while in this state.
+              Reactivate the parent vendor first, or mark this route as active to enable editing.
+            </p>
+          </div>
+        )}
+
         {/* Vendor */}
         <div>
           <label class="block text-sm font-medium mb-2" style="color: rgb(var(--color-text-secondary))">Vendor</label>
@@ -139,6 +166,7 @@ export default component$(() => {
             required
             value={route.vendorLocation.vendor.id}
             class="w-full"
+            disabled={route.deactivatedByParent}
             onChange$={(e) => {
               selectedVendorId.value = (e.target as HTMLSelectElement).value;
             }}
@@ -146,7 +174,7 @@ export default component$(() => {
             <option value="">Select a vendor</option>
             {data.value.vendors.map((vendor) => (
               <option key={vendor.id} value={vendor.id}>
-                {vendor.name}
+                {`${vendor.name}${!vendor.isActive ? ' (Inactive)' : ''}`}
               </option>
             ))}
           </select>
@@ -159,6 +187,7 @@ export default component$(() => {
             name="vendorLocationId"
             required
             class="w-full"
+            disabled={route.deactivatedByParent}
           >
             <option value="">Select a location</option>
             {filteredLocations.value.map((loc) => (
@@ -167,7 +196,7 @@ export default component$(() => {
                 value={loc.id}
                 selected={loc.id === route.vendorLocation.id}
               >
-                {loc.name}
+                {`${loc.name}${!loc.isActive ? ' (Inactive)' : ''}`}
               </option>
             ))}
           </select>
@@ -203,8 +232,7 @@ export default component$(() => {
             name="notes"
             rows={4}
             class="w-full"
-            value={route.notes ?? ''}
-          ></textarea>
+          >{route.notes ?? ''}</textarea>
         </div>
 
         {/* Active toggle */}

@@ -22,11 +22,91 @@ export const useDeleteVendorLocationAction = routeAction$(
   // eslint-disable-next-line @typescript-eslint/no-unused-vars
   async ({ id }, _requestEvent) => {
     try {
-      await db.vendorLocation.delete({ where: { id: Number(id) } });
+      const locationId = Number(id);
+
+      // Get all currently active children
+      const [activeProducts, activeRoutes] = await Promise.all([
+        db.vendorProduct.findMany({
+          where: { vendorLocationId: locationId, isActive: true },
+          select: { id: true },
+        }),
+        db.freightRoute.findMany({
+          where: { vendorLocationId: locationId, isActive: true },
+          select: { id: true },
+        }),
+      ]);
+
+      // Cascade deactivate: mark location and all currently active children as inactive
+      await Promise.all([
+        // Deactivate location
+        db.vendorLocation.update({
+          where: { id: locationId },
+          data: { isActive: false },
+        }),
+        // Deactivate active products and mark as deactivatedByParent
+        db.vendorProduct.updateMany({
+          where: { id: { in: activeProducts.map((p) => p.id) } },
+          data: { isActive: false, deactivatedByParent: true },
+        }),
+        // Deactivate active routes and mark as deactivatedByParent
+        db.freightRoute.updateMany({
+          where: { id: { in: activeRoutes.map((r) => r.id) } },
+          data: { isActive: false, deactivatedByParent: true },
+        }),
+      ]);
+
       return { success: true };
     } catch (error) {
-      console.error('Delete failed:', error);
-      return { success: false, error: 'Failed to delete vendor location' };
+      console.error('Deactivate failed:', error);
+      return { success: false, error: 'Failed to deactivate vendor location' };
+    }
+  },
+  zod$({
+    id: z.string(),
+  }),
+);
+
+export const useReactivateVendorLocationAction = routeAction$(
+  // eslint-disable-next-line @typescript-eslint/no-unused-vars
+  async ({ id }, _requestEvent) => {
+    try {
+      const locationId = Number(id);
+
+      // Get all children that were deactivated by parent
+      const [parentDeactivatedProducts, parentDeactivatedRoutes] = await Promise.all([
+        db.vendorProduct.findMany({
+          where: { vendorLocationId: locationId, deactivatedByParent: true },
+          select: { id: true },
+        }),
+        db.freightRoute.findMany({
+          where: { vendorLocationId: locationId, deactivatedByParent: true },
+          select: { id: true },
+        }),
+      ]);
+
+      // Reactivate location and restore children that were auto-deactivated
+      await Promise.all([
+        // Reactivate location
+        db.vendorLocation.update({
+          where: { id: locationId },
+          data: { isActive: true, deactivatedByParent: false },
+        }),
+        // Reactivate products that were deactivatedByParent
+        db.vendorProduct.updateMany({
+          where: { id: { in: parentDeactivatedProducts.map((p) => p.id) } },
+          data: { isActive: true, deactivatedByParent: false },
+        }),
+        // Reactivate routes that were deactivatedByParent
+        db.freightRoute.updateMany({
+          where: { id: { in: parentDeactivatedRoutes.map((r) => r.id) } },
+          data: { isActive: true, deactivatedByParent: false },
+        }),
+      ]);
+
+      return { success: true };
+    } catch (error) {
+      console.error('Reactivate failed:', error);
+      return { success: false, error: 'Failed to reactivate vendor location' };
     }
   },
   zod$({

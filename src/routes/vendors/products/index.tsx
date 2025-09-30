@@ -23,11 +23,33 @@ export const useDeleteVendorProductAction = routeAction$(
   // eslint-disable-next-line @typescript-eslint/no-unused-vars
   async ({ id }, _requestEvent) => {
     try {
-      await db.vendorProduct.delete({ where: { id: Number(id) } });
+      await db.vendorProduct.update({
+        where: { id: Number(id) },
+        data: { isActive: false },
+      });
       return { success: true };
     } catch (error) {
-      console.error('Delete failed:', error);
-      return { success: false, error: 'Failed to delete vendor product' };
+      console.error('Deactivate failed:', error);
+      return { success: false, error: 'Failed to deactivate vendor product' };
+    }
+  },
+  zod$({
+    id: z.string(),
+  }),
+);
+
+export const useReactivateVendorProductAction = routeAction$(
+  // eslint-disable-next-line @typescript-eslint/no-unused-vars
+  async ({ id }, _requestEvent) => {
+    try {
+      await db.vendorProduct.update({
+        where: { id: Number(id) },
+        data: { isActive: true, deactivatedByParent: false },
+      });
+      return { success: true };
+    } catch (error) {
+      console.error('Reactivate failed:', error);
+      return { success: false, error: 'Failed to reactivate vendor product' };
     }
   },
   zod$({

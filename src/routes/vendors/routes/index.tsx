@@ -1,5 +1,5 @@
 import { component$ } from '@builder.io/qwik';
-import { routeLoader$ } from '@builder.io/qwik-city';
+import { routeLoader$, routeAction$, zod$, z } from '@builder.io/qwik-city';
 import PageSubtitle from '~/components/PageSubtitle';
 import { NavLink } from '~/components/NavLink';
 import { FreightRoutesTable } from '~/components/vendors/routes/FreightRoutesTable';
@@ -24,6 +24,42 @@ export const useFreightRoutesLoader = routeLoader$(async (event) => {
     highlightId,
   };
 });
+
+export const useDeactivateFreightRouteAction = routeAction$(
+  async ({ id }, _requestEvent) => {
+    try {
+      await db.freightRoute.update({
+        where: { id: Number(id) },
+        data: { isActive: false },
+      });
+      return { success: true };
+    } catch (error) {
+      console.error('Deactivate failed:', error);
+      return { success: false, error: 'Failed to deactivate freight route' };
+    }
+  },
+  zod$({
+    id: z.string(),
+  }),
+);
+
+export const useReactivateFreightRouteAction = routeAction$(
+  async ({ id }, _requestEvent) => {
+    try {
+      await db.freightRoute.update({
+        where: { id: Number(id) },
+        data: { isActive: true, deactivatedByParent: false },
+      });
+      return { success: true };
+    } catch (error) {
+      console.error('Reactivate failed:', error);
+      return { success: false, error: 'Failed to reactivate freight route' };
+    }
+  },
+  zod$({
+    id: z.string(),
+  }),
+);
 
 export default component$(() => {
   const routesData = useFreightRoutesLoader();

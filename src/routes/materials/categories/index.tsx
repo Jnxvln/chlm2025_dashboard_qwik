@@ -1,12 +1,11 @@
 import { component$ } from '@builder.io/qwik';
-import { routeLoader$ } from '@builder.io/qwik-city';
+import { routeLoader$, routeAction$, zod$, z, useNavigate } from '@builder.io/qwik-city';
 import { db } from '~/lib/db';
 import { EditIcon, DeleteIcon } from '~/components/icons';
 import { NavLink } from '~/components/NavLink';
 
 export const useMaterialCategoriesLoader = routeLoader$(async () => {
   const categories = await db.materialCategory.findMany({
-    where: { isActive: true },
     include: {
       _count: {
         select: { materials: true },
@@ -17,8 +16,83 @@ export const useMaterialCategoriesLoader = routeLoader$(async () => {
   return categories;
 });
 
+export const useDeactivateMaterialCategoryAction = routeAction$(
+  async ({ id }, _requestEvent) => {
+    try {
+      const categoryId = Number(id);
+
+      // Get all currently active materials in this category
+      const activeMaterials = await db.material.findMany({
+        where: { categoryId, isActive: true },
+        select: { id: true },
+      });
+
+      // Cascade deactivate: mark category and all currently active materials as inactive
+      await Promise.all([
+        // Deactivate category
+        db.materialCategory.update({
+          where: { id: categoryId },
+          data: { isActive: false },
+        }),
+        // Deactivate active materials and mark as deactivatedByParent
+        db.material.updateMany({
+          where: { id: { in: activeMaterials.map((m) => m.id) } },
+          data: { isActive: false, deactivatedByParent: true },
+        }),
+      ]);
+
+      return { success: true };
+    } catch (error) {
+      console.error('Deactivate failed:', error);
+      return { success: false, error: 'Failed to deactivate material category' };
+    }
+  },
+  zod$({
+    id: z.string(),
+  }),
+);
+
+export const useReactivateMaterialCategoryAction = routeAction$(
+  async ({ id }, _requestEvent) => {
+    try {
+      const categoryId = Number(id);
+
+      // Get all materials that were deactivated by parent
+      const parentDeactivatedMaterials = await db.material.findMany({
+        where: { categoryId, deactivatedByParent: true },
+        select: { id: true },
+      });
+
+      // Reactivate category and restore materials that were auto-deactivated
+      await Promise.all([
+        // Reactivate category
+        db.materialCategory.update({
+          where: { id: categoryId },
+          data: { isActive: true },
+        }),
+        // Reactivate materials that were deactivatedByParent
+        db.material.updateMany({
+          where: { id: { in: parentDeactivatedMaterials.map((m) => m.id) } },
+          data: { isActive: true, deactivatedByParent: false },
+        }),
+      ]);
+
+      return { success: true };
+    } catch (error) {
+      console.error('Reactivate failed:', error);
+      return { success: false, error: 'Failed to reactivate material category' };
+    }
+  },
+  zod$({
+    id: z.string(),
+  }),
+);
+
 export default component$(() => {
   const categories = useMaterialCategoriesLoader();
+  const nav = useNavigate();
+  const deactivateAction = useDeactivateMaterialCategoryAction();
+  const reactivateAction = useReactivateMaterialCategoryAction();
 
   return (
     <div class="container mx-auto p-6">
@@ -61,7 +135,7 @@ export default component$(() => {
           </thead>
           <tbody>
             {categories.value.map((category) => (
-              <tr key={category.id}>
+              <tr key={category.id} class={!category.isActive ? 'row-inactive' : ''}>
                 <td class="whitespace-nowrap font-medium">
                   {category.name}
                 </td>
@@ -74,21 +148,59 @@ export default component$(() => {
                   {new Date(category.createdAt).toLocaleDateString()}
                 </td>
                 <td class="text-center">
-                  <div class="flex justify-center items-center gap-2">
-                    <NavLink
-                      href={`/materials/categories/${category.id}/edit`}
+                  <div class="flex justify-center items-center gap-1">
+                    <button
                       class="btn-icon btn-icon-primary"
                       title="Edit category"
+                      onClick$={() => nav(`/materials/categories/${category.id}/edit`)}
                     >
-                      <EditIcon />
-                    </NavLink>
-                    <NavLink
-                      href={`/materials/categories/${category.id}/delete`}
-                      class="btn-icon btn-icon-danger"
-                      title="Delete category"
-                    >
-                      <DeleteIcon />
-                    </NavLink>
+                      <EditIcon size={16} />
+                    </button>
+                    {category.isActive ? (
+                      <button
+                        class="btn-icon btn-icon-danger"
+                        title="Deactivate category"
+                        onClick$={async () => {
+                          const confirmed = confirm(
+                            'Are you sure you want to remove this material category? This will mark it as inactive.',
+                          );
+                          if (!confirmed) return;
+                          await deactivateAction.submit({
+                            id: String(category.id),
+                          });
+                          window.location.reload();
+                        }}
+                      >
+                        <DeleteIcon size={16} />
+                      </button>
+                    ) : (
+                      <button
+                        class="btn-icon btn-icon-success"
+                        title="Reactivate category"
+                        onClick$={async () => {
+                          await reactivateAction.submit({
+                            id: String(category.id),
+                          });
+                          window.location.reload();
+                        }}
+                      >
+                        <svg
+                          width={16}
+                          height={16}
+                          viewBox="0 0 24 24"
+                          fill="none"
+                          stroke="currentColor"
+                          stroke-width="2"
+                          stroke-linecap="round"
+                          stroke-linejoin="round"
+                        >
+                          <path d="M3 12a9 9 0 0 1 9-9 9.75 9.75 0 0 1 6.74 2.74L21 8" />
+                          <path d="M21 3v5h-5" />
+                          <path d="M21 12a9 9 0 0 1-9 9 9.75 9.75 0 0 1-6.74-2.74L3 16" />
+                          <path d="M3 21v-5h5" />
+                        </svg>
+                      </button>
+                    )}
                   </div>
                 </td>
               </tr>

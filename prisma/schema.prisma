@@ -45,30 +45,32 @@ model Vendor {
 }
 
 model VendorProduct {
-  id               Int            @id @default(autoincrement())
-  name             String
-  productCost      Float
-  notes            String
-  isActive         Boolean        @default(true)
-  createdAt        DateTime       @default(now())
-  updatedAt        DateTime       @default(now())
-  vendorId         Int
-  vendorLocationId Int
-  hauls            Haul[]
-  vendor           Vendor         @relation(fields: [vendorId], references: [id])
-  vendorLocation   VendorLocation @relation(fields: [vendorLocationId], references: [id])
+  id                 Int            @id @default(autoincrement())
+  name               String
+  productCost        Float
+  notes              String
+  isActive           Boolean        @default(true)
+  deactivatedByParent Boolean       @default(false)
+  createdAt          DateTime       @default(now())
+  updatedAt          DateTime       @default(now())
+  vendorId           Int
+  vendorLocationId   Int
+  hauls              Haul[]
+  vendor             Vendor         @relation(fields: [vendorId], references: [id])
+  vendorLocation     VendorLocation @relation(fields: [vendorLocationId], references: [id])
 }
 
 model VendorLocation {
-  id             Int             @id @default(autoincrement())
-  name           String
-  isActive       Boolean         @default(true)
-  createdAt      DateTime        @default(now())
-  updatedAt      DateTime        @default(now())
-  vendorId       Int
-  freightRoutes  FreightRoute[]
-  vendor         Vendor          @relation(fields: [vendorId], references: [id])
-  vendorProducts VendorProduct[]
+  id                 Int             @id @default(autoincrement())
+  name               String
+  isActive           Boolean         @default(true)
+  deactivatedByParent Boolean        @default(false)
+  createdAt          DateTime        @default(now())
+  updatedAt          DateTime        @default(now())
+  vendorId           Int
+  freightRoutes      FreightRoute[]
+  vendor             Vendor          @relation(fields: [vendorId], references: [id])
+  vendorProducts     VendorProduct[]
 }
 
 model MaterialCategory {
@@ -81,21 +83,22 @@ model MaterialCategory {
 }
 
 model Material {
-  id          Int              @id @default(autoincrement())
-  name        String
-  stock       String
-  image       String?
-  bin         String?
-  size        String?
-  description String?
-  notes       String?
-  isFeatured  Boolean          @default(false)
-  isTruckable Boolean          @default(false)
-  isActive    Boolean          @default(true)
-  createdAt   DateTime         @default(now())
-  updatedAt   DateTime         @default(now())
-  categoryId  Int
-  category    MaterialCategory @relation(fields: [categoryId], references: [id])
+  id                 Int              @id @default(autoincrement())
+  name               String
+  stock              String
+  image              String?
+  bin                String?
+  size               String?
+  description        String?
+  notes              String?
+  isFeatured         Boolean          @default(false)
+  isTruckable        Boolean          @default(false)
+  isActive           Boolean          @default(true)
+  deactivatedByParent Boolean         @default(false)
+  createdAt          DateTime         @default(now())
+  updatedAt          DateTime         @default(now())
+  categoryId         Int
+  category           MaterialCategory @relation(fields: [categoryId], references: [id])
 }
 
 model Workday {
@@ -142,16 +145,17 @@ model Haul {
 }
 
 model FreightRoute {
-  id               Int            @id @default(autoincrement())
-  destination      String
-  freightCost      Float
-  notes            String?
-  isActive         Boolean        @default(true)
-  createdAt        DateTime       @default(now())
-  updatedAt        DateTime       @default(now())
-  vendorLocationId Int
-  vendorLocation   VendorLocation @relation(fields: [vendorLocationId], references: [id])
-  hauls            Haul[]
+  id                 Int            @id @default(autoincrement())
+  destination        String
+  freightCost        Float
+  notes              String?
+  isActive           Boolean        @default(true)
+  deactivatedByParent Boolean       @default(false)
+  createdAt          DateTime       @default(now())
+  updatedAt          DateTime       @default(now())
+  vendorLocationId   Int
+  vendorLocation     VendorLocation @relation(fields: [vendorLocationId], references: [id])
+  hauls              Haul[]
 }
 
 model WaitlistEntry {
