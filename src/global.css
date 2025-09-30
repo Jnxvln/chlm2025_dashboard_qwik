@@ -193,6 +193,14 @@
     animation: highlight-fade 3s ease-out forwards;
   }
 
+  .table-modern tbody tr.row-inactive {
+    background-color: rgb(var(--color-danger) / 0.12);
+  }
+
+  .table-modern tbody tr.row-inactive:hover {
+    background-color: rgb(var(--color-danger) / 0.15);
+  }
+
   .table-modern tbody td {
     padding: 1rem;
     color: rgb(var(--color-text-primary));
@@ -353,6 +361,15 @@
   .btn-icon-danger:hover {
     background-color: rgb(var(--color-danger) / 0.1);
     color: rgb(var(--color-danger-hover));
+  }
+
+  .btn-icon-success {
+    color: rgb(var(--color-success));
+  }
+
+  .btn-icon-success:hover {
+    background-color: rgb(var(--color-success) / 0.1);
+    color: rgb(var(--color-success-hover));
   }
 
   /* Theme toggle button */

@@ -26,7 +26,8 @@
       "Bash(PORT=3000 npm start)",
       "Bash(PORT=8080 npm start)",
       "Bash(pnpm run lint:*)",
-      "Bash(pnpm run:*)"
+      "Bash(pnpm run:*)",
+      "Bash(git checkout:*)"
     ],
     "defaultMode": "acceptEdits"
   }

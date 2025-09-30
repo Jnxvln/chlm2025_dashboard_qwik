@@ -1,12 +1,13 @@
 import { component$ } from '@builder.io/qwik';
 import { useNavigate } from '@builder.io/qwik-city';
-import { useDeleteDriverAction } from '~/routes/drivers';
+import { useDeleteDriverAction, useReactivateDriverAction } from '~/routes/drivers';
 import { EditIcon, DeleteIcon } from '../icons';
 
 export const DriverTable = component$(
   ({ drivers, highlightId }: { drivers: any[]; highlightId?: string }) => {
     const navigate = useNavigate();
     const deleteDriverAction = useDeleteDriverAction();
+    const reactivateDriverAction = useReactivateDriverAction();
 
     if (drivers.length === 0) {
       return (
@@ -39,7 +40,7 @@ export const DriverTable = component$(
               return (
                 <tr
                   key={driver.id}
-                  class={isHighlighted ? 'row-highlighted' : ''}
+                  class={isHighlighted ? 'row-highlighted' : (!driver.isActive ? 'row-inactive' : '')}
                 >
                   <td class="font-medium">
                     {driver.firstName} {driver.lastName}
@@ -67,22 +68,51 @@ export const DriverTable = component$(
                       >
                         <EditIcon size={16} />
                       </button>
-                      <button
-                        class="btn-icon btn-icon-danger"
-                        title="Delete driver"
-                        onClick$={async () => {
-                          const confirmed = confirm(
-                            'Are you sure you want to delete this driver?',
-                          );
-                          if (!confirmed) return;
-                          await deleteDriverAction.submit({
-                            id: String(driver.id),
-                          });
-                          window.location.reload();
-                        }}
-                      >
-                        <DeleteIcon size={16} />
-                      </button>
+                      {driver.isActive ? (
+                        <button
+                          class="btn-icon btn-icon-danger"
+                          title="Deactivate driver"
+                          onClick$={async () => {
+                            const confirmed = confirm(
+                              'Are you sure you want to remove this driver? This will mark them as inactive.',
+                            );
+                            if (!confirmed) return;
+                            await deleteDriverAction.submit({
+                              id: String(driver.id),
+                            });
+                            window.location.reload();
+                          }}
+                        >
+                          <DeleteIcon size={16} />
+                        </button>
+                      ) : (
+                        <button
+                          class="btn-icon btn-icon-success"
+                          title="Reactivate driver"
+                          onClick$={async () => {
+                            await reactivateDriverAction.submit({
+                              id: String(driver.id),
+                            });
+                            window.location.reload();
+                          }}
+                        >
+                          <svg
+                            width={16}
+                            height={16}
+                            viewBox="0 0 24 24"
+                            fill="none"
+                            stroke="currentColor"
+                            stroke-width="2"
+                            stroke-linecap="round"
+                            stroke-linejoin="round"
+                          >
+                            <path d="M3 12a9 9 0 0 1 9-9 9.75 9.75 0 0 1 6.74 2.74L21 8" />
+                            <path d="M21 3v5h-5" />
+                            <path d="M21 12a9 9 0 0 1-9 9 9.75 9.75 0 0 1-6.74-2.74L3 16" />
+                            <path d="M3 21v-5h5" />
+                          </svg>
+                        </button>
+                      )}
                     </div>
                   </td>
                 </tr>
