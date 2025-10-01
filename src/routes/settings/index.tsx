@@ -144,8 +144,8 @@ export default component$(() => {
   const operatingHoursSatEnd = useSignal('12:00');
   const operatingHoursSunStart = useSignal('CLOSED');
   const operatingHoursSunEnd = useSignal('CLOSED');
-  const driverDefaultNCPayRate = useSignal(0);
-  const driverDefaultHolidayPayRate = useSignal(0);
+  const driverDefaultNCPayRate = useSignal('0.00');
+  const driverDefaultHolidayPayRate = useSignal('0.00');
 
   // Sync all signals with loaded settings ONCE on client-side mount
   useVisibleTask$(() => {
@@ -180,8 +180,8 @@ export default component$(() => {
     operatingHoursSunStart.value = settings.value.operatingHoursSunStart;
     operatingHoursSunEnd.value = settings.value.operatingHoursSunEnd;
 
-    driverDefaultNCPayRate.value = settings.value.driverDefaultNCPayRate;
-    driverDefaultHolidayPayRate.value = settings.value.driverDefaultHolidayPayRate;
+    driverDefaultNCPayRate.value = String(settings.value.driverDefaultNCPayRate);
+    driverDefaultHolidayPayRate.value = String(settings.value.driverDefaultHolidayPayRate);
   });
 
   useVisibleTask$(({ track }) => {
@@ -212,8 +212,8 @@ export default component$(() => {
       operatingHoursSunStart.value = result.settings.operatingHoursSunStart;
       operatingHoursSunEnd.value = result.settings.operatingHoursSunEnd;
 
-      driverDefaultNCPayRate.value = result.settings.driverDefaultNCPayRate;
-      driverDefaultHolidayPayRate.value = result.settings.driverDefaultHolidayPayRate;
+      driverDefaultNCPayRate.value = String(result.settings.driverDefaultNCPayRate);
+      driverDefaultHolidayPayRate.value = String(result.settings.driverDefaultHolidayPayRate);
 
       // Hide success message after 3 seconds
       setTimeout(() => {
@@ -589,9 +589,9 @@ export default component$(() => {
                   type="number"
                   step="0.01"
                   min="0"
-                  value={Number(driverDefaultNCPayRate.value).toFixed(2)}
+                  value={driverDefaultNCPayRate.value}
                   onInput$={(_, el) => {
-                    driverDefaultNCPayRate.value = Number(el.value);
+                    driverDefaultNCPayRate.value = el.value;
                   }}
                   class="w-full"
                 />
@@ -606,9 +606,9 @@ export default component$(() => {
                   type="number"
                   step="0.01"
                   min="0"
-                  value={Number(driverDefaultHolidayPayRate.value).toFixed(2)}
+                  value={driverDefaultHolidayPayRate.value}
                   onInput$={(_, el) => {
-                    driverDefaultHolidayPayRate.value = Number(el.value);
+                    driverDefaultHolidayPayRate.value = el.value;
                   }}
                   class="w-full"
                 />
