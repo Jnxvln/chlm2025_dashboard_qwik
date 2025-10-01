@@ -26,7 +26,7 @@ export const useFreightRoutesLoader = routeLoader$(async (event) => {
 });
 
 export const useDeactivateFreightRouteAction = routeAction$(
-  async ({ id }, _requestEvent) => {
+  async ({ id }) => {
     try {
       await db.freightRoute.update({
         where: { id: Number(id) },
@@ -44,7 +44,7 @@ export const useDeactivateFreightRouteAction = routeAction$(
 );
 
 export const useReactivateFreightRouteAction = routeAction$(
-  async ({ id }, _requestEvent) => {
+  async ({ id }) => {
     try {
       await db.freightRoute.update({
         where: { id: Number(id) },

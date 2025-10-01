@@ -49,7 +49,6 @@ export const useEditFreightRouteLoader = routeLoader$(async (event) => {
 
   // If freight route has an inactive vendor or location, include them as well
   const currentVendorId = freightRoute.vendorLocation.vendor.id;
-  const currentLocationId = freightRoute.vendorLocation.id;
 
   const currentVendor = await db.vendor.findUnique({
     where: { id: currentVendorId },

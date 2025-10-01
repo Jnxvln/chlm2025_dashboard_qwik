@@ -17,7 +17,7 @@ export const useMaterialCategoriesLoader = routeLoader$(async () => {
 });
 
 export const useDeactivateMaterialCategoryAction = routeAction$(
-  async ({ id }, _requestEvent) => {
+  async ({ id }) => {
     try {
       const categoryId = Number(id);
 
@@ -53,7 +53,7 @@ export const useDeactivateMaterialCategoryAction = routeAction$(
 );
 
 export const useReactivateMaterialCategoryAction = routeAction$(
-  async ({ id }, _requestEvent) => {
+  async ({ id }) => {
     try {
       const categoryId = Number(id);
 

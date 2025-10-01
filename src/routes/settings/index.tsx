@@ -1,11 +1,10 @@
-import { component$, useSignal, useVisibleTask$, $ } from '@builder.io/qwik';
+import { component$, useSignal, useVisibleTask$ } from '@builder.io/qwik';
 import {
   routeLoader$,
   routeAction$,
   zod$,
   z,
   Form,
-  useNavigate,
 } from '@builder.io/qwik-city';
 import { db } from '~/lib/db';
 import PageTitle from '~/components/PageTitle';
@@ -118,7 +117,6 @@ export const useUpdateSettings = routeAction$(
 export default component$(() => {
   const settings = useSettings();
   const updateSettings = useUpdateSettings();
-  const nav = useNavigate();
   const success = useSignal(false);
 
   // Operating hours "closed" state signals (initialized in useVisibleTask)
