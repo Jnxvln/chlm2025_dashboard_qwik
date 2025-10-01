@@ -172,3 +172,35 @@ model WaitlistEntry {
   createdAt   DateTime  @default(now())
   updatedAt   DateTime  @default(now())
 }
+
+model Settings {
+  id                                  Int       @id @default(autoincrement())
+
+  // STORE SETTINGS
+  storeOpen                           Boolean   @default(true)
+  storeClosureType                    String    @default("default")  // "default", "weather", "holiday", or "custom"
+  storeCustomClosureMessage           String?                        // Used when storeClosureType is "custom"
+  storeDefaultClosureReason           String    @default("C&H is currently closed")
+  storeDefaultClosureReasonWeather    String    @default("C&H is closed due to weather")
+  storeDefaultClosureReasonHoliday    String    @default("C&H is closed for the holiday")
+  storeDisplayInventoryStatus         Boolean   @default(true)
+  
+  // OPERATING HOURS (Displayed as: "Mon-Fri: 8:00am - 5:00pm", "Sat: 8:00am - 12:00pm", etc.)
+  operatingHoursMonFriStart           String    @default("08:00")
+  operatingHoursMonFriEnd             String    @default("17:00")
+  operatingHoursSatStart              String    @default("08:00")
+  operatingHoursSatEnd                String    @default("12:00")
+  operatingHoursSunStart              String    @default("CLOSED")
+  operatingHoursSunEnd                String    @default("CLOSED")
+
+  // DRIVER SETTINGS
+  driverDefaultNCPayRate              Decimal   @default(0.00) @db.Decimal(10, 2)
+  driverDefaultHolidayPayRate         Decimal   @default(0.00) @db.Decimal(10, 2)
+  
+  // USER SETTINGS
+  userPrefersCaps                     Boolean   @default(false)       // Whether the user prefers to see all-caps text in the UI
+  userDefaultColorTheme               String    @default("default")   // User's preferred Tailwind color theme
+
+  createdAt                           DateTime  @default(now())
+  updatedAt                           DateTime  @default(now())
+}
