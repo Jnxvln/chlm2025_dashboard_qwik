@@ -27,11 +27,11 @@ export const useSettings = routeLoader$(async () => {
     });
   }
 
-  // Convert Decimal types to numbers for serialization
+  // Convert Decimal types to numbers for serialization (with 2 decimal places)
   const result = {
     ...settings,
-    driverDefaultNCPayRate: Number(settings.driverDefaultNCPayRate),
-    driverDefaultHolidayPayRate: Number(settings.driverDefaultHolidayPayRate),
+    driverDefaultNCPayRate: Number(settings.driverDefaultNCPayRate).toFixed(2),
+    driverDefaultHolidayPayRate: Number(settings.driverDefaultHolidayPayRate).toFixed(2),
   };
 
   console.log('📊 SETTINGS LOADER - Returning settings:', JSON.stringify(result, null, 2));
@@ -77,13 +77,13 @@ export const useUpdateSettings = routeAction$(
 
       console.log('✅ SETTINGS UPDATE - Successfully saved:', JSON.stringify(updated, null, 2));
 
-      // Return the updated settings so we can sync the UI
+      // Return the updated settings so we can sync the UI (with 2 decimal places)
       return {
         success: true,
         settings: {
           ...updated,
-          driverDefaultNCPayRate: Number(updated.driverDefaultNCPayRate),
-          driverDefaultHolidayPayRate: Number(updated.driverDefaultHolidayPayRate),
+          driverDefaultNCPayRate: Number(updated.driverDefaultNCPayRate).toFixed(2),
+          driverDefaultHolidayPayRate: Number(updated.driverDefaultHolidayPayRate).toFixed(2),
         }
       };
     } catch (err) {
@@ -593,6 +593,10 @@ export default component$(() => {
                   onInput$={(_, el) => {
                     driverDefaultNCPayRate.value = el.value;
                   }}
+                  onBlur$={(_, el) => {
+                    const num = parseFloat(el.value) || 0;
+                    driverDefaultNCPayRate.value = num.toFixed(2);
+                  }}
                   class="w-full"
                 />
               </div>
@@ -609,6 +613,10 @@ export default component$(() => {
                   value={driverDefaultHolidayPayRate.value}
                   onInput$={(_, el) => {
                     driverDefaultHolidayPayRate.value = el.value;
+                  }}
+                  onBlur$={(_, el) => {
+                    const num = parseFloat(el.value) || 0;
+                    driverDefaultHolidayPayRate.value = num.toFixed(2);
                   }}
                   class="w-full"
                 />
