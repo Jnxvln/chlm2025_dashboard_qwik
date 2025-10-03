@@ -94,7 +94,8 @@ export default component$(() => {
     track(() => updateVendorLocation.value?.success);
     if (updateVendorLocation.value?.success) {
       success.value = true;
-      setTimeout(() => nav('/vendors/locations'), 1200);
+      const returnTo = new URLSearchParams(window.location.search).get('returnTo') || '/vendors/locations';
+      setTimeout(() => nav(returnTo), 1200);
     }
   });
 

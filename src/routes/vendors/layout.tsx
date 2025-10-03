@@ -10,6 +10,14 @@ export default component$(() => {
 
       <div class="mb-6 gap-2 flex flex-row flex-wrap">
         <NavLink
+          href="/vendors/overview"
+          class="btn btn-accent btn-sm"
+          activeStyle="background-color: rgb(var(--color-warning)); color: rgb(var(--color-text-inverse)); border-color: rgb(var(--color-warning));"
+          exact
+        >
+          Overview
+        </NavLink>
+        <NavLink
           href="/vendors"
           class="btn btn-accent btn-sm"
           activeStyle="background-color: rgb(var(--color-warning)); color: rgb(var(--color-text-inverse)); border-color: rgb(var(--color-warning));"

@@ -13,7 +13,7 @@ export const Nav = component$(() => {
     { href: '/', label: 'Home' },
     { href: '/drivers', label: 'Drivers' },
     { href: '/hauls', label: 'Hauls' },
-    { href: '/vendors', label: 'Vendors' },
+    { href: '/vendors/overview', label: 'Vendors' },
     { href: '/materials', label: 'Materials' },
     { href: '/waitlist', label: 'Wait List' },
     { href: '/calculators', label: 'Calculators' },

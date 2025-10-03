@@ -7,7 +7,7 @@ import {
   Form,
 } from '@builder.io/qwik-city';
 import { db } from '~/lib/db';
-import { useNavigate } from '@builder.io/qwik-city';
+import { useNavigate, useLocation } from '@builder.io/qwik-city';
 import BackButton from '~/components/BackButton';
 import PageSubtitle from '~/components/PageSubtitle';
 
@@ -55,12 +55,14 @@ export default component$(() => {
   const updateVendor = useUpdateVendor();
   const success = useSignal(false);
   const nav = useNavigate();
+  const loc = useLocation();
 
   useVisibleTask$(({ track }) => {
     track(() => updateVendor.value?.success);
     if (updateVendor.value?.success) {
       success.value = true;
-      setTimeout(() => nav('/vendors'), 1200);
+      const returnTo = loc.url.searchParams.get('returnTo') || '/vendors';
+      setTimeout(() => nav(returnTo), 1200);
     }
   });
 
@@ -182,7 +184,7 @@ export default component$(() => {
           )}
 
           <div class="flex justify-end gap-3">
-            <a href="/vendors" class="btn btn-ghost">Cancel</a>
+            <a href={loc.url.searchParams.get('returnTo') || '/vendors'} class="btn btn-ghost">Cancel</a>
             <button
               type="submit"
               class="btn btn-primary"

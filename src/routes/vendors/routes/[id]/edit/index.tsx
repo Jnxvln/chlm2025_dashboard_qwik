@@ -1,4 +1,5 @@
 import {
+  $,
   component$,
   useComputed$,
   useSignal,
@@ -14,6 +15,7 @@ import {
   z,
 } from '@builder.io/qwik-city';
 import { db } from '~/lib/db';
+import { validateDestinationNotYard } from '~/lib/validation';
 import PageSubtitle from '~/components/PageSubtitle';
 import BackButton from '~/components/BackButton';
 
@@ -71,13 +73,23 @@ export const useEditFreightRouteLoader = routeLoader$(async (event) => {
 export const useUpdateFreightRoute = routeAction$(
   async (values, event) => {
     const id = parseInt(event.params.id);
+    const toYard = values.toYard === 'on';
+
+    // Server-side validation: prevent manual "C&H Yard" entries
+    const validation = validateDestinationNotYard(values.destination, toYard);
+    if (!validation.isValid) {
+      return {
+        success: false,
+        error: validation.error,
+      };
+    }
 
     await db.freightRoute.update({
       where: { id },
       data: {
-        destination: values.destination,
+        destination: toYard ? 'C&H Yard' : values.destination,
         freightCost: parseFloat(values.freightCost),
-        toYard: values.toYard === 'on',
+        toYard,
         isActive: values.isActive === 'on',
         notes: values.notes || null,
         vendorLocationId: parseInt(values.vendorLocationId),
@@ -111,15 +123,56 @@ export default component$(() => {
   const loc = useLocation();
 
   const selectedVendorId = useSignal<string | null>(null);
+  const selectedLocationId = useSignal<string | null>(null);
   const toYard = useSignal<boolean>(false);
   const destination = useSignal<string>('');
+  const destinationError = useSignal<string>('');
+  const existingYardRoute = useSignal<{
+    id: number;
+    destination: string;
+    vendorLocation: {
+      name: string;
+      vendor: { name: string };
+    };
+  } | null>(null);
+  const checkingYardRoute = useSignal<boolean>(false);
 
   // Default vendor selection and toYard state based on existing route
   useVisibleTask$(() => {
     selectedVendorId.value =
       data.value.freightRoute.vendorLocation.vendor.id.toString();
+    selectedLocationId.value = data.value.freightRoute.vendorLocationId.toString();
     toYard.value = data.value.freightRoute.toYard;
     destination.value = data.value.freightRoute.destination;
+  });
+
+  // Check for existing yard route when location changes (excluding current route)
+  const checkForYardRoute = $(async (locationId: string) => {
+    if (!locationId) {
+      existingYardRoute.value = null;
+      return;
+    }
+
+    checkingYardRoute.value = true;
+    try {
+      const currentRouteId = loc.params.id;
+      const response = await fetch(`/api/check-yard-route?locationId=${locationId}&excludeRouteId=${currentRouteId}`);
+      const data = await response.json();
+
+      if (data.exists) {
+        existingYardRoute.value = data.route;
+        // If a yard route exists, uncheck toYard checkbox
+        if (toYard.value) {
+          toYard.value = false;
+        }
+      } else {
+        existingYardRoute.value = null;
+      }
+    } catch (error) {
+      console.error('Error checking for yard route:', error);
+    } finally {
+      checkingYardRoute.value = false;
+    }
   });
 
   // Return to routes listing after submission
@@ -127,7 +180,8 @@ export default component$(() => {
     const result = track(() => action.value);
     if (result?.success) {
       console.log('Freight Route updated!');
-      setTimeout(() => nav(`/vendors/routes?highlight=${loc.params.id}`), 1000);
+      const returnTo = loc.url.searchParams.get('returnTo') || `/vendors/routes?highlight=${loc.params.id}`;
+      setTimeout(() => nav(returnTo), 1000);
     }
   });
 
@@ -193,6 +247,11 @@ export default component$(() => {
             required
             class="w-full"
             disabled={route.deactivatedByParent}
+            onChange$={(e) => {
+              const locationId = (e.target as HTMLSelectElement).value;
+              selectedLocationId.value = locationId;
+              checkForYardRoute(locationId);
+            }}
           >
             <option value="">Select a location</option>
             {filteredLocations.value.map((loc) => (
@@ -216,13 +275,23 @@ export default component$(() => {
             value={toYard.value ? 'C&H Yard' : destination.value}
             onInput$={(e) => {
               if (!toYard.value) {
-                destination.value = (e.target as HTMLInputElement).value;
+                const value = (e.target as HTMLInputElement).value;
+                destination.value = value;
+
+                // Real-time validation
+                const validation = validateDestinationNotYard(value, false);
+                destinationError.value = validation.error || '';
               }
             }}
             readOnly={toYard.value}
             class="w-full"
             style={toYard.value ? "background-color: rgb(var(--color-bg-secondary)) !important; cursor: not-allowed;" : ""}
           />
+          {destinationError.value && (
+            <p class="text-sm mt-1" style="color: rgb(var(--color-error))">
+              {destinationError.value}
+            </p>
+          )}
         </div>
 
         {/* Freight Cost */}
@@ -247,18 +316,44 @@ export default component$(() => {
           >{route.notes ?? ''}</textarea>
         </div>
 
+        {/* Existing Yard Route Warning */}
+        {existingYardRoute.value && (
+          <div class="p-3 rounded-lg" style="background-color: rgb(var(--color-warning) / 0.1); border: 1px solid rgb(var(--color-warning) / 0.3);">
+            <p class="text-sm mb-2" style="color: rgb(var(--color-text-primary))">
+              <strong>Note:</strong> A yard route already exists for this location:
+            </p>
+            <p class="text-sm mb-2" style="color: rgb(var(--color-text-secondary))">
+              "{existingYardRoute.value.destination}" (Route #{existingYardRoute.value.id})
+            </p>
+            <a
+              href={`/vendors/routes/${existingYardRoute.value.id}/edit`}
+              class="text-sm underline"
+              style="color: rgb(var(--color-accent))"
+            >
+              Edit existing yard route →
+            </a>
+          </div>
+        )}
+
         {/* To Yard toggle */}
         <div class="flex items-center gap-2">
           <input
             name="toYard"
             type="checkbox"
             checked={toYard.value}
+            disabled={!!existingYardRoute.value}
             onChange$={(e) => {
               toYard.value = (e.target as HTMLInputElement).checked;
+              // Clear destination error when toYard is checked
+              if (toYard.value) {
+                destinationError.value = '';
+              }
             }}
-            style="accent-color: rgb(var(--color-primary))"
+            style={existingYardRoute.value ? "opacity: 0.5; cursor: not-allowed;" : "accent-color: rgb(var(--color-primary))"}
           />
-          <label class="text-sm font-medium" style="color: rgb(var(--color-text-primary))">To Yard (C&H Yard)</label>
+          <label class="text-sm font-medium" style={existingYardRoute.value ? "color: rgb(var(--color-text-secondary)); opacity: 0.7;" : "color: rgb(var(--color-text-primary))"}>
+            To Yard (C&H Yard)
+          </label>
         </div>
 
         {/* Active toggle */}
@@ -267,19 +362,28 @@ export default component$(() => {
           <label class="text-sm font-medium" style="color: rgb(var(--color-text-primary))">Active</label>
         </div>
 
-        <button
-          type="submit"
-          class="btn btn-primary"
-          disabled={action.isRunning}
-        >
-          {action.isRunning ? 'Updating...' : 'Update Freight Route'}
-        </button>
+        <div class="flex justify-end gap-3">
+          <a href={loc.url.searchParams.get('returnTo') || '/vendors/routes'} class="btn btn-ghost">Cancel</a>
+          <button
+            type="submit"
+            class="btn btn-primary"
+            disabled={action.isRunning || !!destinationError.value}
+          >
+            {action.isRunning ? 'Updating...' : 'Update Freight Route'}
+          </button>
+        </div>
       </Form>
       </div>
 
       {action.value?.success && (
         <div class="mt-4 p-3 rounded-lg" style="background-color: rgb(var(--color-success) / 0.1); color: rgb(var(--color-success))">
           Route updated! Redirecting...
+        </div>
+      )}
+
+      {action.value?.error && (
+        <div class="mt-4 p-3 rounded-lg" style="background-color: rgb(var(--color-error) / 0.1); color: rgb(var(--color-error))">
+          {action.value.error}
         </div>
       )}
     </section>

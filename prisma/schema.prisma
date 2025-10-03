@@ -157,6 +157,8 @@ model FreightRoute {
   vendorLocationId   Int
   vendorLocation     VendorLocation @relation(fields: [vendorLocationId], references: [id])
   hauls              Haul[]
+
+  @@index([vendorLocationId, toYard])
 }
 
 model WaitlistEntry {

@@ -7,7 +7,7 @@ import {
   Form,
 } from '@builder.io/qwik-city';
 import { db } from '~/lib/db';
-import { useNavigate } from '@builder.io/qwik-city';
+import { useNavigate, useLocation } from '@builder.io/qwik-city';
 import PageSubtitle from '~/components/PageSubtitle';
 import BackButton from '~/components/BackButton';
 
@@ -97,6 +97,7 @@ export default component$(() => {
   const updateVendorProduct = useUpdateVendorProduct();
   const success = useSignal(false);
   const nav = useNavigate();
+  const loc = useLocation();
 
   // const selectedVendorId = useSignal<number>(vendorProduct.value.vendorId);
   const selectedVendorId = useSignal<number | undefined>(undefined);
@@ -130,7 +131,8 @@ export default component$(() => {
     track(() => updateVendorProduct.value?.success);
     if (updateVendorProduct.value?.success) {
       success.value = true;
-      setTimeout(() => nav('/vendors/products'), 1200);
+      const returnTo = new URLSearchParams(window.location.search).get('returnTo') || '/vendors/products';
+      setTimeout(() => nav(returnTo), 1200);
     }
   });
 
@@ -253,7 +255,7 @@ export default component$(() => {
         )}
 
         <div class="flex justify-end gap-3">
-          <a href="/vendors/products" class="btn btn-ghost">Cancel</a>
+          <a href={loc.url.searchParams.get('returnTo') || '/vendors/products'} class="btn btn-ghost">Cancel</a>
           <button
             type="submit"
             class="btn btn-primary"
