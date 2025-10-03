@@ -94,7 +94,7 @@ export default component$(() => {
     track(() => updateVendorLocation.value?.success);
     if (updateVendorLocation.value?.success) {
       success.value = true;
-      setTimeout(() => nav('/vendor-locations'), 1200);
+      setTimeout(() => nav('/vendors/locations'), 1200);
     }
   });
 
