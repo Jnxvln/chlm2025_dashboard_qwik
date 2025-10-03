@@ -148,6 +148,7 @@ model FreightRoute {
   id                 Int            @id @default(autoincrement())
   destination        String
   freightCost        Float
+  toYard             Boolean        @default(false)
   notes              String?
   isActive           Boolean        @default(true)
   deactivatedByParent Boolean       @default(false)

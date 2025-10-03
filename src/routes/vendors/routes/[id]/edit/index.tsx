@@ -77,6 +77,7 @@ export const useUpdateFreightRoute = routeAction$(
       data: {
         destination: values.destination,
         freightCost: parseFloat(values.freightCost),
+        toYard: values.toYard === 'on',
         isActive: values.isActive === 'on',
         notes: values.notes || null,
         vendorLocationId: parseInt(values.vendorLocationId),
@@ -96,6 +97,7 @@ export const useUpdateFreightRoute = routeAction$(
       .refine((val) => !isNaN(parseFloat(val)), {
         message: 'Must be a number',
       }),
+    toYard: z.string().optional(),
     isActive: z.string().optional(),
     vendorLocationId: z.string().min(1),
     notes: z.string().optional(),
@@ -109,11 +111,15 @@ export default component$(() => {
   const loc = useLocation();
 
   const selectedVendorId = useSignal<string | null>(null);
+  const toYard = useSignal<boolean>(false);
+  const destination = useSignal<string>('');
 
-  // Default vendor selection based on existing route
+  // Default vendor selection and toYard state based on existing route
   useVisibleTask$(() => {
     selectedVendorId.value =
       data.value.freightRoute.vendorLocation.vendor.id.toString();
+    toYard.value = data.value.freightRoute.toYard;
+    destination.value = data.value.freightRoute.destination;
   });
 
   // Return to routes listing after submission
@@ -207,8 +213,15 @@ export default component$(() => {
           <input
             name="destination"
             type="text"
-            value={route.destination}
+            value={toYard.value ? 'C&H Yard' : destination.value}
+            onInput$={(e) => {
+              if (!toYard.value) {
+                destination.value = (e.target as HTMLInputElement).value;
+              }
+            }}
+            readOnly={toYard.value}
             class="w-full"
+            style={toYard.value ? "background-color: rgb(var(--color-bg-secondary)) !important; cursor: not-allowed;" : ""}
           />
         </div>
 
@@ -232,6 +245,20 @@ export default component$(() => {
             rows={4}
             class="w-full"
           >{route.notes ?? ''}</textarea>
+        </div>
+
+        {/* To Yard toggle */}
+        <div class="flex items-center gap-2">
+          <input
+            name="toYard"
+            type="checkbox"
+            checked={toYard.value}
+            onChange$={(e) => {
+              toYard.value = (e.target as HTMLInputElement).checked;
+            }}
+            style="accent-color: rgb(var(--color-primary))"
+          />
+          <label class="text-sm font-medium" style="color: rgb(var(--color-text-primary))">To Yard (C&H Yard)</label>
         </div>
 
         {/* Active toggle */}

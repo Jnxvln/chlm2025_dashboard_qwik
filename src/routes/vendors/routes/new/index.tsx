@@ -38,6 +38,7 @@ export const useCreateFreightRoute = routeAction$(
       data: {
         destination: values.destination,
         freightCost: parseFloat(values.freightCost),
+        toYard: values.toYard === 'on',
         isActive: values.isActive === 'on',
         vendorLocationId: parseInt(values.vendorLocationId),
       },
@@ -56,6 +57,7 @@ export const useCreateFreightRoute = routeAction$(
       .refine((val) => !isNaN(parseFloat(val)), {
         message: 'Must be a number',
       }),
+    toYard: z.string().optional(), // checkbox
     isActive: z.string().optional(), // checkbox
     vendorLocationId: z.string().min(1),
   }),
@@ -77,6 +79,8 @@ export default component$(() => {
   const loc = useLocation();
 
   const selectedVendorId = useSignal<string | null>(null);
+  const toYard = useSignal<boolean>(false);
+  const destination = useSignal<string>('');
 
   const filteredLocations = useComputed$(() => {
     const vendor = vendors.value.find(
@@ -147,7 +151,19 @@ export default component$(() => {
         {/* Destination */}
         <div>
           <label class="block text-sm font-medium mb-2" style="color: rgb(var(--color-text-secondary))">Destination</label>
-          <input name="destination" type="text" class="w-full" />
+          <input
+            name="destination"
+            type="text"
+            class="w-full"
+            value={toYard.value ? 'C&H Yard' : destination.value}
+            onInput$={(e) => {
+              if (!toYard.value) {
+                destination.value = (e.target as HTMLInputElement).value;
+              }
+            }}
+            readOnly={toYard.value}
+            style={toYard.value ? "background-color: rgb(var(--color-bg-secondary)) !important; cursor: not-allowed;" : ""}
+          />
         </div>
 
         {/* Freight Cost */}
@@ -165,6 +181,20 @@ export default component$(() => {
         <div>
           <label class="block text-sm font-medium mb-2" style="color: rgb(var(--color-text-secondary))">Notes</label>
           <textarea name="notes" rows={4} class="w-full"></textarea>
+        </div>
+
+        {/* To Yard toggle */}
+        <div class="flex items-center gap-2">
+          <input
+            name="toYard"
+            type="checkbox"
+            checked={toYard.value}
+            onChange$={(e) => {
+              toYard.value = (e.target as HTMLInputElement).checked;
+            }}
+            style="accent-color: rgb(var(--color-primary))"
+          />
+          <label class="text-sm font-medium" style="color: rgb(var(--color-text-primary))">To Yard (C&H Yard)</label>
         </div>
 
         {/* Active toggle */}
