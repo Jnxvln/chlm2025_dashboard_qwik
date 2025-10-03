@@ -2,7 +2,7 @@ import { component$, useSignal, useComputed$, useVisibleTask$, $ } from '@builde
 import { routeLoader$, useLocation, useNavigate } from '@builder.io/qwik-city';
 import { db } from '~/lib/db';
 import PageTitle from '~/components/PageTitle';
-import { EditIcon, DeleteIcon } from '~/components/icons';
+import { EditIcon } from '~/components/icons';
 
 export const useVendorsOverviewLoader = routeLoader$(async () => {
   const vendors = await db.vendor.findMany({
@@ -573,10 +573,6 @@ export default component$(() => {
                                             <div class="space-y-2" style="max-height: 300px; overflow-y: auto; padding-right: 0.5rem;">
                                               {location.freightRoutes.filter(r => !r.toYard).map((route) => {
                                             const isRouteMatch = searchMatches.value?.routes.has(route.id);
-                                            const shouldHighlight = quickInfoOption.value === 'A' &&
-                                                                   route.toYard &&
-                                                                   selectedProductId.value &&
-                                                                   location.vendorProducts.some(p => p.id === selectedProductId.value);
 
                                             return (
                                               <div
