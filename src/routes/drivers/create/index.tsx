@@ -48,7 +48,7 @@ export const useCreateDriverAction = routeAction$(
           nonCommissionRate: data.nonCommissionRate,
           dateHired: processedDateHired,
           dateReleased: processedDateReleased,
-          isActive: data.isActive,
+          isActive: data.isActive === true, // Explicitly convert: true if checked, false if unchecked
         },
       });
 
