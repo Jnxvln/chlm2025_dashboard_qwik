@@ -8,6 +8,9 @@ export default component$(() => {
 
   // Parse the breakdownData from URL params
   const breakdownDataParam = loc.url.searchParams.get('breakdownData');
+  const outboundParam = loc.url.searchParams.get('outbound');
+  const isOutbound = outboundParam === 'true';
+
   let breakdownData: any = null;
 
   try {
@@ -121,8 +124,13 @@ export default component$(() => {
               {/* Column 1 - Tons/Yards */}
               <div class="print-col print-col-center">
                 <div class="print-quantity">
+                  {isOutbound && (
+                    <div class="print-outbound-label">
+                      <strong>Outbound Truckload</strong>
+                    </div>
+                  )}
                   <div>{formatNumber(tons)} T</div>
-                  <div>= {formatNumber(yards)} yds</div>
+                  {!isOutbound && <div>= {formatNumber(yards)} yds</div>}
                 </div>
               </div>
 
@@ -251,6 +259,11 @@ export default component$(() => {
             flex-direction: column;
             gap: 0.25rem;
             font-size: 1rem;
+          }
+
+          .print-outbound-label {
+            font-size: 0.9rem;
+            margin-bottom: 0.25rem;
           }
 
           /* Column 2 (Right) Styles */

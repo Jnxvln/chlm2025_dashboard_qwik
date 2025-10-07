@@ -141,12 +141,34 @@ export default component$(() => {
     }
   });
 
-  // Return to routes listing after submission
+  // Return to returnTo URL or routes listing after submission
   useVisibleTask$(({ track }) => {
     const result = track(() => action.value);
     if (result?.success) {
       console.log('Freight Route created!');
-      setTimeout(() => nav(`/vendors/routes?highlight=${loc.params.id}`), 1000);
+      const returnTo = loc.url.searchParams.get('returnTo');
+      if (returnTo) {
+        // Return to the specified URL with the new route ID
+        const separator = returnTo.includes('?') ? '&' : '?';
+        setTimeout(() => nav(`${decodeURIComponent(returnTo)}${separator}newRouteId=${result.id}`), 1000);
+      } else {
+        setTimeout(() => nav(`/vendors/routes?highlight=${loc.params.id}`), 1000);
+      }
+    }
+  });
+
+  // Prefill vendor and location from URL params
+  useVisibleTask$(() => {
+    const vendorIdParam = loc.url.searchParams.get('vendorId');
+    const locationIdParam = loc.url.searchParams.get('locationId');
+
+    if (vendorIdParam) {
+      selectedVendorId.value = vendorIdParam;
+    }
+
+    if (locationIdParam) {
+      selectedLocationId.value = locationIdParam;
+      checkForYardRoute(locationIdParam);
     }
   });
 
@@ -170,6 +192,7 @@ export default component$(() => {
             name="vendorId"
             required
             class="w-full"
+            value={selectedVendorId.value || ''}
             onChange$={(e) => {
               selectedVendorId.value = (e.target as HTMLSelectElement).value;
             }}
@@ -190,6 +213,7 @@ export default component$(() => {
             name="vendorLocationId"
             required
             class="w-full"
+            value={selectedLocationId.value || ''}
             onChange$={(e) => {
               const locationId = (e.target as HTMLSelectElement).value;
               selectedLocationId.value = locationId;
