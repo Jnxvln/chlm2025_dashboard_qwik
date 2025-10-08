@@ -53,6 +53,7 @@ export const useCreateFreightRoute = routeAction$(
         freightCost: parseFloat(values.freightCost),
         toYard,
         isActive: values.isActive === 'on',
+        notes: values.notes || null,
         vendorLocationId: parseInt(values.vendorLocationId),
       },
     });
@@ -73,6 +74,7 @@ export const useCreateFreightRoute = routeAction$(
     toYard: z.string().optional(), // checkbox
     isActive: z.string().optional(), // checkbox
     vendorLocationId: z.string().min(1),
+    notes: z.string().optional(),
   }),
 );
 
