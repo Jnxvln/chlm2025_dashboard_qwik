@@ -67,68 +67,82 @@ export default component$(() => {
       </div>
 
       <div class="card mt-4 max-w-xl">
-        <Form
-          action={createVendorLocationAction}
-          class="flex flex-col gap-4"
-        >
-        <div>
-          <label class="block text-sm font-medium mb-2" style="color: rgb(var(--color-text-secondary))">Location Name *</label>
-          <input
-            name="name"
-            type="text"
-            defaultValue="Main"
-            required
-            class="w-full"
-          />
-        </div>
+        <Form action={createVendorLocationAction} class="flex flex-col gap-4">
+          <div>
+            <label
+              class="block text-sm font-medium mb-2"
+              style="color: rgb(var(--color-text-secondary))"
+            >
+              Vendor *
+            </label>
+            <select name="vendorId" class="w-full" required>
+              <option value="">Select Vendor *</option>
+              {vendors.value.map((vendor) => (
+                <option key={vendor.id} value={vendor.id}>
+                  {`${vendor.name} (${vendor.shortName})`}
+                </option>
+              ))}
+            </select>
+          </div>
+          <div>
+            <label
+              class="block text-sm font-medium mb-2"
+              style="color: rgb(var(--color-text-secondary))"
+            >
+              Location Name *
+            </label>
+            <input
+              name="name"
+              type="text"
+              defaultValue="Main"
+              required
+              class="w-full"
+            />
+          </div>
 
-        <div>
-          <label class="block text-sm font-medium mb-2" style="color: rgb(var(--color-text-secondary))">Vendor *</label>
-          <select
-            name="vendorId"
-            class="w-full"
-            required
+          <div class="flex items-center gap-2">
+            <input
+              name="isActive"
+              type="checkbox"
+              id="isActive"
+              value="true"
+              checked
+              style="accent-color: rgb(var(--color-primary))"
+            />
+            <label
+              for="isActive"
+              class="text-sm font-medium"
+              style="color: rgb(var(--color-text-primary))"
+            >
+              Is Active
+            </label>
+          </div>
+
+          <button
+            type="submit"
+            class="btn btn-primary"
+            disabled={createVendorLocationAction.isRunning}
           >
-          <option value="">Select Vendor *</option>
-          {vendors.value.map((vendor) => (
-            <option key={vendor.id} value={vendor.id}>
-              {`${vendor.name} (${vendor.shortName})`}
-            </option>
-          ))}
-          </select>
-        </div>
-
-        <div class="flex items-center gap-2">
-          <input
-            name="isActive"
-            type="checkbox"
-            id="isActive"
-            value="true"
-            checked
-            style="accent-color: rgb(var(--color-primary))"
-          />
-          <label for="isActive" class="text-sm font-medium" style="color: rgb(var(--color-text-primary))">
-            Is Active
-          </label>
-        </div>
-
-        <button
-          type="submit"
-          class="btn btn-primary"
-          disabled={createVendorLocationAction.isRunning}
-        >
-          {createVendorLocationAction.isRunning ? 'Creating...' : 'Create Vendor Location'}
-        </button>
-      </Form>
+            {createVendorLocationAction.isRunning
+              ? 'Creating...'
+              : 'Create Vendor Location'}
+          </button>
+        </Form>
       </div>
 
       {createVendorLocationAction.value?.error && (
-        <div class="mt-4 p-3 rounded-lg" style="background-color: rgb(var(--color-danger) / 0.1); color: rgb(var(--color-danger))">
+        <div
+          class="mt-4 p-3 rounded-lg"
+          style="background-color: rgb(var(--color-danger) / 0.1); color: rgb(var(--color-danger))"
+        >
           Error: {createVendorLocationAction.value.error}
         </div>
       )}
       {createVendorLocationAction.value?.success && (
-        <div class="mt-4 p-3 rounded-lg" style="background-color: rgb(var(--color-success) / 0.1); color: rgb(var(--color-success))">
+        <div
+          class="mt-4 p-3 rounded-lg"
+          style="background-color: rgb(var(--color-success) / 0.1); color: rgb(var(--color-success))"
+        >
           Vendor location created! Redirecting...
         </div>
       )}

@@ -42,7 +42,10 @@ export const useGetVendors = routeLoader$(async ({ params }) => {
     });
 
     // Add current vendor if it's not already in the list
-    if (currentVendor && !activeVendors.find(v => v.id === currentVendor.id)) {
+    if (
+      currentVendor &&
+      !activeVendors.find((v) => v.id === currentVendor.id)
+    ) {
       activeVendors.push(currentVendor);
     }
   }
@@ -94,7 +97,9 @@ export default component$(() => {
     track(() => updateVendorLocation.value?.success);
     if (updateVendorLocation.value?.success) {
       success.value = true;
-      const returnTo = new URLSearchParams(window.location.search).get('returnTo') || '/vendors/locations';
+      const returnTo =
+        new URLSearchParams(window.location.search).get('returnTo') ||
+        '/vendors/locations';
       setTimeout(() => nav(returnTo), 1200);
     }
   });
@@ -108,84 +113,107 @@ export default component$(() => {
       </div>
 
       <div class="card mt-4">
-        <Form
-          action={updateVendorLocation}
-          class="flex flex-col gap-4"
-        >
-        {vendorLocation.value.deactivatedByParent && (
-          <div class="p-4 rounded-lg mb-4" style="background-color: rgb(var(--color-warning) / 0.1); border: 1px solid rgb(var(--color-warning) / 0.3);">
-            <p class="text-sm" style="color: rgb(var(--color-text-primary))">
-              <strong>Note:</strong> This location was deactivated because its parent vendor was deactivated.
-              The vendor cannot be changed while in this state.
-              Reactivate the parent vendor first, or mark this location as active to enable editing.
-            </p>
+        <Form action={updateVendorLocation} class="flex flex-col gap-4">
+          {vendorLocation.value.deactivatedByParent && (
+            <div
+              class="p-4 rounded-lg mb-4"
+              style="background-color: rgb(var(--color-warning) / 0.1); border: 1px solid rgb(var(--color-warning) / 0.3);"
+            >
+              <p class="text-sm" style="color: rgb(var(--color-text-primary))">
+                <strong>Note:</strong> This location was deactivated because its
+                parent vendor was deactivated. The vendor cannot be changed
+                while in this state. Reactivate the parent vendor first, or mark
+                this location as active to enable editing.
+              </p>
+            </div>
+          )}
+
+          <div>
+            <label
+              class="block text-sm font-medium mb-2"
+              style="color: rgb(var(--color-text-secondary))"
+            >
+              Vendor *
+            </label>
+            <select
+              name="vendorId"
+              value={selectedVendorId.value ?? ''}
+              class="w-full"
+              required
+              disabled={vendorLocation.value.deactivatedByParent}
+              onChange$={(e) => {
+                selectedVendorId.value = Number(
+                  (e.target as HTMLSelectElement).value,
+                );
+              }}
+            >
+              <option value="">Select Vendor *</option>
+              {vendors.value.map((vendor) => (
+                <option key={vendor.id} value={vendor.id}>
+                  {`${vendor.name} (${vendor.shortName})${!vendor.isActive ? ' (Inactive)' : ''}`}
+                </option>
+              ))}
+            </select>
           </div>
-        )}
+          <div>
+            <label
+              class="block text-sm font-medium mb-2"
+              style="color: rgb(var(--color-text-secondary))"
+            >
+              Location Name *
+            </label>
+            <input
+              name="name"
+              type="text"
+              value={vendorLocation.value.name}
+              required
+              class="w-full"
+            />
+          </div>
 
-        <div>
-          <label class="block text-sm font-medium mb-2" style="color: rgb(var(--color-text-secondary))">Location Name *</label>
-          <input
-            name="name"
-            type="text"
-            value={vendorLocation.value.name}
-            required
-            class="w-full"
-          />
-        </div>
+          <div class="flex items-center gap-2">
+            <input
+              name="isActive"
+              type="checkbox"
+              value="true"
+              checked={vendorLocation.value.isActive}
+              style="accent-color: rgb(var(--color-primary))"
+            />
+            <label
+              class="text-sm font-medium"
+              style="color: rgb(var(--color-text-primary))"
+            >
+              Is Active
+            </label>
+          </div>
 
-        <div>
-          <label class="block text-sm font-medium mb-2" style="color: rgb(var(--color-text-secondary))">Vendor *</label>
-          <select
-            name="vendorId"
-            value={selectedVendorId.value ?? ''}
-            class="w-full"
-            required
-            disabled={vendorLocation.value.deactivatedByParent}
-            onChange$={(e) => {
-              selectedVendorId.value = Number(
-                (e.target as HTMLSelectElement).value,
-              );
-            }}
+          <button
+            type="submit"
+            class="btn btn-primary"
+            disabled={updateVendorLocation.isRunning || success.value}
           >
-          <option value="">Select Vendor *</option>
-          {vendors.value.map((vendor) => (
-            <option key={vendor.id} value={vendor.id}>
-              {`${vendor.name} (${vendor.shortName})${!vendor.isActive ? ' (Inactive)' : ''}`}
-            </option>
-          ))}
-          </select>
-        </div>
+            {updateVendorLocation.isRunning
+              ? 'Updating...'
+              : 'Update Vendor Location'}
+          </button>
 
-        <div class="flex items-center gap-2">
-          <input
-            name="isActive"
-            type="checkbox"
-            value="true"
-            checked={vendorLocation.value.isActive}
-            style="accent-color: rgb(var(--color-primary))"
-          />
-          <label class="text-sm font-medium" style="color: rgb(var(--color-text-primary))">Is Active</label>
-        </div>
-
-        <button
-          type="submit"
-          class="btn btn-primary"
-          disabled={updateVendorLocation.isRunning || success.value}
-        >
-          {updateVendorLocation.isRunning ? 'Updating...' : 'Update Vendor Location'}
-        </button>
-
-        {updateVendorLocation.value?.error && (
-          <div class="p-3 rounded-lg" style="background-color: rgb(var(--color-danger) / 0.1); color: rgb(var(--color-danger))">
-            {updateVendorLocation.value.error}
-          </div>
-        )}
-        {success.value && (
-          <div class="p-3 rounded-lg" style="background-color: rgb(var(--color-success) / 0.1); color: rgb(var(--color-success))">
-            Vendor location updated! Redirecting...
-          </div>
-        )}
-      </Form>
+          {updateVendorLocation.value?.error && (
+            <div
+              class="p-3 rounded-lg"
+              style="background-color: rgb(var(--color-danger) / 0.1); color: rgb(var(--color-danger))"
+            >
+              {updateVendorLocation.value.error}
+            </div>
+          )}
+          {success.value && (
+            <div
+              class="p-3 rounded-lg"
+              style="background-color: rgb(var(--color-success) / 0.1); color: rgb(var(--color-success))"
+            >
+              Vendor location updated! Redirecting...
+            </div>
+          )}
+        </Form>
       </div>
     </section>
   );

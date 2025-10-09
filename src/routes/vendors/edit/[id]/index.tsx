@@ -128,9 +128,16 @@ export default component$(() => {
                 name="chtFuelSurcharge"
                 type="number"
                 step="0.01"
-                value={vendor.value.chtFuelSurcharge}
+                value={(vendor.value.chtFuelSurcharge ?? 0).toFixed(2)}
                 placeholder="0.00"
                 class="w-full"
+                onBlur$={(e) => {
+                  const target = e.target as HTMLInputElement;
+                  const value = parseFloat(target.value);
+                  if (!isNaN(value)) {
+                    target.value = value.toFixed(2);
+                  }
+                }}
               />
             </div>
             <div>
@@ -146,9 +153,16 @@ export default component$(() => {
                 name="vendorFuelSurcharge"
                 type="number"
                 step="0.01"
-                value={vendor.value.vendorFuelSurcharge}
+                value={(vendor.value.vendorFuelSurcharge ?? 0).toFixed(2)}
                 placeholder="0.00"
                 class="w-full"
+                onBlur$={(e) => {
+                  const target = e.target as HTMLInputElement;
+                  const value = parseFloat(target.value);
+                  if (!isNaN(value)) {
+                    target.value = value.toFixed(2);
+                  }
+                }}
               />
             </div>
           </div>

@@ -88,109 +88,136 @@ export default component$(() => {
 
       <div class="card mt-4">
         <Form action={createVendorProductAction} class="flex flex-col gap-4">
-        <div>
-          <label class="block text-sm font-medium mb-2" style="color: rgb(var(--color-text-secondary))">Product Name *</label>
-          <input
-            name="name"
-            type="text"
-            required
-            class="w-full"
-          />
-        </div>
+          <div>
+            <label
+              class="block text-sm font-medium mb-2"
+              style="color: rgb(var(--color-text-secondary))"
+            >
+              Vendor *
+            </label>
+            <select
+              name="vendorId"
+              class="w-full"
+              required
+              onChange$={(e) => {
+                const value = (e.target as HTMLSelectElement).value;
+                selectedVendorId.value = value ? Number(value) : null;
+              }}
+            >
+              <option value="">Select Vendor *</option>
+              {vendors.value.map((vendor) => (
+                <option key={vendor.id} value={vendor.id}>
+                  {`${vendor.name} (${vendor.shortName})`}
+                </option>
+              ))}
+            </select>
+          </div>
 
-        <div>
-          <label class="block text-sm font-medium mb-2" style="color: rgb(var(--color-text-secondary))">Product Cost *</label>
-          <input
-            name="productCost"
-            type="number"
-            min={0}
-            step={0.01}
-            required
-            class="w-full"
-          />
-        </div>
-
-        <div>
-          <label class="block text-sm font-medium mb-2" style="color: rgb(var(--color-text-secondary))">Notes</label>
-          <textarea
-            name="notes"
-            rows={3}
-            class="w-full"
-          />
-        </div>
-
-        <div>
-          <label class="block text-sm font-medium mb-2" style="color: rgb(var(--color-text-secondary))">Vendor *</label>
-          <select
-            name="vendorId"
-            class="w-full"
-            required
-            onChange$={(e) => {
-              const value = (e.target as HTMLSelectElement).value;
-              selectedVendorId.value = value ? Number(value) : null;
-            }}
-          >
-            <option value="">Select Vendor *</option>
-            {vendors.value.map((vendor) => (
-              <option key={vendor.id} value={vendor.id}>
-                {`${vendor.name} (${vendor.shortName})`}
+          <div>
+            <label
+              class="block text-sm font-medium mb-2"
+              style="color: rgb(var(--color-text-secondary))"
+            >
+              Location *
+            </label>
+            <select
+              name="vendorLocationId"
+              class="w-full"
+              required
+              disabled={!selectedVendorId.value}
+            >
+              <option value="">
+                {selectedVendorId.value
+                  ? 'Select Location *'
+                  : 'Select Vendor First'}
               </option>
-            ))}
-          </select>
-        </div>
+              {availableLocations.value.map((location) => (
+                <option key={location.id} value={location.id}>
+                  {location.name}
+                </option>
+              ))}
+            </select>
+          </div>
+          <div>
+            <label
+              class="block text-sm font-medium mb-2"
+              style="color: rgb(var(--color-text-secondary))"
+            >
+              Product Name *
+            </label>
+            <input name="name" type="text" required class="w-full" />
+          </div>
 
-        <div>
-          <label class="block text-sm font-medium mb-2" style="color: rgb(var(--color-text-secondary))">Location *</label>
-          <select
-            name="vendorLocationId"
-            class="w-full"
-            required
-            disabled={!selectedVendorId.value}
+          <div>
+            <label
+              class="block text-sm font-medium mb-2"
+              style="color: rgb(var(--color-text-secondary))"
+            >
+              Product Cost *
+            </label>
+            <input
+              name="productCost"
+              type="number"
+              min={0}
+              step={0.01}
+              required
+              class="w-full"
+            />
+          </div>
+
+          <div>
+            <label
+              class="block text-sm font-medium mb-2"
+              style="color: rgb(var(--color-text-secondary))"
+            >
+              Notes
+            </label>
+            <textarea name="notes" rows={3} class="w-full" />
+          </div>
+
+          <div class="flex items-center gap-2">
+            <input
+              name="isActive"
+              type="checkbox"
+              id="isActive"
+              value="true"
+              checked
+              style="accent-color: rgb(var(--color-primary))"
+            />
+            <label
+              for="isActive"
+              class="text-sm font-medium"
+              style="color: rgb(var(--color-text-primary))"
+            >
+              Is Active
+            </label>
+          </div>
+
+          <button
+            type="submit"
+            class="btn btn-primary"
+            disabled={createVendorProductAction.isRunning}
           >
-            <option value="">
-              {selectedVendorId.value
-                ? 'Select Location *'
-                : 'Select Vendor First'}
-            </option>
-            {availableLocations.value.map((location) => (
-              <option key={location.id} value={location.id}>
-                {location.name}
-              </option>
-            ))}
-          </select>
-        </div>
-
-        <div class="flex items-center gap-2">
-          <input
-            name="isActive"
-            type="checkbox"
-            id="isActive"
-            value="true"
-            checked
-            style="accent-color: rgb(var(--color-primary))"
-          />
-          <label for="isActive" class="text-sm font-medium" style="color: rgb(var(--color-text-primary))">
-            Is Active
-          </label>
-        </div>
-
-        <button
-          type="submit"
-          class="btn btn-primary"
-          disabled={createVendorProductAction.isRunning}
-        >
-          {createVendorProductAction.isRunning ? 'Creating...' : 'Create Vendor Product'}
-        </button>
-      </Form>
+            {createVendorProductAction.isRunning
+              ? 'Creating...'
+              : 'Create Vendor Product'}
+          </button>
+        </Form>
       </div>
 
       {createVendorProductAction.value?.error && (
-        <div class="mt-4 p-3 rounded-lg" style="background-color: rgb(var(--color-danger) / 0.1); color: rgb(var(--color-danger))">
+        <div
+          class="mt-4 p-3 rounded-lg"
+          style="background-color: rgb(var(--color-danger) / 0.1); color: rgb(var(--color-danger))"
+        >
           Error: {createVendorProductAction.value.error}
         </div>
       )}
       {createVendorProductAction.value?.success && (
-        <div class="mt-4 p-3 rounded-lg" style="background-color: rgb(var(--color-success) / 0.1); color: rgb(var(--color-success))">
+        <div
+          class="mt-4 p-3 rounded-lg"
+          style="background-color: rgb(var(--color-success) / 0.1); color: rgb(var(--color-success))"
+        >
           Vendor product created! Redirecting...
         </div>
       )}
