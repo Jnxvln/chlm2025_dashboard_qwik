@@ -1,9 +1,50 @@
 import { component$ } from '@builder.io/qwik';
-import type { DocumentHead } from '@builder.io/qwik-city';
+import { routeLoader$, type DocumentHead } from '@builder.io/qwik-city';
+import { db } from '~/lib/db';
 import PageSubtitle from '~/components/PageSubtitle';
 import PageTitle from '~/components/PageTitle';
 
+export const useDashboardLoader = routeLoader$(async ({ query }) => {
+  const sortOrder = query.get('waitlistSort') || 'oldest';
+  const order = sortOrder === 'newest' ? 'desc' : 'asc';
+
+  const waitlistEntries = await db.waitlistEntry.findMany({
+    where: {
+      status: 'waiting',
+    },
+    include: {
+      contact: true,
+      vendorProduct: {
+        include: {
+          vendor: true,
+        },
+      },
+    },
+    orderBy: {
+      createdAt: order,
+    },
+    take: 10,
+  });
+
+  return {
+    waitlistEntries,
+    sortOrder,
+  };
+});
+
 export default component$(() => {
+  const data = useDashboardLoader();
+
+  // Format date as MM/DD/YY
+  const formatDate = (date: Date | string) => {
+    const d = new Date(date);
+    return d.toLocaleDateString('en-US', {
+      month: '2-digit',
+      day: '2-digit',
+      year: '2-digit',
+    });
+  };
+
   return (
     <div class="container mx-auto p-6">
       <PageTitle text="Dashboard" />
@@ -94,207 +135,96 @@ export default component$(() => {
         </div>
       </section>
 
-      {/* Waitlist Section (Oldest?) */}
+      {/* Waitlist Section */}
       <section class="mb-8">
         <div class="card">
           <div
-            class="card-header"
+            class="card-header flex items-center justify-between"
             style="background: linear-gradient(135deg, rgb(var(--color-accent) / 0.1), rgb(var(--color-primary) / 0.1))"
           >
-            <PageSubtitle text="Waitlist" />
-            <p class="card-subtitle">The oldest top 10 entries listed here</p>
+            <div>
+              <PageSubtitle text="Waitlist" />
+              <p class="card-subtitle">
+                {data.value.sortOrder === 'newest' ? 'Newest' : 'Oldest'} 10 waiting entries
+              </p>
+            </div>
+            <select
+              class="text-sm px-3 py-1 rounded"
+              style="background-color: rgb(var(--color-bg-primary)); border: 1px solid rgb(var(--color-border)); color: rgb(var(--color-text-primary))"
+              value={data.value.sortOrder}
+              onChange$={(e) => {
+                const newSort = (e.target as HTMLSelectElement).value;
+                const url = new URL(window.location.href);
+                url.searchParams.set('waitlistSort', newSort);
+                window.location.href = url.toString();
+              }}
+            >
+              <option value="oldest">Oldest First</option>
+              <option value="newest">Newest First</option>
+            </select>
           </div>
 
-          {/* Waitlist placeholder listing */}
-          <div class="space-y-3">
-            <div
-              class="flex items-center justify-between p-4 rounded-lg transition-colors"
-              style="background-color: rgb(var(--color-surface-hover))"
-            >
-              <div class="flex items-center space-x-3">
-                <div
-                  class="flex-shrink-0 w-8 h-8 rounded-full flex items-center justify-center"
-                  style="background-color: rgb(var(--color-accent) / 0.2)"
-                >
-                  <span
-                    class="text-xs font-medium"
-                    style="color: rgb(var(--color-accent))"
-                  >
-                    LW
-                  </span>
-                </div>
-                <div>
-                  <p
-                    class="font-medium"
-                    style="color: rgb(var(--color-text-primary))"
-                  >
-                    Larry Williams
-                  </p>
-                  <p
-                    class="text-sm"
-                    style="color: rgb(var(--color-text-secondary))"
-                  >
-                    2PL 4x4 Cherry Blend
-                  </p>
-                </div>
-              </div>
-              <div class="text-right">
-                <p
-                  class="text-sm font-medium"
-                  style="color: rgb(var(--color-text-primary))"
-                >
-                  555-627-1255
-                </p>
-                <p
-                  class="text-xs"
-                  style="color: rgb(var(--color-text-tertiary))"
-                >
-                  5/22/2025
-                </p>
-              </div>
-            </div>
-
-            <div
-              class="flex items-center justify-between p-4 rounded-lg transition-colors"
-              style="background-color: rgb(var(--color-surface-hover))"
-            >
-              <div class="flex items-center space-x-3">
-                <div
-                  class="flex-shrink-0 w-8 h-8 rounded-full flex items-center justify-center"
-                  style="background-color: rgb(var(--color-primary) / 0.2)"
-                >
-                  <span
-                    class="text-xs font-medium"
-                    style="color: rgb(var(--color-primary))"
-                  >
-                    TL
-                  </span>
-                </div>
-                <div>
-                  <p
-                    class="font-medium"
-                    style="color: rgb(var(--color-text-primary))"
-                  >
-                    Tina Lybeck
-                  </p>
-                  <p
-                    class="text-sm"
-                    style="color: rgb(var(--color-text-secondary))"
-                  >
-                    1PL Med Mossy Boulders
-                  </p>
-                </div>
-              </div>
-              <div class="text-right">
-                <p
-                  class="text-sm font-medium"
-                  style="color: rgb(var(--color-text-primary))"
-                >
-                  555-631-2479
-                </p>
-                <p
-                  class="text-xs"
-                  style="color: rgb(var(--color-text-tertiary))"
-                >
-                  5/30/2025
+          {/* Waitlist Table */}
+          <div class="table-container overflow-x-auto">
+            {data.value.waitlistEntries.length > 0 ? (
+              <table class="table-modern">
+                <thead>
+                  <tr>
+                    <th>Date</th>
+                    <th>Contact</th>
+                    <th>Resource</th>
+                    <th>Quantity</th>
+                    <th>Phone</th>
+                  </tr>
+                </thead>
+                <tbody>
+                  {data.value.waitlistEntries.map((entry) => (
+                    <tr
+                      key={entry.id}
+                      class="cursor-pointer"
+                      onClick$={() => {
+                        window.location.href = `/waitlist/${entry.id}/edit`;
+                      }}
+                    >
+                      <td>{formatDate(entry.createdAt)}</td>
+                      <td>
+                        {entry.contact.firstName} {entry.contact.lastName}
+                      </td>
+                      <td>
+                        {entry.resourceType === 'vendor_product'
+                          ? entry.vendorProduct?.name || 'N/A'
+                          : entry.customResourceName}
+                      </td>
+                      <td>
+                        {entry.quantity}
+                        {entry.quantityUnit ? ` ${entry.quantityUnit}` : ''}
+                      </td>
+                      <td>{entry.contact.phone1}</td>
+                    </tr>
+                  ))}
+                </tbody>
+              </table>
+            ) : (
+              <div class="p-8 text-center">
+                <p style="color: rgb(var(--color-text-secondary))">
+                  No waiting entries found
                 </p>
               </div>
-            </div>
-
-            <div
-              class="flex items-center justify-between p-4 rounded-lg transition-colors"
-              style="background-color: rgb(var(--color-surface-hover))"
-            >
-              <div class="flex items-center space-x-3">
-                <div
-                  class="flex-shrink-0 w-8 h-8 rounded-full flex items-center justify-center"
-                  style="background-color: rgb(var(--color-success) / 0.2)"
-                >
-                  <span
-                    class="text-xs font-medium"
-                    style="color: rgb(var(--color-success))"
-                  >
-                    CL
-                  </span>
-                </div>
-                <div>
-                  <p
-                    class="font-medium"
-                    style="color: rgb(var(--color-text-primary))"
-                  >
-                    Connor Lebobby
-                  </p>
-                  <p
-                    class="text-sm"
-                    style="color: rgb(var(--color-text-secondary))"
-                  >
-                    4yds Red Mulch
-                  </p>
-                </div>
-              </div>
-              <div class="text-right">
-                <p
-                  class="text-sm font-medium"
-                  style="color: rgb(var(--color-text-primary))"
-                >
-                  555-473-6448
-                </p>
-                <p
-                  class="text-xs"
-                  style="color: rgb(var(--color-text-tertiary))"
-                >
-                  6/16/2025
-                </p>
-              </div>
-            </div>
-
-            <div
-              class="flex items-center justify-between p-4 rounded-lg transition-colors"
-              style="background-color: rgb(var(--color-surface-hover))"
-            >
-              <div class="flex items-center space-x-3">
-                <div
-                  class="flex-shrink-0 w-8 h-8 rounded-full flex items-center justify-center"
-                  style="background-color: rgb(var(--color-warning) / 0.2)"
-                >
-                  <span
-                    class="text-xs font-medium"
-                    style="color: rgb(var(--color-warning))"
-                  >
-                    MO
-                  </span>
-                </div>
-                <div>
-                  <p
-                    class="font-medium"
-                    style="color: rgb(var(--color-text-primary))"
-                  >
-                    Mila O'Reilly
-                  </p>
-                  <p
-                    class="text-sm"
-                    style="color: rgb(var(--color-text-secondary))"
-                  >
-                    ?yds Oversize Blue/White
-                  </p>
-                </div>
-              </div>
-              <div class="text-right">
-                <p
-                  class="text-sm font-medium"
-                  style="color: rgb(var(--color-text-primary))"
-                >
-                  555-497-1489
-                </p>
-                <p
-                  class="text-xs"
-                  style="color: rgb(var(--color-text-tertiary))"
-                >
-                  6/20/2025
-                </p>
-              </div>
-            </div>
+            )}
           </div>
+
+          {/* View All Link */}
+          {data.value.waitlistEntries.length > 0 && (
+            <div class="p-4 text-center" style="border-top: 1px solid rgb(var(--color-border))">
+              <a
+                href="/waitlist"
+                class="text-sm"
+                style="color: rgb(var(--color-accent))"
+              >
+                View all waitlist entries →
+              </a>
+            </div>
+          )}
         </div>
       </section>
     </div>
