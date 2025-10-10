@@ -183,7 +183,7 @@ export default component$(() => {
                       key={entry.id}
                       class="cursor-pointer"
                       onClick$={() => {
-                        window.location.href = `/waitlist/${entry.id}/edit`;
+                        window.location.href = `/waitlist/${entry.id}/edit?returnTo=${encodeURIComponent('/')}`;
                       }}
                     >
                       <td>{formatDate(entry.createdAt)}</td>

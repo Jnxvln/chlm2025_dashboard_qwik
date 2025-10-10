@@ -108,12 +108,13 @@ export default component$(() => {
   );
   const selectedStatus = useSignal<string>(data.value.waitlistEntry.status);
 
-  // Return to waitlist after submission
+  // Return to returnTo URL or waitlist after submission
   useVisibleTask$(({ track }) => {
     const result = track(() => action.value);
     if (result?.success) {
       console.log('Waitlist entry updated!');
-      setTimeout(() => nav(`/waitlist`), 1000);
+      const returnTo = loc.url.searchParams.get('returnTo') || '/waitlist';
+      setTimeout(() => nav(returnTo), 1000);
     }
   });
 
@@ -339,7 +340,10 @@ export default component$(() => {
           </div>
 
           <div class="flex justify-end gap-3">
-            <a href="/waitlist" class="btn btn-ghost">
+            <a
+              href={loc.url.searchParams.get('returnTo') || '/waitlist'}
+              class="btn btn-ghost"
+            >
               Cancel
             </a>
             <button
