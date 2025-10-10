@@ -1,7 +1,5 @@
 import {
-  $,
   component$,
-  useComputed$,
   useSignal,
   useVisibleTask$,
 } from '@builder.io/qwik';

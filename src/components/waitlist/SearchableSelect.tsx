@@ -1,4 +1,4 @@
-import { component$, useSignal, $ } from '@builder.io/qwik';
+import { component$, useSignal, type QRL } from '@builder.io/qwik';
 
 interface SearchableSelectProps {
   name: string;
@@ -7,7 +7,7 @@ interface SearchableSelectProps {
   placeholder?: string;
   options: Array<{ value: string | number; label: string }>;
   value: string;
-  onValueChange$: (value: string) => void;
+  onValueChange$?: QRL<(value: string) => void>;
   disabled?: boolean;
 }
 
@@ -17,6 +17,7 @@ export const SearchableSelect = component$<SearchableSelectProps>(
     const isOpen = useSignal(false);
     const selectedLabel = useSignal('');
     const highlightedIndex = useSignal(-1);
+    const internalValue = useSignal(value);
 
     // Set initial selected label
     if (value && !selectedLabel.value) {
@@ -26,26 +27,17 @@ export const SearchableSelect = component$<SearchableSelectProps>(
       }
     }
 
+    // Update internal value when prop changes
+    if (value !== internalValue.value) {
+      internalValue.value = value;
+    }
+
     // Filter options based on search query
     const filteredOptions = searchQuery.value
       ? options.filter((opt) =>
           opt.label.toLowerCase().includes(searchQuery.value.toLowerCase())
         )
       : options;
-
-    const handleSelect$ = $((option: { value: string | number; label: string }) => {
-      onValueChange$(String(option.value));
-      selectedLabel.value = option.label;
-      searchQuery.value = '';
-      isOpen.value = false;
-    });
-
-    const handleClear$ = $(() => {
-      onValueChange$('');
-      selectedLabel.value = '';
-      searchQuery.value = '';
-      isOpen.value = false;
-    });
 
     return (
       <div class="relative">
@@ -57,7 +49,7 @@ export const SearchableSelect = component$<SearchableSelectProps>(
         </label>
 
         {/* Hidden input for form submission */}
-        <input type="hidden" name={name} value={value} />
+        <input type="hidden" name={name} value={internalValue.value} />
 
         {/* Search input */}
         <div class="relative">
@@ -92,7 +84,14 @@ export const SearchableSelect = component$<SearchableSelectProps>(
               } else if (e.key === 'Enter' || e.key === 'Tab') {
                 if (highlightedIndex.value >= 0 && highlightedIndex.value < filteredOptions.length) {
                   e.preventDefault();
-                  handleSelect$(filteredOptions[highlightedIndex.value]);
+                  const selected = filteredOptions[highlightedIndex.value];
+                  internalValue.value = String(selected.value);
+                  if (onValueChange$) {
+                    onValueChange$(String(selected.value));
+                  }
+                  selectedLabel.value = selected.label;
+                  searchQuery.value = '';
+                  isOpen.value = false;
                 }
               } else if (e.key === 'Escape') {
                 isOpen.value = false;
@@ -114,7 +113,15 @@ export const SearchableSelect = component$<SearchableSelectProps>(
               type="button"
               class="absolute right-2 top-1/2 -translate-y-1/2 text-sm"
               style="color: rgb(var(--color-text-tertiary))"
-              onClick$={handleClear$}
+              onClick$={() => {
+                internalValue.value = '';
+                if (onValueChange$) {
+                  onValueChange$('');
+                }
+                selectedLabel.value = '';
+                searchQuery.value = '';
+                isOpen.value = false;
+              }}
             >
               ✕
             </button>
@@ -128,7 +135,7 @@ export const SearchableSelect = component$<SearchableSelectProps>(
             style="background-color: rgb(var(--color-bg-primary)); border-color: rgb(var(--color-border)); max-height: 300px; overflow-y: auto;"
           >
             {filteredOptions.map((option, index) => {
-              const isSelected = String(option.value) === String(value);
+              const isSelected = String(option.value) === String(internalValue.value);
               const isHighlighted = index === highlightedIndex.value;
 
               return (
@@ -146,7 +153,13 @@ export const SearchableSelect = component$<SearchableSelectProps>(
                   onClick$={(e) => {
                     e.preventDefault();
                     e.stopPropagation();
-                    handleSelect$(option);
+                    internalValue.value = String(option.value);
+                    if (onValueChange$) {
+                      onValueChange$(String(option.value));
+                    }
+                    selectedLabel.value = option.label;
+                    searchQuery.value = '';
+                    isOpen.value = false;
                   }}
                   onMouseDown$={(e) => {
                     e.preventDefault(); // Prevent blur

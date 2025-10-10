@@ -525,7 +525,7 @@ export default component$(() => {
                     <tr>
                       <th
                         class="relative cursor-help"
-                        onMouseEnter$={(e) => {
+                        onMouseEnter$={() => {
                           // Tooltip shows on hover
                         }}
                       >

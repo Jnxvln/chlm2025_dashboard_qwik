@@ -141,7 +141,7 @@ export default component$(() => {
                 label: `${contact.firstName} ${contact.lastName}${contact.companyName ? ` (${contact.companyName})` : ''}`,
               }))}
               value={String(entry.contactId)}
-              onValueChange$={(value) => {
+              onValueChange$={() => {
                 // Value change handled by form
               }}
             />
@@ -216,7 +216,7 @@ export default component$(() => {
                 label: `${product.name} (${product.vendor.shortName} - ${product.vendorLocation.name})`,
               }))}
               value={String(entry.vendorProductId || '')}
-              onValueChange$={(value) => {
+              onValueChange$={() => {
                 // Value change handled by form
               }}
             />
