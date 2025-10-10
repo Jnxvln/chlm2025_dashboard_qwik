@@ -595,18 +595,9 @@ export default component$(() => {
                               class="btn-icon btn-icon-danger"
                               title="Delete contact"
                               onClick$={async () => {
-                                const entriesCount = await db.waitlistEntry.count({
-                                  where: { contactId: contact.id },
-                                });
-
-                                let message = 'Are you sure you want to delete this contact?';
-                                if (entriesCount > 0) {
-                                  message += `\n\nThis will also delete ${entriesCount} associated waitlist ${
-                                    entriesCount === 1 ? 'entry' : 'entries'
-                                  }.`;
-                                }
-
-                                const confirmed = confirm(message);
+                                const confirmed = confirm(
+                                  'Are you sure you want to delete this contact?\n\nNote: This will also delete any associated waitlist entries.'
+                                );
                                 if (!confirmed) return;
 
                                 await deleteContactAction.submit({ id: String(contact.id) });
