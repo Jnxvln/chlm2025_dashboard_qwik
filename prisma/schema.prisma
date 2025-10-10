@@ -7,6 +7,28 @@ datasource db {
   url      = env("DATABASE_URL")
 }
 
+enum WaitlistStatus {
+  waiting
+  contacted
+  fulfilled
+  cancelled
+}
+
+model Contact {
+  id                  Int               @id @default(autoincrement())
+  firstName           String
+  lastName            String
+  companyName         String?
+  phone1              String
+  phone2              String?
+  email1              String?
+  email2              String?
+  notes               String?
+  createdAt           DateTime          @default(now())
+  updatedAt           DateTime          @default(now())
+  waitlistEntries     WaitlistEntry[]
+}
+
 model User {
   id       Int       @id @default(autoincrement())
   email    String    @unique
@@ -56,6 +78,7 @@ model VendorProduct {
   vendorId           Int
   vendorLocationId   Int
   hauls              Haul[]
+  waitlistEntries    WaitlistEntry[]
   vendor             Vendor         @relation(fields: [vendorId], references: [id])
   vendorLocation     VendorLocation @relation(fields: [vendorLocationId], references: [id])
 }
@@ -162,18 +185,30 @@ model FreightRoute {
 }
 
 model WaitlistEntry {
-  id          Int       @id @default(autoincrement())
-  firstName   String
-  lastName    String
-  phone       String
-  email       String?
-  resource    String
-  quantity    String?
-  status      String    @default("waiting")
-  contactedAt DateTime?
-  notes       String?
-  createdAt   DateTime  @default(now())
-  updatedAt   DateTime  @default(now())
+  id                  Int               @id @default(autoincrement())
+
+  // Resource tracking - discriminated union pattern
+  resourceType        String            // 'vendor_product' or 'custom'
+  vendorProductId     Int?
+  vendorProduct       VendorProduct?    @relation(fields: [vendorProductId], references: [id])
+  customResourceName  String?
+
+  // Quantity tracking
+  quantity            Int
+  quantityUnit        String?           // 'lbs', 'yds', 'ea' (each), or null for unitless
+
+  status              WaitlistStatus    @default(waiting)
+  notes               String?
+  contactedAt         DateTime?
+  createdAt           DateTime          @default(now())
+  updatedAt           DateTime          @default(now())
+
+  contactId           Int
+  contact             Contact           @relation(fields: [contactId], references: [id], onDelete: Cascade)
+
+  @@index([contactId])
+  @@index([vendorProductId])
+  @@index([status])
 }
 
 model Settings {
