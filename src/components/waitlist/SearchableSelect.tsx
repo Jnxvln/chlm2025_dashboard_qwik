@@ -1,4 +1,4 @@
-import { component$, useSignal, type QRL } from '@builder.io/qwik';
+import { component$, useSignal } from '@builder.io/qwik';
 
 interface SearchableSelectProps {
   name: string;
@@ -7,12 +7,11 @@ interface SearchableSelectProps {
   placeholder?: string;
   options: Array<{ value: string | number; label: string }>;
   value: string;
-  onValueChange$?: QRL<(value: string) => void>;
   disabled?: boolean;
 }
 
 export const SearchableSelect = component$<SearchableSelectProps>(
-  ({ name, label, required, placeholder, options, value, onValueChange$, disabled }) => {
+  ({ name, label, required, placeholder, options, value, disabled }) => {
     const searchQuery = useSignal('');
     const isOpen = useSignal(false);
     const selectedLabel = useSignal('');
@@ -86,9 +85,6 @@ export const SearchableSelect = component$<SearchableSelectProps>(
                   e.preventDefault();
                   const selected = filteredOptions[highlightedIndex.value];
                   internalValue.value = String(selected.value);
-                  if (onValueChange$) {
-                    onValueChange$(String(selected.value));
-                  }
                   selectedLabel.value = selected.label;
                   searchQuery.value = '';
                   isOpen.value = false;
@@ -115,9 +111,6 @@ export const SearchableSelect = component$<SearchableSelectProps>(
               style="color: rgb(var(--color-text-tertiary))"
               onClick$={() => {
                 internalValue.value = '';
-                if (onValueChange$) {
-                  onValueChange$('');
-                }
                 selectedLabel.value = '';
                 searchQuery.value = '';
                 isOpen.value = false;
@@ -154,9 +147,6 @@ export const SearchableSelect = component$<SearchableSelectProps>(
                     e.preventDefault();
                     e.stopPropagation();
                     internalValue.value = String(option.value);
-                    if (onValueChange$) {
-                      onValueChange$(String(option.value));
-                    }
                     selectedLabel.value = option.label;
                     searchQuery.value = '';
                     isOpen.value = false;

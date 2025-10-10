@@ -141,9 +141,6 @@ export default component$(() => {
                 label: `${contact.firstName} ${contact.lastName}${contact.companyName ? ` (${contact.companyName})` : ''}`,
               }))}
               value={String(entry.contactId)}
-              onValueChange$={() => {
-                // Value change handled by form
-              }}
             />
             <div class="mt-2">
               <a
@@ -216,9 +213,6 @@ export default component$(() => {
                 label: `${product.name} (${product.vendor.shortName} - ${product.vendorLocation.name})`,
               }))}
               value={String(entry.vendorProductId || '')}
-              onValueChange$={() => {
-                // Value change handled by form
-              }}
             />
           )}
 
