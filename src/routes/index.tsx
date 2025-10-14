@@ -1,4 +1,4 @@
-import { component$, $ } from '@builder.io/qwik';
+import { component$ } from '@builder.io/qwik';
 import { routeLoader$, type DocumentHead } from '@builder.io/qwik-city';
 import { db } from '~/lib/db';
 import PageSubtitle from '~/components/PageSubtitle';
