@@ -137,6 +137,7 @@ export default component$(() => {
   // Hover tooltip states
   const hoveredContact = useSignal<number | null>(null);
   const hoveredWaitlistContact = useSignal<number | null>(null);
+  const hoveredNote = useSignal<number | null>(null);
   const tooltipPosition = useSignal<{ x: number; y: number }>({ x: 0, y: 0 });
   const hideTooltipTimeout = useSignal<number | null>(null);
 
@@ -320,6 +321,29 @@ export default component$(() => {
     </div>
   ));
 
+  // Note tooltip component with fixed positioning
+  const NoteTooltip = component$(({ note, x, y }: any) => (
+    <div
+      class="fixed z-[9999] p-3 rounded-lg shadow-xl border"
+      style={`background-color: rgb(var(--color-bg-primary)); border-color: rgb(var(--color-border)); min-width: 200px; max-width: 400px; left: ${x + 10}px; top: ${y + 10}px;`}
+      onMouseEnter$={() => {
+        // Cancel any pending hide
+        if (hideTooltipTimeout.value) {
+          clearTimeout(hideTooltipTimeout.value);
+          hideTooltipTimeout.value = null;
+        }
+      }}
+      onMouseLeave$={() => {
+        // Hide the tooltip when mouse leaves
+        hoveredNote.value = null;
+      }}
+    >
+      <div class="text-sm" style="color: rgb(var(--color-text-secondary)); white-space: pre-wrap;">
+        {note}
+      </div>
+    </div>
+  ));
+
   return (
     <section class="container mx-auto p-6">
       <PageTitle text="Waiting List" />
@@ -387,6 +411,7 @@ export default component$(() => {
                           )}
                         </button>
                       </th>
+                      <th class="text-center">Notes</th>
                       <th>Last Contacted</th>
                       <th class="text-center">Actions</th>
                     </tr>
@@ -425,6 +450,33 @@ export default component$(() => {
                           {entry.quantityUnit ? ` ${entry.quantityUnit}` : ''}
                         </td>
                         <td>{getStatusBadge(entry.status)}</td>
+                        <td class="text-center">
+                          {entry.notes ? (
+                            <span
+                              class="cursor-help"
+                              style="color: rgb(var(--color-accent)); font-size: 1.25rem;"
+                              onMouseEnter$={(e) => {
+                                // Cancel any pending hide
+                                if (hideTooltipTimeout.value) {
+                                  clearTimeout(hideTooltipTimeout.value);
+                                  hideTooltipTimeout.value = null;
+                                }
+                                hoveredNote.value = entry.id;
+                                tooltipPosition.value = { x: e.clientX, y: e.clientY };
+                              }}
+                              onMouseLeave$={() => {
+                                // Delay hiding to allow mouse to move to tooltip
+                                hideTooltipTimeout.value = window.setTimeout(() => {
+                                  hoveredNote.value = null;
+                                }, 200);
+                              }}
+                            >
+                              📝
+                            </span>
+                          ) : (
+                            <span style="color: rgb(var(--color-text-disabled))">—</span>
+                          )}
+                        </td>
                         <td>{formatDate(entry.contactedAt)}</td>
                         <td class="text-center">
                           <div class="flex justify-center items-center gap-1">
@@ -489,20 +541,20 @@ export default component$(() => {
 
         {/* Right column - Contacts */}
         <div class="lg:w-80 flex-shrink-0">
-          <div class="mb-4 flex items-center justify-between">
-            <h2 class="text-xl font-semibold" style="color: rgb(var(--color-text-primary))">
-              Contacts
-            </h2>
-            <a
-              href={`/contacts/new?returnTo=${encodeURIComponent(loc.url.pathname + loc.url.search)}`}
-              class="btn btn-sm btn-primary"
-            >
-              + New
-            </a>
-          </div>
+          <div class="mb-4 flex flex-col gap-3">
+            <div class="flex items-center justify-between">
+              <h2 class="text-xl font-semibold" style="color: rgb(var(--color-text-primary))">
+                Contacts
+              </h2>
+              <a
+                href={`/contacts/new?returnTo=${encodeURIComponent(loc.url.pathname + loc.url.search)}`}
+                class="btn btn-sm btn-primary"
+              >
+                + New
+              </a>
+            </div>
 
-          {/* Contacts Search */}
-          <div class="mb-3">
+            {/* Contacts Search */}
             <input
               type="text"
               placeholder="Search contacts..."
@@ -662,6 +714,13 @@ export default component$(() => {
           x={tooltipPosition.value.x}
           y={tooltipPosition.value.y}
           isWaitlist={false}
+        />
+      )}
+      {hoveredNote.value !== null && (
+        <NoteTooltip
+          note={data.value.waitlistEntries.find((e) => e.id === hoveredNote.value)?.notes}
+          x={tooltipPosition.value.x}
+          y={tooltipPosition.value.y}
         />
       )}
     </section>

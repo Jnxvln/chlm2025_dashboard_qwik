@@ -1,4 +1,4 @@
-import { component$ } from '@builder.io/qwik';
+import { component$, useSignal } from '@builder.io/qwik';
 import { routeLoader$, type DocumentHead } from '@builder.io/qwik-city';
 import { db } from '~/lib/db';
 import PageSubtitle from '~/components/PageSubtitle';
@@ -35,6 +35,11 @@ export const useDashboardLoader = routeLoader$(async ({ query }) => {
 export default component$(() => {
   const data = useDashboardLoader();
 
+  // Hover tooltip states
+  const hoveredNote = useSignal<number | null>(null);
+  const tooltipPosition = useSignal<{ x: number; y: number }>({ x: 0, y: 0 });
+  const hideTooltipTimeout = useSignal<number | null>(null);
+
   // Format date as MM/DD/YY HH:MM AM/PM
   const formatDate = (date: Date | string) => {
     const d = new Date(date);
@@ -62,6 +67,29 @@ export default component$(() => {
     const config = statusMap[status] || { label: status, color: '' };
     return <span class={`badge ${config.color}`}>{config.label}</span>;
   };
+
+  // Note tooltip component with fixed positioning
+  const NoteTooltip = component$(({ note, x, y }: any) => (
+    <div
+      class="fixed z-[9999] p-3 rounded-lg shadow-xl border"
+      style={`background-color: rgb(var(--color-bg-primary)); border-color: rgb(var(--color-border)); min-width: 200px; max-width: 400px; left: ${x + 10}px; top: ${y + 10}px;`}
+      onMouseEnter$={() => {
+        // Cancel any pending hide
+        if (hideTooltipTimeout.value) {
+          clearTimeout(hideTooltipTimeout.value);
+          hideTooltipTimeout.value = null;
+        }
+      }}
+      onMouseLeave$={() => {
+        // Hide the tooltip when mouse leaves
+        hoveredNote.value = null;
+      }}
+    >
+      <div class="text-sm" style="color: rgb(var(--color-text-secondary)); white-space: pre-wrap;">
+        {note}
+      </div>
+    </div>
+  ));
 
   return (
     <div class="container mx-auto p-6">
@@ -194,6 +222,7 @@ export default component$(() => {
                     <th>Quantity</th>
                     <th>Phone</th>
                     <th>Status</th>
+                    <th class="text-center">Notes</th>
                   </tr>
                 </thead>
                 <tbody>
@@ -220,6 +249,33 @@ export default component$(() => {
                       </td>
                       <td>{entry.contact.phone1}</td>
                       <td>{getStatusBadge(entry.status)}</td>
+                      <td class="text-center">
+                        {entry.notes ? (
+                          <span
+                            class="cursor-help"
+                            style="color: rgb(var(--color-accent)); font-size: 1.25rem;"
+                            onMouseEnter$={(e) => {
+                              // Cancel any pending hide
+                              if (hideTooltipTimeout.value) {
+                                clearTimeout(hideTooltipTimeout.value);
+                                hideTooltipTimeout.value = null;
+                              }
+                              hoveredNote.value = entry.id;
+                              tooltipPosition.value = { x: e.clientX, y: e.clientY };
+                            }}
+                            onMouseLeave$={() => {
+                              // Delay hiding to allow mouse to move to tooltip
+                              hideTooltipTimeout.value = window.setTimeout(() => {
+                                hoveredNote.value = null;
+                              }, 200);
+                            }}
+                          >
+                            📝
+                          </span>
+                        ) : (
+                          <span style="color: rgb(var(--color-text-disabled))">—</span>
+                        )}
+                      </td>
                     </tr>
                   ))}
                 </tbody>
@@ -247,6 +303,15 @@ export default component$(() => {
           )}
         </div>
       </section>
+
+      {/* Render tooltip at root level to avoid overflow clipping */}
+      {hoveredNote.value !== null && (
+        <NoteTooltip
+          note={data.value.waitlistEntries.find((e) => e.id === hoveredNote.value)?.notes}
+          x={tooltipPosition.value.x}
+          y={tooltipPosition.value.y}
+        />
+      )}
     </div>
   );
 });
