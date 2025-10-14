@@ -1,4 +1,4 @@
-import { component$ } from '@builder.io/qwik';
+import { component$, $ } from '@builder.io/qwik';
 import { routeLoader$, type DocumentHead } from '@builder.io/qwik-city';
 import { db } from '~/lib/db';
 import PageSubtitle from '~/components/PageSubtitle';
@@ -35,14 +35,32 @@ export const useDashboardLoader = routeLoader$(async ({ query }) => {
 export default component$(() => {
   const data = useDashboardLoader();
 
-  // Format date as MM/DD/YY
+  // Format date as MM/DD/YY HH:MM AM/PM
   const formatDate = (date: Date | string) => {
     const d = new Date(date);
-    return d.toLocaleDateString('en-US', {
+    const datePart = d.toLocaleDateString('en-US', {
       month: '2-digit',
       day: '2-digit',
       year: '2-digit',
     });
+    const timePart = d.toLocaleTimeString('en-US', {
+      hour: 'numeric',
+      minute: '2-digit',
+      hour12: true,
+    });
+    return `${datePart} ${timePart}`;
+  };
+
+  // Format status with colors
+  const getStatusBadge = (status: string) => {
+    const statusMap: Record<string, { label: string; color: string }> = {
+      waiting: { label: 'Waiting', color: 'badge-warning' },
+      contacted: { label: 'Contacted', color: 'badge-info' },
+      fulfilled: { label: 'Fulfilled', color: 'badge-success' },
+      cancelled: { label: 'Cancelled', color: 'badge-danger' },
+    };
+    const config = statusMap[status] || { label: status, color: '' };
+    return <span class={`badge ${config.color}`}>{config.label}</span>;
   };
 
   return (
@@ -175,6 +193,7 @@ export default component$(() => {
                     <th>Resource</th>
                     <th>Quantity</th>
                     <th>Phone</th>
+                    <th>Status</th>
                   </tr>
                 </thead>
                 <tbody>
@@ -200,6 +219,7 @@ export default component$(() => {
                         {entry.quantityUnit ? ` ${entry.quantityUnit}` : ''}
                       </td>
                       <td>{entry.contact.phone1}</td>
+                      <td>{getStatusBadge(entry.status)}</td>
                     </tr>
                   ))}
                 </tbody>
