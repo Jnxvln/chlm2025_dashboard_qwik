@@ -43,7 +43,17 @@ export const Nav = component$(() => {
               {link.label}
             </NavLink>
           ))}
-          <div class="ml-4 pl-4 border-l" style="border-color: rgb(var(--color-border))">
+          <div class="pl-6 border-l" style="border-color: rgb(var(--color-border))">
+            <a
+              href="https://fleettrack.chlandscapematerials.com/"
+              target="_self"
+              class="transition-colors duration-200"
+              style="color: rgb(var(--color-text-secondary))"
+            >
+              Fleet Track
+            </a>
+          </div>
+          <div class="pl-6 border-l" style="border-color: rgb(var(--color-border))">
             <ThemeToggle />
           </div>
         </div>
@@ -95,6 +105,15 @@ export const Nav = component$(() => {
             {link.label}
           </NavLink>
         ))}
+        <a
+          href="https://fleettrack.chlandscapematerials.com/"
+          target="_self"
+          class="transition-colors duration-200 py-2"
+          style="color: rgb(var(--color-text-secondary))"
+          onClick$={closeMenu}
+        >
+          Fleet Track
+        </a>
       </div>
     </nav>
   );
