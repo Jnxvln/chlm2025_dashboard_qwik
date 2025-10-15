@@ -421,23 +421,22 @@ export default component$(() => {
         const outerRadius = 90;
         const innerRadius = 55;
 
-        // Outer circle with green border fill
+        // Draw outer circle border (annulus/ring shape only)
         ctx.beginPath();
         ctx.arc(centerX, centerY, outerRadius, 0, 2 * Math.PI);
-        ctx.fillStyle = 'rgba(34, 139, 120, 0.5)'; // Greenish-blue for border
+        ctx.arc(centerX, centerY, innerRadius, 0, 2 * Math.PI, true); // Counter-clockwise for inner hole
+        ctx.fillStyle = 'rgba(34, 139, 120, 0.5)'; // Greenish-blue for border only
         ctx.fill();
+
+        // Stroke outer circle
+        ctx.beginPath();
+        ctx.arc(centerX, centerY, outerRadius, 0, 2 * Math.PI);
         ctx.strokeStyle = 'rgb(59, 130, 246)';
         ctx.stroke();
 
-        // Inner circle (clear area)
+        // Stroke inner circle
         ctx.beginPath();
         ctx.arc(centerX, centerY, innerRadius, 0, 2 * Math.PI);
-        ctx.clearRect(
-          centerX - innerRadius,
-          centerY - innerRadius,
-          innerRadius * 2,
-          innerRadius * 2,
-        );
         ctx.strokeStyle = 'rgb(59, 130, 246)';
         ctx.stroke();
 
@@ -682,7 +681,7 @@ export default component$(() => {
                         </label>
                         <input
                           type="number"
-                          step="0.01"
+                          step="0.0001"
                           value={inputValues.value[field.name] || ''}
                           onInput$={(e) => {
                             const value = (e.target as HTMLInputElement).value;
