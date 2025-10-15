@@ -205,7 +205,7 @@ export default component$(() => {
               <option value="">Select Vendor</option>
               {Array.isArray(data.value?.vendors) &&
                 data.value.vendors.map((v) => (
-                  <option key={v.id} value={v.id} selected={haul.vendorProduct && v.id === haul.vendorProduct.vendorId}>
+                  <option key={v.id} value={v.id} selected={!!(haul.vendorProduct && v.id === haul.vendorProduct.vendorId)}>
                     {v.name}
                   </option>
                 ))}
@@ -225,7 +225,7 @@ export default component$(() => {
               <option value="">Select Location</option>
               {Array.isArray(filteredLocations.value) &&
                 filteredLocations.value.map((loc) => (
-                  <option key={loc.id} value={loc.id} selected={haul.vendorProduct && loc.id === haul.vendorProduct.vendorLocationId}>
+                  <option key={loc.id} value={loc.id} selected={!!(haul.vendorProduct && loc.id === haul.vendorProduct.vendorLocationId)}>
                     {loc.name}
                   </option>
                 ))}
@@ -247,7 +247,7 @@ export default component$(() => {
             >
               <option value="">Select Route</option>
               {filteredRoutes.value.map((fr) => (
-                <option key={fr.id} value={fr.id} selected={haul.freightRouteId && fr.id === haul.freightRouteId}>
+                <option key={fr.id} value={fr.id} selected={!!(haul.freightRouteId && fr.id === haul.freightRouteId)}>
                   {fr.destination}
                 </option>
               ))}
@@ -267,7 +267,7 @@ export default component$(() => {
             <option value="">Select Material</option>
             {Array.isArray(filteredProducts.value) &&
               filteredProducts.value.map((vp) => (
-                <option key={vp.id} value={vp.id} selected={haul.vendorProductId && vp.id === haul.vendorProductId}>
+                <option key={vp.id} value={vp.id} selected={!!(haul.vendorProductId && vp.id === haul.vendorProductId)}>
                   {vp.name}
                 </option>
               ))}

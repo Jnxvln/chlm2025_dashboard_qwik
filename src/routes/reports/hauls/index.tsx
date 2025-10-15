@@ -285,9 +285,9 @@ export default component$(() => {
                     <td>{haul.customer}</td>
                     <td>{haul.loadRefNum || '—'}</td>
                     <td>{haul.chInvoice || '—'}</td>
-                    <td>{isOffDuty ? '—' : haul.vendorProduct.name}</td>
-                    <td>{isOffDuty ? 'Off Duty' : `${haul.vendorProduct.vendor.shortName}-${haul.vendorProduct.vendorLocation.name}`}</td>
-                    <td>{isOffDuty ? (haul.workday.offDutyReason || 'Off Duty') : haul.freightRoute.destination}</td>
+                    <td>{isOffDuty ? '—' : haul.vendorProduct!.name}</td>
+                    <td>{isOffDuty ? 'Off Duty' : `${haul.vendorProduct!.vendor.shortName}-${haul.vendorProduct!.vendorLocation.name}`}</td>
+                    <td>{isOffDuty ? 'Off Duty' : haul.freightRoute!.destination}</td>
                     <td class="number">{haul.quantity.toFixed(2)}</td>
                     <td>{haul.rateMetric}</td>
                     <td class="number">{formatCurrency(haul.rate)}</td>
