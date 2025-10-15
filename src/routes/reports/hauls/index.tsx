@@ -275,33 +275,38 @@ export default component$(() => {
               </tr>
             </thead>
             <tbody>
-              {haulsWithCalculations.map((haul) => (
-                <tr key={haul.id}>
-                  <td>{formatDate(haul.dateHaul)}</td>
-                  <td>{haul.customer}</td>
-                  <td>{haul.loadRefNum || '—'}</td>
-                  <td>{haul.chInvoice || '—'}</td>
-                  <td>{haul.vendorProduct.name}</td>
-                  <td>{haul.vendorProduct.vendor.shortName}-{haul.vendorProduct.vendorLocation.name}</td>
-                  <td>{haul.freightRoute.destination}</td>
-                  <td class="number">{haul.quantity.toFixed(2)}</td>
-                  <td>{haul.rateMetric}</td>
-                  <td class="number">{formatCurrency(haul.rate)}</td>
-                  <td class="number">{haul.isFirstHaulOfDay ? haul.workday.chHours.toFixed(2) : '—'}</td>
-                  <td class="number">{haul.isFirstHaulOfDay ? haul.workday.ncHours.toFixed(2) : '—'}</td>
-                  <td class="number">{formatCurrency(haul.freightPay)}</td>
-                  <td class="number">{formatCurrency(haul.driverPay)}</td>
-                  <td class="no-print text-center">
-                    <a
-                      href={`/hauls/edit/${haul.id}?returnTo=${encodeURIComponent(`/reports/hauls?driverId=${data.value.driver?.id}&startDate=${data.value.startDate}&endDate=${data.value.endDate}`)}`}
-                      title="Edit Haul"
-                      class="btn-icon btn-icon-primary"
-                    >
-                      <EditIcon size={14} />
-                    </a>
-                  </td>
-                </tr>
-              ))}
+              {haulsWithCalculations.map((haul) => {
+                // Check if this is an off-duty haul
+                const isOffDuty = !haul.vendorProduct || !haul.freightRoute;
+
+                return (
+                  <tr key={haul.id}>
+                    <td>{formatDate(haul.dateHaul)}</td>
+                    <td>{haul.customer}</td>
+                    <td>{haul.loadRefNum || '—'}</td>
+                    <td>{haul.chInvoice || '—'}</td>
+                    <td>{isOffDuty ? '—' : haul.vendorProduct.name}</td>
+                    <td>{isOffDuty ? 'Off Duty' : `${haul.vendorProduct.vendor.shortName}-${haul.vendorProduct.vendorLocation.name}`}</td>
+                    <td>{isOffDuty ? (haul.workday.offDutyReason || 'Off Duty') : haul.freightRoute.destination}</td>
+                    <td class="number">{haul.quantity.toFixed(2)}</td>
+                    <td>{haul.rateMetric}</td>
+                    <td class="number">{formatCurrency(haul.rate)}</td>
+                    <td class="number">{haul.isFirstHaulOfDay ? haul.workday.chHours.toFixed(2) : '—'}</td>
+                    <td class="number">{haul.isFirstHaulOfDay ? haul.workday.ncHours.toFixed(2) : '—'}</td>
+                    <td class="number">{formatCurrency(haul.freightPay)}</td>
+                    <td class="number">{formatCurrency(haul.driverPay)}</td>
+                    <td class="no-print text-center">
+                      <a
+                        href={`/hauls/edit/${haul.id}?returnTo=${encodeURIComponent(`/reports/hauls?driverId=${data.value.driver?.id}&startDate=${data.value.startDate}&endDate=${data.value.endDate}`)}`}
+                        title="Edit Haul"
+                        class="btn-icon btn-icon-primary"
+                      >
+                        <EditIcon size={14} />
+                      </a>
+                    </td>
+                  </tr>
+                );
+              })}
             </tbody>
           </table>
         )}

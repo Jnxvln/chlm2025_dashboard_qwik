@@ -145,26 +145,26 @@ model Workday {
 }
 
 model Haul {
-  id              Int           @id @default(autoincrement())
+  id              Int            @id @default(autoincrement())
   dateHaul        DateTime
   truck           String
   customer        String
   chInvoice       String?
   loadType        String
   loadRefNum      String?
-  vendorProductId Int
-  freightRouteId  Int
+  vendorProductId Int?
+  freightRouteId  Int?
   rateMetric      String
   rate            Float
   quantity        Float
-  createdAt       DateTime      @default(now())
-  updatedAt       DateTime      @default(now())
+  createdAt       DateTime       @default(now())
+  updatedAt       DateTime       @default(now())
   workdayId       Int
   createdById     Int
-  createdBy       User          @relation(fields: [createdById], references: [id])
-  freightRoute    FreightRoute  @relation(fields: [freightRouteId], references: [id])
-  vendorProduct   VendorProduct @relation(fields: [vendorProductId], references: [id])
-  workday         Workday       @relation(fields: [workdayId], references: [id])
+  createdBy       User           @relation(fields: [createdById], references: [id])
+  freightRoute    FreightRoute?  @relation(fields: [freightRouteId], references: [id])
+  vendorProduct   VendorProduct? @relation(fields: [vendorProductId], references: [id])
+  workday         Workday        @relation(fields: [workdayId], references: [id])
 }
 
 model FreightRoute {

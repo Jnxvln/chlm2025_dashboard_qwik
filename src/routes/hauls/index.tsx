@@ -1,6 +1,6 @@
 import { component$, useSignal, useVisibleTask$, $, useComputed$ } from '@builder.io/qwik';
 export { useHaulsLoader } from './loader';
-import { useNavigate, routeAction$, zod$, z, type DocumentHead } from '@builder.io/qwik-city';
+import { useNavigate, useLocation, routeAction$, zod$, z, type DocumentHead } from '@builder.io/qwik-city';
 import { useHaulsLoader } from './loader';
 import PageTitle from '~/components/PageTitle';
 import { AddIcon, EditIcon, DeleteIcon } from '~/components/icons';
@@ -98,6 +98,7 @@ function updateUrl(nav: any, driver?: string, startDate?: string, endDate?: stri
 export default component$(() => {
   const data = useHaulsLoader();
   const nav = useNavigate();
+  const loc = useLocation();
   const deleteAction = useDeleteHaulAction();
   const expandedRows = useSignal<Set<number>>(new Set());
   const currentPage = useSignal(1);
@@ -604,6 +605,7 @@ export default component$(() => {
               <tr>
                 <th>Date</th>
                 <th>Driver</th>
+                <th class="text-center">Status</th>
                 <th>CH Hours</th>
                 <th>NC Hours</th>
                 <th class="text-center">Hauls</th>
@@ -633,6 +635,22 @@ export default component$(() => {
                           </div>
                         )}
                       </td>
+                      <td class="text-center">
+                        {workday.offDuty ? (
+                          <div class="flex flex-col items-center">
+                            <span title={`Off Duty: ${workday.offDutyReason || 'Off Duty'}`} style="font-size: 1.25rem;">
+                              🏠
+                            </span>
+                            <span class="text-xs mt-1" style="color: rgb(var(--color-text-tertiary))">
+                              {workday.offDutyReason}
+                            </span>
+                          </div>
+                        ) : (
+                          <span title="On Duty" style="font-size: 1.25rem;">
+                            ✅
+                          </span>
+                        )}
+                      </td>
                       <td>
                         <span class="font-medium">{workday.chHours} hrs</span>
                       </td>
@@ -648,13 +666,25 @@ export default component$(() => {
                       </td>
                       <td class="text-center">
                         {haulCount === 0 ? (
-                          <a
-                            href={`/hauls/new?driver=${data.value.currentDriverId}&date=${dateStr}&returnTo=${encodeURIComponent(`/hauls?driver=${data.value.currentDriverId}&startDate=${data.value.currentStartDate}&endDate=${data.value.currentEndDate}`)}`}
-                            class="btn btn-sm btn-primary"
-                          >
-                            <AddIcon size={14} />
-                            Create Haul
-                          </a>
+                          workday.offDuty ? (
+                            <button
+                              type="button"
+                              class="btn btn-sm btn-ghost cursor-not-allowed opacity-50"
+                              title="Cannot create haul - driver is off duty"
+                              disabled
+                            >
+                              <AddIcon size={14} />
+                              Create Haul
+                            </button>
+                          ) : (
+                            <a
+                              href={`/hauls/new?driver=${data.value.currentDriverId}&date=${dateStr}&returnTo=${encodeURIComponent(`/hauls?driver=${data.value.currentDriverId}&startDate=${data.value.currentStartDate}&endDate=${data.value.currentEndDate}`)}`}
+                              class="btn btn-sm btn-primary"
+                            >
+                              <AddIcon size={14} />
+                              Create Haul
+                            </a>
+                          )
                         ) : (
                           <button
                             onClick$={() => toggleRowExpansion(workday.id)}
@@ -673,7 +703,7 @@ export default component$(() => {
                           >
                             <EditIcon size={16} />
                           </a>
-                          {haulCount > 0 && (
+                          {haulCount > 0 && !workday.offDuty && (
                             <a
                               href={`/hauls/new?driver=${data.value.currentDriverId}&date=${dateStr}&returnTo=${encodeURIComponent(`/hauls?driver=${data.value.currentDriverId}&startDate=${data.value.currentStartDate}&endDate=${data.value.currentEndDate}`)}`}
                               title="Add Haul"
@@ -690,7 +720,7 @@ export default component$(() => {
                     {/* Expanded Hauls Row */}
                     {isExpanded && haulCount > 0 && (
                       <tr key={`${workday.id}-expanded`}>
-                        <td colSpan={6} class="p-0">
+                        <td colSpan={7} class="p-0">
                           <div style="background-color: rgb(var(--color-bg-secondary))" class="p-4">
                             <div class="table-container">
                               <table class="table-modern text-xs">
@@ -704,48 +734,58 @@ export default component$(() => {
                                   </tr>
                                 </thead>
                                 <tbody>
-                                  {workday.hauls.map((haul: any) => (
-                                    <tr key={haul.id}>
-                                      <td>
-                                        <div class="font-medium">{haul.customer}</div>
-                                        <div class="text-xs mt-1" style="color: rgb(var(--color-text-tertiary))">
-                                          {haul.chInvoice && <span>CH: {haul.chInvoice} | </span>}Load/Ref: {haul.loadRefNum || '—'}
-                                        </div>
-                                      </td>
-                                      <td>
-                                        <div class="font-medium">{haul.vendorProduct.vendor.shortName}-{haul.vendorProduct.vendorLocation.name}</div>
-                                        <div class="text-xs mt-1" style="color: rgb(var(--color-text-tertiary))">
-                                          → {haul.freightRoute.destination}
-                                        </div>
-                                      </td>
-                                      <td>
-                                        <div class="font-medium">{haul.vendorProduct.name}</div>
-                                        <div class="text-xs mt-1" style="color: rgb(var(--color-text-tertiary))">
-                                          {haul.quantity}t @ ${haul.rate}/t
-                                        </div>
-                                      </td>
-                                      <td>
-                                        <div class="font-medium">{haul.miles} mi</div>
-                                        <div class="text-xs mt-1" style="color: rgb(var(--color-text-tertiary))">
-                                          Pay: ${haul.payRate} | Truck {haul.truck}
-                                        </div>
-                                      </td>
-                                      <td class="text-center">
-                                        <div class="flex justify-center items-center gap-1">
-                                          <a href={`/hauls/edit/${haul.id}?returnTo=${encodeURIComponent(`/hauls?driver=${data.value.currentDriverId}&startDate=${data.value.currentStartDate}&endDate=${data.value.currentEndDate}`)}`} title="Edit Haul" class="btn-icon btn-icon-primary">
-                                            <EditIcon size={14} />
-                                          </a>
-                                          <button
-                                            title="Delete Haul"
-                                            onClick$={() => handleDeleteHaul(haul.id, haul.customer || 'Unknown Customer')}
-                                            class="btn-icon btn-icon-danger"
-                                          >
-                                            <DeleteIcon size={14} />
-                                          </button>
-                                        </div>
-                                      </td>
-                                    </tr>
-                                  ))}
+                                  {workday.hauls.map((haul: any) => {
+                                    return (
+                                      <tr key={haul.id}>
+                                        <td>
+                                          <div class="font-medium">{haul.customer}</div>
+                                          <div class="text-xs mt-1" style="color: rgb(var(--color-text-tertiary))">
+                                            {haul.chInvoice && <span>CH: {haul.chInvoice} | </span>}Load/Ref: {haul.loadRefNum || '—'}
+                                          </div>
+                                        </td>
+                                        <td>
+                                          {haul.vendorProduct && haul.freightRoute ? (
+                                            <>
+                                              <div class="font-medium">{haul.vendorProduct.vendor.shortName}-{haul.vendorProduct.vendorLocation.name}</div>
+                                              <div class="text-xs mt-1" style="color: rgb(var(--color-text-tertiary))">
+                                                → {haul.freightRoute.destination}
+                                              </div>
+                                            </>
+                                          ) : (
+                                            <div class="font-medium">—</div>
+                                          )}
+                                        </td>
+                                        <td>
+                                          <div class="font-medium">{haul.vendorProduct?.name || '—'}</div>
+                                          <div class="text-xs mt-1" style="color: rgb(var(--color-text-tertiary))">
+                                            {haul.quantity}t @ ${haul.rate}/t
+                                          </div>
+                                        </td>
+                                        <td>
+                                          <div class="font-medium">{haul.miles || 0} mi</div>
+                                          <div class="text-xs mt-1" style="color: rgb(var(--color-text-tertiary))">
+                                            Pay: ${haul.payRate || 0} | Truck {haul.truck}
+                                          </div>
+                                        </td>
+                                        <td class="text-center">
+                                          <div class="flex justify-center items-center gap-1">
+                                            <a href={`/hauls/edit/${haul.id}?returnTo=${encodeURIComponent(
+                                              `/hauls?driver=${data.value.currentDriverId}&startDate=${data.value.currentStartDate}&endDate=${data.value.currentEndDate}`
+                                            )}`} title="Edit Haul" class="btn-icon btn-icon-primary">
+                                              <EditIcon size={14} />
+                                            </a>
+                                            <button
+                                              title="Delete Haul"
+                                              onClick$={() => handleDeleteHaul(haul.id, haul.customer || 'Unknown Customer')}
+                                              class="btn-icon btn-icon-danger"
+                                            >
+                                              <DeleteIcon size={14} />
+                                            </button>
+                                          </div>
+                                        </td>
+                                      </tr>
+                                    );
+                                  })}
                                 </tbody>
                               </table>
                             </div>

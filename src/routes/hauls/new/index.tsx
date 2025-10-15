@@ -429,11 +429,19 @@ export default component$(() => {
               <div class={selectedLoadType.value === 'flatbed' ? "grid grid-cols-3 gap-4" : "grid grid-cols-2 gap-4"}>
                 <div>
                   <label class="block text-sm font-medium mb-2" style="color: rgb(var(--color-text-secondary))">Customer</label>
-                  <input name="customer" type="text" class="w-full" />
+                  <input
+                    name="customer"
+                    type="text"
+                    class="w-full"
+                  />
                 </div>
                 <div>
                   <label class="block text-sm font-medium mb-2" style="color: rgb(var(--color-text-secondary))">Load/Ref #</label>
-                  <input name="loadRefNum" type="text" class="w-full" />
+                  <input
+                    name="loadRefNum"
+                    type="text"
+                    class="w-full"
+                  />
                 </div>
                 {selectedLoadType.value === 'flatbed' && (
                   <div>
@@ -559,17 +567,15 @@ export default component$(() => {
               </div>
 
               {/* Buttons */}
-              <div class="flex justify-end items-center mt-4">
-                <div class="flex gap-4">
-                  <a href={returnTo} class="btn btn-ghost">Cancel</a>
-                  <button
-                    type="submit"
-                    class="btn btn-primary"
-                    disabled={action.isRunning}
-                  >
-                    {action.isRunning ? 'Saving...' : 'Save Haul'}
-                  </button>
-                </div>
+              <div class="flex justify-end gap-4 mt-4">
+                <a href={returnTo} class="btn btn-ghost">Cancel</a>
+                <button
+                  type="submit"
+                  class="btn btn-primary"
+                  disabled={action.isRunning}
+                >
+                  {action.isRunning ? 'Saving...' : 'Save Haul'}
+                </button>
               </div>
             </>
           )}

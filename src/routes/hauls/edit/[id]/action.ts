@@ -16,12 +16,8 @@ export const useEditHaulAction = routeAction$(
           rateMetric: data.rateMetric,
           rate: data.rate,
           quantity: data.quantity,
-          vendorProduct: {
-            connect: { id: data.vendorProductId }
-          },
-          freightRoute: {
-            connect: { id: data.freightRouteId }
-          },
+          vendorProductId: data.vendorProductId || null,
+          freightRouteId: data.freightRouteId || null,
           // Note: workdayId and createdById are not updated in edits
         },
       });
@@ -45,10 +41,10 @@ export const useEditHaulAction = routeAction$(
     loadType: z.enum(['enddump', 'flatbed']),
     loadRefNum: z.string().optional(),
     rateMetric: z.enum(['ton', 'mile', 'hour']),
-    rate: z.coerce.number().gt(0),
-    quantity: z.coerce.number().gt(0),
-    vendorProductId: z.coerce.number(),
-    freightRouteId: z.coerce.number(),
+    rate: z.coerce.number().gte(0),
+    quantity: z.coerce.number().gte(0),
+    vendorProductId: z.coerce.number().optional(),
+    freightRouteId: z.coerce.number().optional(),
     returnTo: z.string().optional(),
   }),
 );

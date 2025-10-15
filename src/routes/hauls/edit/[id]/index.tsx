@@ -3,6 +3,7 @@ import {
   useSignal,
   useComputed$,
   useVisibleTask$,
+  $,
 } from '@builder.io/qwik';
 import { Form, useNavigate, useLocation } from '@builder.io/qwik-city';
 import BackButton from '~/components/BackButton';
@@ -42,10 +43,15 @@ export default component$(() => {
   // Initialize signals with loaded data
   useVisibleTask$(() => {
     if (data.value.haul) {
-      selectedVendorId.value = data.value.haul.vendorProduct.vendorId.toString();
-      selectedLocationId.value = data.value.haul.vendorProduct.vendorLocationId.toString();
-      selectedLoadType.value = data.value.haul.loadType as 'enddump' | 'flatbed';
-      selectedRate.value = data.value.haul.rate;
+      const haul = data.value.haul;
+
+      if (haul.vendorProduct) {
+        selectedVendorId.value = haul.vendorProduct.vendorId.toString();
+        selectedLocationId.value = haul.vendorProduct.vendorLocationId.toString();
+      }
+
+      selectedLoadType.value = haul.loadType as 'enddump' | 'flatbed';
+      selectedRate.value = haul.rate;
     }
   });
 
@@ -165,11 +171,21 @@ export default component$(() => {
           </div>
           <div>
             <label class="block text-sm font-medium mb-1" style="color: rgb(var(--color-text-secondary))">Customer</label>
-            <input name="customer" type="text" class="w-full" value={haul.customer || ''} />
+            <input
+              name="customer"
+              type="text"
+              class="w-full"
+              value={haul.customer || ''}
+            />
           </div>
           <div>
             <label class="block text-sm font-medium mb-1" style="color: rgb(var(--color-text-secondary))">Load/Ref #</label>
-            <input name="loadRefNum" type="text" class="w-full" value={haul.loadRefNum || ''} />
+            <input
+              name="loadRefNum"
+              type="text"
+              class="w-full"
+              value={haul.loadRefNum || ''}
+            />
           </div>
         </div>
 
@@ -189,7 +205,7 @@ export default component$(() => {
               <option value="">Select Vendor</option>
               {Array.isArray(data.value?.vendors) &&
                 data.value.vendors.map((v) => (
-                  <option key={v.id} value={v.id} selected={v.id === haul.vendorProduct.vendorId}>
+                  <option key={v.id} value={v.id} selected={haul.vendorProduct && v.id === haul.vendorProduct.vendorId}>
                     {v.name}
                   </option>
                 ))}
@@ -209,7 +225,7 @@ export default component$(() => {
               <option value="">Select Location</option>
               {Array.isArray(filteredLocations.value) &&
                 filteredLocations.value.map((loc) => (
-                  <option key={loc.id} value={loc.id} selected={loc.id === haul.vendorProduct.vendorLocationId}>
+                  <option key={loc.id} value={loc.id} selected={haul.vendorProduct && loc.id === haul.vendorProduct.vendorLocationId}>
                     {loc.name}
                   </option>
                 ))}
@@ -231,7 +247,7 @@ export default component$(() => {
             >
               <option value="">Select Route</option>
               {filteredRoutes.value.map((fr) => (
-                <option key={fr.id} value={fr.id} selected={fr.id === haul.freightRouteId}>
+                <option key={fr.id} value={fr.id} selected={haul.freightRouteId && fr.id === haul.freightRouteId}>
                   {fr.destination}
                 </option>
               ))}
@@ -251,7 +267,7 @@ export default component$(() => {
             <option value="">Select Material</option>
             {Array.isArray(filteredProducts.value) &&
               filteredProducts.value.map((vp) => (
-                <option key={vp.id} value={vp.id} selected={vp.id === haul.vendorProductId}>
+                <option key={vp.id} value={vp.id} selected={haul.vendorProductId && vp.id === haul.vendorProductId}>
                   {vp.name}
                 </option>
               ))}
@@ -301,22 +317,20 @@ export default component$(() => {
         )}
 
         {/* Buttons */}
-        <div class="flex justify-end items-center mt-6">
-          <div class="flex gap-3">
-            <a
-              href={returnTo || fallbackUrl}
-              class="btn btn-ghost"
-            >
-              Cancel
-            </a>
-            <button
-              type="submit"
-              class="btn btn-primary"
-              disabled={action.isRunning}
-            >
-              {action.isRunning ? 'Updating...' : 'Update Haul'}
-            </button>
-          </div>
+        <div class="flex justify-end gap-3 mt-6">
+          <a
+            href={returnTo || fallbackUrl}
+            class="btn btn-ghost"
+          >
+            Cancel
+          </a>
+          <button
+            type="submit"
+            class="btn btn-primary"
+            disabled={action.isRunning}
+          >
+            {action.isRunning ? 'Updating...' : 'Update Haul'}
+          </button>
         </div>
 
         {/* Messages */}

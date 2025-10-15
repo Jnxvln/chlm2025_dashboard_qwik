@@ -8,6 +8,7 @@ export const useNewHaulAction = routeAction$(
       if (!data.workdayId) {
         return { success: false, error: 'Workday is required to create a haul' };
       }
+
       const haul = await db.haul.create({
         data: {
           dateHaul: new Date(data.dateHaul),
@@ -19,8 +20,8 @@ export const useNewHaulAction = routeAction$(
           rateMetric: data.rateMetric,
           rate: data.rate,
           quantity: data.quantity,
-          vendorProductId: data.vendorProductId,
-          freightRouteId: data.freightRouteId,
+          vendorProductId: data.vendorProductId || null,
+          freightRouteId: data.freightRouteId || null,
           workdayId: data.workdayId,
           createdById: data.createdById,
         },
@@ -44,10 +45,10 @@ export const useNewHaulAction = routeAction$(
     loadType: z.enum(['enddump', 'flatbed']),
     loadRefNum: z.string().optional(),
     rateMetric: z.enum(['ton', 'mile', 'hour']),
-    rate: z.coerce.number().gt(0),
-    quantity: z.coerce.number().gt(0),
-    vendorProductId: z.coerce.number(),
-    freightRouteId: z.coerce.number(),
+    rate: z.coerce.number().gte(0),
+    quantity: z.coerce.number().gte(0),
+    vendorProductId: z.coerce.number().optional(),
+    freightRouteId: z.coerce.number().optional(),
     workdayId: z.coerce.number(),
     createdById: z.coerce.number(),
     returnTo: z.string().optional(),

@@ -1,4 +1,4 @@
-import { component$, useSignal, useVisibleTask$ } from '@builder.io/qwik';
+import { component$, useSignal, useVisibleTask$, $ } from '@builder.io/qwik';
 import {
   routeLoader$,
   routeAction$,
@@ -16,7 +16,10 @@ import { useDriversLoader } from '../../layout';
 export const useWorkdayLoader = routeLoader$(async ({ params, redirect }) => {
   const workday = await db.workday.findUnique({
     where: { id: Number(params.id) },
-    include: { driver: true },
+    include: {
+      driver: true,
+      hauls: true, // Include hauls to check if workday has associated hauls
+    },
   });
 
   if (!workday) {
@@ -29,6 +32,13 @@ export const useWorkdayLoader = routeLoader$(async ({ params, redirect }) => {
 export const useUpdateWorkdayAction = routeAction$(
   async (data, event) => {
     try {
+      // If marking as off-duty, delete all associated hauls first
+      if (data.offDuty) {
+        await db.haul.deleteMany({
+          where: { workdayId: Number(data.id) },
+        });
+      }
+
       const workday = await db.workday.update({
         where: { id: Number(data.id) },
         data: {
@@ -83,7 +93,37 @@ export default component$(() => {
   const backUrl = decodedReturnTo || `/workdays${loc.url.search}`;
 
   const isOffDuty = useSignal(workday.value.offDuty || false);
+  const offDutyReason = useSignal(workday.value.offDutyReason || '');
+  const showDeleteHaulsModal = useSignal(false);
   const dateValue = new Date(workday.value.date).toISOString().split('T')[0];
+
+  // Handler for off-duty checkbox change
+  const handleOffDutyChange = $((checked: boolean) => {
+    // If checking and there are hauls, show deletion modal
+    if (checked && workday.value.hauls && workday.value.hauls.length > 0) {
+      showDeleteHaulsModal.value = true;
+      return; // Don't change checkbox yet
+    }
+
+    // If unchecking, just uncheck
+    isOffDuty.value = checked;
+    if (!checked) {
+      offDutyReason.value = ''; // Clear reason when unchecking
+    }
+  });
+
+  // Handler for modal confirmation
+  const handleDeleteHaulsConfirm = $(() => {
+    // Mark as off-duty and close modal
+    // The backend will delete hauls when the form is submitted
+    isOffDuty.value = true;
+    showDeleteHaulsModal.value = false;
+  });
+
+  // Handler for modal cancel
+  const handleDeleteHaulsCancel = $(() => {
+    showDeleteHaulsModal.value = false;
+  });
 
   useVisibleTask$(({ track }) => {
     const result = track(() => updateAction.value);
@@ -91,6 +131,53 @@ export default component$(() => {
       setTimeout(() => nav(`/workdays?highlight=${result.workdayId}`), 1000);
     }
   });
+
+  // Show delete hauls modal
+  if (showDeleteHaulsModal.value) {
+    const haulCount = workday.value.hauls?.length || 0;
+
+    return (
+      <div class="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50">
+        <div class="card max-w-lg w-full mx-4">
+          <h2 class="text-xl font-bold mb-4" style="color: rgb(var(--color-text-primary))">
+            Delete Hauls to Mark Off Duty?
+          </h2>
+          <p class="mb-4" style="color: rgb(var(--color-text-secondary))">
+            This workday has <strong>{haulCount}</strong> haul{haulCount !== 1 ? 's' : ''} that will be deleted if you mark this day as off-duty.
+          </p>
+
+          {/* List hauls */}
+          <div class="mb-4 max-h-48 overflow-y-auto">
+            <ul class="space-y-2">
+              {(workday.value.hauls || []).map((haul: any) => (
+                <li key={haul.id} class="p-2 rounded" style="background-color: rgb(var(--color-bg-secondary))">
+                  <div class="font-medium">{haul.customer}</div>
+                  <div class="text-sm" style="color: rgb(var(--color-text-tertiary))">
+                    {haul.loadRefNum ? `Ref: ${haul.loadRefNum}` : 'No ref number'} • {haul.quantity}t @ ${haul.rate}/t
+                  </div>
+                </li>
+              ))}
+            </ul>
+          </div>
+
+          <div class="flex justify-end gap-3">
+            <button
+              class="btn btn-ghost"
+              onClick$={handleDeleteHaulsCancel}
+            >
+              Cancel
+            </button>
+            <button
+              class="btn btn-danger"
+              onClick$={handleDeleteHaulsConfirm}
+            >
+              Delete Hauls & Mark Off Duty
+            </button>
+          </div>
+        </div>
+      </div>
+    );
+  }
 
   return (
     <div class="container mx-auto p-6 max-w-2xl">
@@ -253,7 +340,7 @@ export default component$(() => {
                     class="h-4 w-4 rounded"
                     style="accent-color: rgb(var(--color-primary))"
                     onChange$={(_, el) => {
-                      isOffDuty.value = el.checked;
+                      handleOffDutyChange(el.checked);
                     }}
                   />
                   <label
@@ -272,17 +359,29 @@ export default component$(() => {
                       class="block text-sm font-medium mb-2"
                       style="color: rgb(var(--color-text-secondary))"
                     >
-                      Off Duty Reason
+                      Off Duty Reason *
                     </label>
-                    <textarea
+                    <select
                       id="offDutyReason"
                       name="offDutyReason"
-                      rows={2}
                       class="w-full"
-                      placeholder="Reason for being off duty..."
+                      required
+                      value={offDutyReason.value}
+                      onChange$={(_, el) => {
+                        offDutyReason.value = el.value;
+                      }}
                     >
-                      {workday.value.offDutyReason || ''}
-                    </textarea>
+                      <option value="" selected={offDutyReason.value === ''}>Select reason...</option>
+                      <option value="No Work" selected={offDutyReason.value === 'No Work'}>No Work</option>
+                      <option value="Maintenance" selected={offDutyReason.value === 'Maintenance'}>Maintenance</option>
+                      <option value="Sick" selected={offDutyReason.value === 'Sick'}>Sick</option>
+                      <option value="Holiday" selected={offDutyReason.value === 'Holiday'}>Holiday</option>
+                      <option value="Vacation" selected={offDutyReason.value === 'Vacation'}>Vacation</option>
+                      <option value="Weather" selected={offDutyReason.value === 'Weather'}>Weather</option>
+                      <option value="Personal" selected={offDutyReason.value === 'Personal'}>Personal</option>
+                      <option value="Bereavement" selected={offDutyReason.value === 'Bereavement'}>Bereavement</option>
+                      <option value="Other" selected={offDutyReason.value === 'Other'}>Other</option>
+                    </select>
                   </div>
                 )}
               </div>
