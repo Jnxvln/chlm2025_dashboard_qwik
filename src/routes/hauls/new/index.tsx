@@ -290,7 +290,7 @@ export default component$(() => {
   return (
     <div class="p-6 max-w-3xl mx-auto">
       {/* Show title with date if workday confirmed */}
-      {workdayId.value && selectedDate.value && (
+      {workdayId.value !== null && selectedDate.value && (
         <div class="mb-6">
           <h1 class="text-2xl font-bold" style="color: rgb(var(--color-text-primary))">
             New Haul
@@ -309,7 +309,7 @@ export default component$(() => {
           <input type="hidden" name="returnTo" value={returnTo} />
 
           {/* Step 1: Date Selection - Show only if no workday confirmed yet AND no preselected date */}
-          {!workdayId.value && !data.value.hasPreselectedDate && (
+          {workdayId.value === null && !data.value.hasPreselectedDate && (
             <>
               <div>
                 <label class="block text-sm font-medium mb-2" style="color: rgb(var(--color-text-secondary))">
@@ -350,7 +350,7 @@ export default component$(() => {
           )}
 
           {/* Loading state for preselected dates */}
-          {!workdayId.value && data.value.hasPreselectedDate && (
+          {workdayId.value === null && data.value.hasPreselectedDate && (
             <div class="text-center py-8">
               <p class="text-lg" style="color: rgb(var(--color-text-secondary))">
                 Checking workday for {selectedDate.value}...
@@ -362,7 +362,7 @@ export default component$(() => {
           <input type="hidden" name="dateHaul" value={selectedDate.value} />
 
           {/* Show form only after workday is confirmed */}
-          {workdayId.value && (
+          {workdayId.value !== null && (
             <>
               {/* Load Time - First field */}
               <div>
