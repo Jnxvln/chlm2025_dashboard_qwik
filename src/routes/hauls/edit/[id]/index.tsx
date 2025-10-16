@@ -175,11 +175,13 @@ export default component$(() => {
               name="loadType"
               class="w-full"
               required
-              onChange$={(e) =>
-                (selectedLoadType.value = (e.target as HTMLSelectElement).value as
+              onChange$={(e) => {
+                selectedLoadType.value = (e.target as HTMLSelectElement).value as
                   | 'enddump'
-                  | 'flatbed')
-              }
+                  | 'flatbed';
+                // Clear rate when switching load types
+                selectedRate.value = '';
+              }}
             >
               <option value="enddump" selected={haul.loadType === 'enddump'}>End Dump</option>
               <option value="flatbed" selected={haul.loadType === 'flatbed'}>Flat Bed</option>
@@ -224,90 +226,137 @@ export default component$(() => {
           </div>
         </div>
 
-        {/* Row 3 */}
-        <div class="grid grid-cols-3 gap-4">
-          <div>
-            <label class="block text-sm font-medium mb-1" style="color: rgb(var(--color-text-secondary))">From (Vendor)</label>
-            <select
-              name="vendorId"
-              class="w-full"
-              required
-              onChange$={(e) => {
-                selectedVendorId.value = (e.target as HTMLSelectElement).value;
-                selectedLocationId.value = null;
-              }}
-            >
-              <option value="">Select Vendor</option>
-              {Array.isArray(data.value?.vendors) &&
-                data.value.vendors.map((v) => (
-                  <option key={v.id} value={v.id} selected={!!(haul.vendorProduct && v.id === haul.vendorProduct.vendorId)}>
-                    {v.name}
-                  </option>
-                ))}
-            </select>
-          </div>
+        {/* Conditional fields based on load type */}
+        {selectedLoadType.value === 'enddump' ? (
+          <>
+            {/* End Dump: Vendor, Location, Route */}
+            <div class="grid grid-cols-3 gap-4">
+              <div>
+                <label class="block text-sm font-medium mb-1" style="color: rgb(var(--color-text-secondary))">From (Vendor)</label>
+                <select
+                  name="vendorId"
+                  class="w-full"
+                  required
+                  onChange$={(e) => {
+                    selectedVendorId.value = (e.target as HTMLSelectElement).value;
+                    selectedLocationId.value = null;
+                  }}
+                >
+                  <option value="">Select Vendor</option>
+                  {Array.isArray(data.value?.vendors) &&
+                    data.value.vendors.map((v) => (
+                      <option key={v.id} value={v.id} selected={!!(haul.vendorProduct && v.id === haul.vendorProduct.vendorId)}>
+                        {v.name}
+                      </option>
+                    ))}
+                </select>
+              </div>
 
-          <div>
-            <label class="block text-sm font-medium mb-1" style="color: rgb(var(--color-text-secondary))">Location</label>
-            <select
-              name="vendorLocationId"
-              class="w-full"
-              required
-              onChange$={(e) => {
-                selectedLocationId.value = (e.target as HTMLSelectElement).value;
-              }}
-            >
-              <option value="">Select Location</option>
-              {Array.isArray(filteredLocations.value) &&
-                filteredLocations.value.map((loc) => (
-                  <option key={loc.id} value={loc.id} selected={!!(haul.vendorProduct && loc.id === haul.vendorProduct.vendorLocationId)}>
-                    {loc.name}
-                  </option>
-                ))}
-            </select>
-          </div>
+              <div>
+                <label class="block text-sm font-medium mb-1" style="color: rgb(var(--color-text-secondary))">Location</label>
+                <select
+                  name="vendorLocationId"
+                  class="w-full"
+                  required
+                  onChange$={(e) => {
+                    selectedLocationId.value = (e.target as HTMLSelectElement).value;
+                  }}
+                >
+                  <option value="">Select Location</option>
+                  {Array.isArray(filteredLocations.value) &&
+                    filteredLocations.value.map((loc) => (
+                      <option key={loc.id} value={loc.id} selected={!!(haul.vendorProduct && loc.id === haul.vendorProduct.vendorLocationId)}>
+                        {loc.name}
+                      </option>
+                    ))}
+                </select>
+              </div>
 
-          <div>
-            <label class="block text-sm font-medium mb-1" style="color: rgb(var(--color-text-secondary))">To (Route)</label>
-            <select
-              name="freightRouteId"
-              class="w-full"
-              required
-              onChange$={(e) => {
-                const fr = data.value.freightRoutes.find(
-                  (r) => r.id.toString() === (e.target as HTMLSelectElement).value,
-                );
-                if (fr) selectedRate.value = fr.freightCost.toFixed(2);
-              }}
-            >
-              <option value="">Select Route</option>
-              {filteredRoutes.value.map((fr) => (
-                <option key={fr.id} value={fr.id} selected={!!(haul.freightRouteId && fr.id === haul.freightRouteId)}>
-                  {fr.destination}
-                </option>
-              ))}
-            </select>
-          </div>
-        </div>
+              <div>
+                <label class="block text-sm font-medium mb-1" style="color: rgb(var(--color-text-secondary))">To (Route)</label>
+                <select
+                  name="freightRouteId"
+                  class="w-full"
+                  required
+                  onChange$={(e) => {
+                    const fr = data.value.freightRoutes.find(
+                      (r) => r.id.toString() === (e.target as HTMLSelectElement).value,
+                    );
+                    if (fr) selectedRate.value = fr.freightCost.toFixed(2);
+                  }}
+                >
+                  <option value="">Select Route</option>
+                  {filteredRoutes.value.map((fr) => (
+                    <option key={fr.id} value={fr.id} selected={!!(haul.freightRouteId && fr.id === haul.freightRouteId)}>
+                      {fr.destination}
+                    </option>
+                  ))}
+                </select>
+              </div>
+            </div>
 
-        {/* Row 4 */}
-        <div>
-          <label class="block text-sm font-medium mb-1" style="color: rgb(var(--color-text-secondary))">Material</label>
-          <select
-            name="vendorProductId"
-            required
-            class="w-full"
-            disabled={!selectedVendorId.value || !selectedLocationId.value}
-          >
-            <option value="">Select Material</option>
-            {Array.isArray(filteredProducts.value) &&
-              filteredProducts.value.map((vp) => (
-                <option key={vp.id} value={vp.id} selected={!!(haul.vendorProductId && vp.id === haul.vendorProductId)}>
-                  {vp.name}
-                </option>
-              ))}
-          </select>
-        </div>
+            {/* End Dump: Material */}
+            <div>
+              <label class="block text-sm font-medium mb-1" style="color: rgb(var(--color-text-secondary))">Material</label>
+              <select
+                name="vendorProductId"
+                required
+                class="w-full"
+                disabled={!selectedVendorId.value || !selectedLocationId.value}
+              >
+                <option value="">Select Material</option>
+                {Array.isArray(filteredProducts.value) &&
+                  filteredProducts.value.map((vp) => (
+                    <option key={vp.id} value={vp.id} selected={!!(haul.vendorProductId && vp.id === haul.vendorProductId)}>
+                      {vp.name}
+                    </option>
+                  ))}
+              </select>
+            </div>
+          </>
+        ) : (
+          <>
+            {/* Flatbed: From and To text inputs */}
+            <div class="grid grid-cols-2 gap-4">
+              <div>
+                <label class="block text-sm font-medium mb-1" style="color: rgb(var(--color-text-secondary))">From *</label>
+                <input
+                  name="flatbedFrom"
+                  type="text"
+                  class="w-full"
+                  required
+                  placeholder="City, ST"
+                  value={haul.flatbedFrom || ''}
+                />
+              </div>
+
+              <div>
+                <label class="block text-sm font-medium mb-1" style="color: rgb(var(--color-text-secondary))">To *</label>
+                <input
+                  name="flatbedTo"
+                  type="text"
+                  class="w-full"
+                  required
+                  placeholder="City, ST"
+                  value={haul.flatbedTo || ''}
+                />
+              </div>
+            </div>
+
+            {/* Flatbed: Material text input */}
+            <div>
+              <label class="block text-sm font-medium mb-1" style="color: rgb(var(--color-text-secondary))">Material *</label>
+              <input
+                name="flatbedMaterial"
+                type="text"
+                class="w-full"
+                required
+                placeholder="Material description"
+                value={haul.flatbedMaterial || ''}
+              />
+            </div>
+          </>
+        )}
 
         {/* Row 5 */}
         <div class="grid grid-cols-3 gap-4">
@@ -340,7 +389,9 @@ export default component$(() => {
             />
           </div>
           <div>
-            <label class="block text-sm font-medium mb-1" style="color: rgb(var(--color-text-secondary))">Rate</label>
+            <label class="block text-sm font-medium mb-1" style="color: rgb(var(--color-text-secondary))">
+              {selectedLoadType.value === 'flatbed' ? 'Pay Rate' : 'Rate'}
+            </label>
             <input
               name="rate"
               type="number"

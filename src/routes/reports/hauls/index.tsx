@@ -113,7 +113,13 @@ export default component$(() => {
   let totalNcHours = 0;
 
   const haulsWithCalculations = (data.value.allHauls || []).map((haul, index) => {
-    const freightPay = haul.quantity * haul.rate;
+    // Calculate freight pay based on load type
+    // For enddump: quantity * rate
+    // For flatbed: just rate (pay rate is the total load pay)
+    const freightPay = haul.loadType === 'flatbed'
+      ? haul.rate
+      : haul.quantity * haul.rate;
+
     const driverPayRate = haul.loadType === 'enddump'
       ? data.value.driver?.endDumpPayRate || 0
       : data.value.driver?.flatBedPayRate || 0;
@@ -310,9 +316,27 @@ export default component$(() => {
                     <td>{haul.customer || '—'}</td>
                     <td>{haul.loadRefNum || '—'}</td>
                     <td>{haul.chInvoice || '—'}</td>
-                    <td>{isOffDuty ? '—' : haul.vendorProduct!.name}</td>
-                    <td>{isOffDuty ? 'Off Duty' : `${haul.vendorProduct!.vendor.shortName}-${haul.vendorProduct!.vendorLocation.name}`}</td>
-                    <td>{isOffDuty ? getOffDutyReasonDisplay(haul.workday.offDutyReason, data.value.settings) : haul.freightRoute!.destination}</td>
+                    <td>
+                      {isOffDuty
+                        ? '—'
+                        : haul.loadType === 'flatbed'
+                          ? (haul.flatbedMaterial || '—')
+                          : haul.vendorProduct!.name}
+                    </td>
+                    <td>
+                      {isOffDuty
+                        ? 'Off Duty'
+                        : haul.loadType === 'flatbed'
+                          ? (haul.flatbedFrom || '—')
+                          : `${haul.vendorProduct!.vendor.shortName}-${haul.vendorProduct!.vendorLocation.name}`}
+                    </td>
+                    <td>
+                      {isOffDuty
+                        ? getOffDutyReasonDisplay(haul.workday.offDutyReason, data.value.settings)
+                        : haul.loadType === 'flatbed'
+                          ? (haul.flatbedTo || '—')
+                          : haul.freightRoute!.destination}
+                    </td>
                     <td class="number">{isOffDuty ? '—' : haul.quantity.toFixed(2)}</td>
                     <td>{isOffDuty ? '—' : haul.rateMetric}</td>
                     <td class="number">{isOffDuty ? '—' : formatCurrency(haul.rate)}</td>

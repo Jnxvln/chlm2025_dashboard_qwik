@@ -795,7 +795,14 @@ export default component$(() => {
                                           </div>
                                         </td>
                                         <td>
-                                          {haul.vendorProduct && haul.freightRoute ? (
+                                          {haul.loadType === 'flatbed' ? (
+                                            <>
+                                              <div class="font-medium">{haul.flatbedFrom || '—'}</div>
+                                              <div class="text-xs mt-1" style="color: rgb(var(--color-text-tertiary))">
+                                                → {haul.flatbedTo || '—'}
+                                              </div>
+                                            </>
+                                          ) : haul.vendorProduct && haul.freightRoute ? (
                                             <>
                                               <div class="font-medium">{haul.vendorProduct.vendor.shortName}-{haul.vendorProduct.vendorLocation.name}</div>
                                               <div class="text-xs mt-1" style="color: rgb(var(--color-text-tertiary))">
@@ -807,9 +814,14 @@ export default component$(() => {
                                           )}
                                         </td>
                                         <td>
-                                          <div class="font-medium">{haul.vendorProduct?.name || '—'}</div>
+                                          <div class="font-medium">
+                                            {haul.loadType === 'flatbed' ? (haul.flatbedMaterial || '—') : (haul.vendorProduct?.name || '—')}
+                                          </div>
                                           <div class="text-xs mt-1" style="color: rgb(var(--color-text-tertiary))">
-                                            {haul.quantity}t @ ${haul.rate}/t
+                                            {haul.loadType === 'flatbed'
+                                              ? `${haul.quantity}${haul.rateMetric === 'ton' ? 't' : haul.rateMetric === 'mile' ? 'mi' : 'hr'} @ $${haul.rate} pay`
+                                              : `${haul.quantity}t @ $${haul.rate}/t`
+                                            }
                                           </div>
                                         </td>
                                         <td>

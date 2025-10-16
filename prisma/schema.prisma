@@ -155,6 +155,9 @@ model Haul {
   loadRefNum      String?
   vendorProductId Int?
   freightRouteId  Int?
+  flatbedFrom     String?
+  flatbedTo       String?
+  flatbedMaterial String?
   rateMetric      String
   rate            Float
   quantity        Float

@@ -19,6 +19,9 @@ export const useEditHaulAction = routeAction$(
           quantity: data.quantity,
           vendorProductId: data.vendorProductId || null,
           freightRouteId: data.freightRouteId || null,
+          flatbedFrom: data.flatbedFrom || null,
+          flatbedTo: data.flatbedTo || null,
+          flatbedMaterial: data.flatbedMaterial || null,
           // Note: workdayId and createdById are not updated in edits
         },
         select: {
@@ -52,6 +55,9 @@ export const useEditHaulAction = routeAction$(
     quantity: z.coerce.number().gte(0),
     vendorProductId: z.coerce.number().optional(),
     freightRouteId: z.coerce.number().optional(),
+    flatbedFrom: z.string().optional(),
+    flatbedTo: z.string().optional(),
+    flatbedMaterial: z.string().optional(),
     returnTo: z.string().optional(),
   }),
 );
