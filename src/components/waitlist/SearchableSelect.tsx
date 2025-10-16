@@ -90,9 +90,8 @@ export const SearchableSelect = component$<SearchableSelectProps>(
                   selectedLabel.value = selected.label;
                   searchQuery.value = '';
                   isOpen.value = false;
-                  if (onChange$) {
-                    onChange$(newValue);
-                  }
+                  // eslint-disable-next-line qwik/valid-lexical-scope
+                  onChange$?.(newValue);
                 }
               } else if (e.key === 'Escape') {
                 isOpen.value = false;
@@ -119,9 +118,8 @@ export const SearchableSelect = component$<SearchableSelectProps>(
                 selectedLabel.value = '';
                 searchQuery.value = '';
                 isOpen.value = false;
-                if (onChange$) {
-                  onChange$('');
-                }
+                // eslint-disable-next-line qwik/valid-lexical-scope
+                onChange$?.('');
               }}
             >
               ✕
@@ -159,9 +157,8 @@ export const SearchableSelect = component$<SearchableSelectProps>(
                     selectedLabel.value = option.label;
                     searchQuery.value = '';
                     isOpen.value = false;
-                    if (onChange$) {
-                      onChange$(newValue);
-                    }
+                    // eslint-disable-next-line qwik/valid-lexical-scope
+                    onChange$?.(newValue);
                   }}
                   onMouseDown$={(e) => {
                     e.preventDefault(); // Prevent blur
