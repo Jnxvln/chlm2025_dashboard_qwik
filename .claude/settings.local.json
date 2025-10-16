@@ -29,7 +29,8 @@
       "Bash(pnpm run:*)",
       "Bash(git checkout:*)",
       "Bash(pnpm eslint:*)",
-      "Bash(pnpm exec eslint:*)"
+      "Bash(pnpm exec eslint:*)",
+      "Bash(cat:*)"
     ],
     "defaultMode": "acceptEdits"
   }
