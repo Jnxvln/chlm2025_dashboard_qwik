@@ -1,6 +1,6 @@
 import { component$, useSignal, useVisibleTask$, $, useComputed$ } from '@builder.io/qwik';
 export { useHaulsLoader } from './loader';
-import { useNavigate, useLocation, routeAction$, zod$, z, type DocumentHead } from '@builder.io/qwik-city';
+import { useNavigate, routeAction$, zod$, z, type DocumentHead } from '@builder.io/qwik-city';
 import { useHaulsLoader } from './loader';
 import PageTitle from '~/components/PageTitle';
 import { AddIcon, EditIcon, DeleteIcon } from '~/components/icons';
@@ -98,7 +98,6 @@ function updateUrl(nav: any, driver?: string, startDate?: string, endDate?: stri
 export default component$(() => {
   const data = useHaulsLoader();
   const nav = useNavigate();
-  const loc = useLocation();
   const deleteAction = useDeleteHaulAction();
   const expandedRows = useSignal<Set<number>>(new Set());
   const currentPage = useSignal(1);

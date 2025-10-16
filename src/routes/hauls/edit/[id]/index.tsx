@@ -3,7 +3,6 @@ import {
   useSignal,
   useComputed$,
   useVisibleTask$,
-  $,
 } from '@builder.io/qwik';
 import { Form, useNavigate, useLocation } from '@builder.io/qwik-city';
 import BackButton from '~/components/BackButton';
