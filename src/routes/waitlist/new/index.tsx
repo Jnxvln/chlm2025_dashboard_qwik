@@ -39,8 +39,25 @@ export const useWaitlistNewLoader = routeLoader$(async () => {
 });
 
 export const useCreateWaitlistEntry = routeAction$(
-  async (values) => {
+  async (values, { fail }) => {
     const resourceType = values.resourceType;
+
+    // Manual validation for conditional required fields
+    if (resourceType === 'vendor_product' && !values.vendorProductId) {
+      return fail(400, {
+        fieldErrors: {
+          vendorProductId: 'Please select a product',
+        },
+      });
+    }
+
+    if (resourceType === 'custom' && !values.customResourceName) {
+      return fail(400, {
+        fieldErrors: {
+          customResourceName: 'Please enter a custom resource name',
+        },
+      });
+    }
 
     const waitlistEntry = await db.waitlistEntry.create({
       data: {
@@ -119,6 +136,9 @@ export default component$(() => {
                 label: `${contact.firstName} ${contact.lastName}${contact.companyName ? ` (${contact.companyName})` : ''}`,
               }))}
               value={selectedContactId.value}
+              onChange$={(value) => {
+                selectedContactId.value = value;
+              }}
             />
             <div class="mt-2">
               <a
@@ -191,6 +211,9 @@ export default component$(() => {
                 label: `${product.name} (${product.vendor.shortName} - ${product.vendorLocation.name})`,
               }))}
               value={selectedVendorProductId.value}
+              onChange$={(value) => {
+                selectedVendorProductId.value = value;
+              }}
             />
           )}
 
@@ -330,12 +353,19 @@ export default component$(() => {
         </div>
       )}
 
-      {action.value?.fieldErrors && (
+      {action.value?.failed && (
         <div
           class="mt-4 p-3 rounded-lg"
-          style="background-color: rgb(var(--color-error) / 0.1); color: rgb(var(--color-error))"
+          style="background-color: rgb(var(--color-danger) / 0.1); color: rgb(var(--color-danger))"
         >
-          Please fix the errors above.
+          <div class="font-semibold mb-2">Please fix the following errors:</div>
+          <ul class="list-disc list-inside space-y-1">
+            {action.value.fieldErrors && Object.entries(action.value.fieldErrors).map(([field, errors]) => (
+              <li key={field}>
+                <strong>{field}:</strong> {Array.isArray(errors) ? errors.join(', ') : errors}
+              </li>
+            ))}
+          </ul>
         </div>
       )}
     </section>

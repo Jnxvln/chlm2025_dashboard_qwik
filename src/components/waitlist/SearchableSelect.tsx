@@ -8,10 +8,11 @@ interface SearchableSelectProps {
   options: Array<{ value: string | number; label: string }>;
   value: string;
   disabled?: boolean;
+  onChange$?: (value: string) => void;
 }
 
 export const SearchableSelect = component$<SearchableSelectProps>(
-  ({ name, label, required, placeholder, options, value, disabled }) => {
+  ({ name, label, required, placeholder, options, value, disabled, onChange$ }) => {
     const searchQuery = useSignal('');
     const isOpen = useSignal(false);
     const selectedLabel = useSignal('');
@@ -84,10 +85,14 @@ export const SearchableSelect = component$<SearchableSelectProps>(
                 if (highlightedIndex.value >= 0 && highlightedIndex.value < filteredOptions.length) {
                   e.preventDefault();
                   const selected = filteredOptions[highlightedIndex.value];
-                  internalValue.value = String(selected.value);
+                  const newValue = String(selected.value);
+                  internalValue.value = newValue;
                   selectedLabel.value = selected.label;
                   searchQuery.value = '';
                   isOpen.value = false;
+                  if (onChange$) {
+                    onChange$(newValue);
+                  }
                 }
               } else if (e.key === 'Escape') {
                 isOpen.value = false;
@@ -114,6 +119,9 @@ export const SearchableSelect = component$<SearchableSelectProps>(
                 selectedLabel.value = '';
                 searchQuery.value = '';
                 isOpen.value = false;
+                if (onChange$) {
+                  onChange$('');
+                }
               }}
             >
               ✕
@@ -146,10 +154,14 @@ export const SearchableSelect = component$<SearchableSelectProps>(
                   onClick$={(e) => {
                     e.preventDefault();
                     e.stopPropagation();
-                    internalValue.value = String(option.value);
+                    const newValue = String(option.value);
+                    internalValue.value = newValue;
                     selectedLabel.value = option.label;
                     searchQuery.value = '';
                     isOpen.value = false;
+                    if (onChange$) {
+                      onChange$(newValue);
+                    }
                   }}
                   onMouseDown$={(e) => {
                     e.preventDefault(); // Prevent blur
