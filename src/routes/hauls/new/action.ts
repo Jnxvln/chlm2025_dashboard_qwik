@@ -4,9 +4,27 @@ import { db } from '~/lib/db';
 export const useNewHaulAction = routeAction$(
   async (data) => {
     try {
-      // Validate workdayId exists
-      if (!data.workdayId) {
-        return { success: false, error: 'Workday is required to create a haul' };
+      let workdayId = data.workdayId;
+
+      // If workdayId is 0 or negative, we need to create a new workday
+      if (!workdayId || workdayId <= 0) {
+        if (!data.driverId) {
+          return { success: false, error: 'Driver is required to create a workday' };
+        }
+
+        // Create new workday
+        const workday = await db.workday.create({
+          data: {
+            driverId: data.driverId,
+            date: new Date(data.dateHaul),
+            chHours: 0,
+            ncHours: 0,
+            offDuty: false,
+            createdById: data.createdById,
+          },
+        });
+
+        workdayId = workday.id;
       }
 
       const haul = await db.haul.create({
@@ -23,7 +41,7 @@ export const useNewHaulAction = routeAction$(
           quantity: data.quantity,
           vendorProductId: data.vendorProductId || null,
           freightRouteId: data.freightRouteId || null,
-          workdayId: data.workdayId,
+          workdayId: workdayId,
           createdById: data.createdById,
         },
       });
@@ -31,6 +49,7 @@ export const useNewHaulAction = routeAction$(
       return {
         success: true,
         haulId: haul.id,
+        workdayId: workdayId,
         returnTo: data.returnTo || null,
       };
     } catch (error) {
@@ -52,6 +71,7 @@ export const useNewHaulAction = routeAction$(
     vendorProductId: z.coerce.number().optional(),
     freightRouteId: z.coerce.number().optional(),
     workdayId: z.coerce.number(),
+    driverId: z.coerce.number(),
     createdById: z.coerce.number(),
     returnTo: z.string().optional(),
   }),

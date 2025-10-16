@@ -95,6 +95,9 @@ export default component$(() => {
   const isOffDuty = useSignal(workday.value.offDuty || false);
   const offDutyReason = useSignal(workday.value.offDutyReason || '');
   const showDeleteHaulsModal = useSignal(false);
+  const showCustomReasonModal = useSignal(false);
+  const customReasonType = useSignal<'Holiday' | 'Other'>('Holiday');
+  const customReasonInput = useSignal('');
   const dateValue = new Date(workday.value.date).toISOString().split('T')[0];
 
   // Handler for off-duty checkbox change
@@ -123,6 +126,33 @@ export default component$(() => {
   // Handler for modal cancel
   const handleDeleteHaulsCancel = $(() => {
     showDeleteHaulsModal.value = false;
+  });
+
+  // Handler for off-duty reason change
+  const handleOffDutyReasonChange = $((value: string) => {
+    if (value === 'Holiday' || value === 'Other') {
+      customReasonType.value = value;
+      customReasonInput.value = '';
+      showCustomReasonModal.value = true;
+    } else {
+      offDutyReason.value = value;
+    }
+  });
+
+  // Handler for custom reason modal confirmation
+  const handleCustomReasonConfirm = $(() => {
+    const customText = customReasonInput.value.trim();
+    if (customText) {
+      offDutyReason.value = `${customReasonType.value}: ${customText}`;
+    } else {
+      offDutyReason.value = customReasonType.value;
+    }
+    showCustomReasonModal.value = false;
+  });
+
+  // Handler for custom reason modal cancel
+  const handleCustomReasonModalCancel = $(() => {
+    showCustomReasonModal.value = false;
   });
 
   useVisibleTask$(({ track }) => {
@@ -172,6 +202,60 @@ export default component$(() => {
               onClick$={handleDeleteHaulsConfirm}
             >
               Delete Hauls & Mark Off Duty
+            </button>
+          </div>
+        </div>
+      </div>
+    );
+  }
+
+  // Show custom reason modal
+  if (showCustomReasonModal.value) {
+    return (
+      <div class="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50">
+        <div class="card max-w-lg w-full mx-4">
+          <h2 class="text-xl font-bold mb-4" style="color: rgb(var(--color-text-primary))">
+            {customReasonType.value === 'Holiday' ? 'Which Holiday?' : 'Enter Custom Reason'}
+          </h2>
+          <p class="mb-4" style="color: rgb(var(--color-text-secondary))">
+            {customReasonType.value === 'Holiday'
+              ? 'Please specify which holiday (e.g., Christmas, Thanksgiving, etc.)'
+              : 'Please enter a custom reason. Keep it brief.'}
+          </p>
+
+          <div class="mb-4">
+            <input
+              type="text"
+              class="w-full"
+              placeholder={customReasonType.value === 'Holiday' ? 'e.g., Christmas' : 'e.g., Family emergency'}
+              value={customReasonInput.value}
+              onInput$={(_, el) => {
+                customReasonInput.value = el.value;
+              }}
+              onKeyDown$={(e) => {
+                if (e.key === 'Enter' && customReasonInput.value.trim()) {
+                  handleCustomReasonConfirm();
+                } else if (e.key === 'Escape') {
+                  handleCustomReasonModalCancel();
+                }
+              }}
+              autoFocus
+            />
+          </div>
+
+          <div class="flex justify-end gap-3">
+            <button
+              class="btn btn-ghost"
+              onClick$={handleCustomReasonModalCancel}
+            >
+              Cancel
+            </button>
+            <button
+              class="btn btn-primary"
+              onClick$={handleCustomReasonConfirm}
+              disabled={!customReasonInput.value.trim()}
+            >
+              Confirm
             </button>
           </div>
         </div>
@@ -362,26 +446,31 @@ export default component$(() => {
                       Off Duty Reason *
                     </label>
                     <select
-                      id="offDutyReason"
-                      name="offDutyReason"
+                      id="offDutyReasonSelect"
                       class="w-full"
                       required
-                      value={offDutyReason.value}
+                      value={offDutyReason.value.startsWith('Holiday:') ? 'Holiday' : offDutyReason.value.startsWith('Other:') ? 'Other' : offDutyReason.value}
                       onChange$={(_, el) => {
-                        offDutyReason.value = el.value;
+                        handleOffDutyReasonChange(el.value);
                       }}
                     >
-                      <option value="" selected={offDutyReason.value === ''}>Select reason...</option>
-                      <option value="No Work" selected={offDutyReason.value === 'No Work'}>No Work</option>
-                      <option value="Maintenance" selected={offDutyReason.value === 'Maintenance'}>Maintenance</option>
-                      <option value="Sick" selected={offDutyReason.value === 'Sick'}>Sick</option>
-                      <option value="Holiday" selected={offDutyReason.value === 'Holiday'}>Holiday</option>
-                      <option value="Vacation" selected={offDutyReason.value === 'Vacation'}>Vacation</option>
-                      <option value="Weather" selected={offDutyReason.value === 'Weather'}>Weather</option>
-                      <option value="Personal" selected={offDutyReason.value === 'Personal'}>Personal</option>
-                      <option value="Bereavement" selected={offDutyReason.value === 'Bereavement'}>Bereavement</option>
-                      <option value="Other" selected={offDutyReason.value === 'Other'}>Other</option>
+                      <option value="">Select reason...</option>
+                      <option value="No Work">No Work</option>
+                      <option value="Maintenance">Maintenance</option>
+                      <option value="Sick">Sick</option>
+                      <option value="Holiday">Holiday</option>
+                      <option value="Vacation">Vacation</option>
+                      <option value="Weather">Weather</option>
+                      <option value="Personal">Personal</option>
+                      <option value="Bereavement">Bereavement</option>
+                      <option value="Other">Other</option>
                     </select>
+                    <input type="hidden" name="offDutyReason" value={offDutyReason.value} />
+                    {(offDutyReason.value.startsWith('Holiday:') || offDutyReason.value.startsWith('Other:')) && (
+                      <div class="mt-2 p-2 rounded text-sm" style="background-color: rgb(var(--color-bg-tertiary)); color: rgb(var(--color-text-secondary))">
+                        {offDutyReason.value}
+                      </div>
+                    )}
                   </div>
                 )}
               </div>

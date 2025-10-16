@@ -21,11 +21,16 @@ export const useEditHaulAction = routeAction$(
           freightRouteId: data.freightRouteId || null,
           // Note: workdayId and createdById are not updated in edits
         },
+        select: {
+          id: true,
+          workdayId: true,
+        },
       });
 
       return {
         success: true,
         haulId: haul.id,
+        workdayId: haul.workdayId,
         returnTo: data.returnTo || null,
       };
     } catch (error) {

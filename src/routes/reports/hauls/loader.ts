@@ -52,6 +52,9 @@ export const useHaulsSummaryLoader = routeLoader$(async (event) => {
     };
   }
 
+  // Load settings for off-duty reason display
+  const settings = await db.settings.findFirst();
+
   // Load all workdays in the date range for this driver
   const workdays = await db.workday.findMany({
     where: {
@@ -79,10 +82,45 @@ export const useHaulsSummaryLoader = routeLoader$(async (event) => {
     orderBy: { date: 'asc' },
   });
 
-  // Flatten all hauls from all workdays and sort by dateHaul
+  // Flatten all hauls from all workdays, PLUS add placeholder entries for off-duty days with no hauls
   const allHauls = workdays
-    .flatMap(workday =>
-      workday.hauls.map(haul => ({
+    .flatMap(workday => {
+      // If workday is off-duty and has no hauls, create a placeholder entry
+      if (workday.offDuty && workday.hauls.length === 0) {
+        return [{
+          id: -workday.id, // Negative ID to distinguish from real hauls
+          dateHaul: workday.date,
+          loadTime: '00:00',
+          truck: '',
+          customer: '',
+          chInvoice: null,
+          loadType: '',
+          loadRefNum: null,
+          vendorProductId: null,
+          freightRouteId: null,
+          rateMetric: '',
+          rate: 0,
+          quantity: 0,
+          createdAt: workday.createdAt,
+          updatedAt: workday.updatedAt,
+          workdayId: workday.id,
+          createdById: workday.createdById,
+          vendorProduct: null,
+          freightRoute: null,
+          workday: {
+            id: workday.id,
+            date: workday.date,
+            chHours: workday.chHours,
+            ncHours: workday.ncHours,
+            ncReasons: workday.ncReasons,
+            offDuty: workday.offDuty,
+            offDutyReason: workday.offDutyReason,
+          }
+        }];
+      }
+
+      // Otherwise, map the actual hauls
+      return workday.hauls.map(haul => ({
         ...haul,
         workday: {
           id: workday.id,
@@ -90,9 +128,11 @@ export const useHaulsSummaryLoader = routeLoader$(async (event) => {
           chHours: workday.chHours,
           ncHours: workday.ncHours,
           ncReasons: workday.ncReasons,
+          offDuty: workday.offDuty,
+          offDutyReason: workday.offDutyReason,
         }
-      }))
-    )
+      }));
+    })
     .sort((a, b) => new Date(a.dateHaul).getTime() - new Date(b.dateHaul).getTime());
 
   // Calculate totals
@@ -115,6 +155,11 @@ export const useHaulsSummaryLoader = routeLoader$(async (event) => {
     driver,
     workdays,
     allHauls,
+    settings: settings ? {
+      ...settings,
+      driverDefaultNCPayRate: Number(settings.driverDefaultNCPayRate),
+      driverDefaultHolidayPayRate: Number(settings.driverDefaultHolidayPayRate),
+    } : null,
     startDate: startDateStr!,
     endDate: endDateStr!,
     totals: {

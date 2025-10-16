@@ -70,6 +70,13 @@ export const useUpdateSettings = routeAction$(
           operatingHoursSunEnd: data.operatingHoursSunEnd,
           driverDefaultNCPayRate: Number(data.driverDefaultNCPayRate).toFixed(2),
           driverDefaultHolidayPayRate: Number(data.driverDefaultHolidayPayRate).toFixed(2),
+          offDutyReasonNoWork: data.offDutyReasonNoWork,
+          offDutyReasonMaintenance: data.offDutyReasonMaintenance,
+          offDutyReasonSick: data.offDutyReasonSick,
+          offDutyReasonVacation: data.offDutyReasonVacation,
+          offDutyReasonWeather: data.offDutyReasonWeather,
+          offDutyReasonPersonal: data.offDutyReasonPersonal,
+          offDutyReasonBereavement: data.offDutyReasonBereavement,
           userPrefersCaps: data.userPrefersCaps === 'true',
           userDefaultColorTheme: data.userDefaultColorTheme,
         },
@@ -108,6 +115,13 @@ export const useUpdateSettings = routeAction$(
       operatingHoursSunEnd: z.string(),
       driverDefaultNCPayRate: z.coerce.number(),
       driverDefaultHolidayPayRate: z.coerce.number(),
+      offDutyReasonNoWork: z.string(),
+      offDutyReasonMaintenance: z.string(),
+      offDutyReasonSick: z.string(),
+      offDutyReasonVacation: z.string(),
+      offDutyReasonWeather: z.string(),
+      offDutyReasonPersonal: z.string(),
+      offDutyReasonBereavement: z.string(),
       userPrefersCaps: z.string(),
       userDefaultColorTheme: z.string(),
     }),
@@ -146,6 +160,13 @@ export default component$(() => {
   const operatingHoursSunEnd = useSignal('CLOSED');
   const driverDefaultNCPayRate = useSignal('0.00');
   const driverDefaultHolidayPayRate = useSignal('0.00');
+  const offDutyReasonNoWork = useSignal('No Work');
+  const offDutyReasonMaintenance = useSignal('Maintenance');
+  const offDutyReasonSick = useSignal('Sick');
+  const offDutyReasonVacation = useSignal('Vacation');
+  const offDutyReasonWeather = useSignal('Weather');
+  const offDutyReasonPersonal = useSignal('Personal');
+  const offDutyReasonBereavement = useSignal('Bereavement');
 
   // Sync all signals with loaded settings ONCE on client-side mount
   useVisibleTask$(() => {
@@ -182,6 +203,14 @@ export default component$(() => {
 
     driverDefaultNCPayRate.value = String(settings.value.driverDefaultNCPayRate);
     driverDefaultHolidayPayRate.value = String(settings.value.driverDefaultHolidayPayRate);
+
+    offDutyReasonNoWork.value = settings.value.offDutyReasonNoWork;
+    offDutyReasonMaintenance.value = settings.value.offDutyReasonMaintenance;
+    offDutyReasonSick.value = settings.value.offDutyReasonSick;
+    offDutyReasonVacation.value = settings.value.offDutyReasonVacation;
+    offDutyReasonWeather.value = settings.value.offDutyReasonWeather;
+    offDutyReasonPersonal.value = settings.value.offDutyReasonPersonal;
+    offDutyReasonBereavement.value = settings.value.offDutyReasonBereavement;
   });
 
   useVisibleTask$(({ track }) => {
@@ -214,6 +243,14 @@ export default component$(() => {
 
       driverDefaultNCPayRate.value = String(result.settings.driverDefaultNCPayRate);
       driverDefaultHolidayPayRate.value = String(result.settings.driverDefaultHolidayPayRate);
+
+      offDutyReasonNoWork.value = result.settings.offDutyReasonNoWork;
+      offDutyReasonMaintenance.value = result.settings.offDutyReasonMaintenance;
+      offDutyReasonSick.value = result.settings.offDutyReasonSick;
+      offDutyReasonVacation.value = result.settings.offDutyReasonVacation;
+      offDutyReasonWeather.value = result.settings.offDutyReasonWeather;
+      offDutyReasonPersonal.value = result.settings.offDutyReasonPersonal;
+      offDutyReasonBereavement.value = result.settings.offDutyReasonBereavement;
 
       // Hide success message after 3 seconds
       setTimeout(() => {
@@ -621,6 +658,134 @@ export default component$(() => {
                   class="w-full"
                 />
               </div>
+            </div>
+          </div>
+
+          {/* OFF-DUTY REASON SETTINGS */}
+          <div>
+            <h2 class="text-xl font-semibold mb-4" style="color: rgb(var(--color-text-primary))">
+              Off-Duty Reason Settings
+            </h2>
+            <p class="text-sm mb-4" style="color: rgb(var(--color-text-secondary))">
+              Customize the text displayed in reports for each off-duty reason. These values will be used when generating haul summary reports.
+            </p>
+            <div class="space-y-4">
+
+              <div>
+                <label class="block text-sm font-medium mb-2" style="color: rgb(var(--color-text-secondary))">
+                  No Work
+                </label>
+                <input
+                  name="offDutyReasonNoWork"
+                  type="text"
+                  value={offDutyReasonNoWork.value}
+                  onInput$={(_, el) => {
+                    offDutyReasonNoWork.value = el.value;
+                  }}
+                  class="w-full"
+                  placeholder="No Work"
+                />
+              </div>
+
+              <div>
+                <label class="block text-sm font-medium mb-2" style="color: rgb(var(--color-text-secondary))">
+                  Maintenance
+                </label>
+                <input
+                  name="offDutyReasonMaintenance"
+                  type="text"
+                  value={offDutyReasonMaintenance.value}
+                  onInput$={(_, el) => {
+                    offDutyReasonMaintenance.value = el.value;
+                  }}
+                  class="w-full"
+                  placeholder="Maintenance"
+                />
+              </div>
+
+              <div>
+                <label class="block text-sm font-medium mb-2" style="color: rgb(var(--color-text-secondary))">
+                  Sick
+                </label>
+                <input
+                  name="offDutyReasonSick"
+                  type="text"
+                  value={offDutyReasonSick.value}
+                  onInput$={(_, el) => {
+                    offDutyReasonSick.value = el.value;
+                  }}
+                  class="w-full"
+                  placeholder="Sick"
+                />
+              </div>
+
+              <div>
+                <label class="block text-sm font-medium mb-2" style="color: rgb(var(--color-text-secondary))">
+                  Vacation
+                </label>
+                <input
+                  name="offDutyReasonVacation"
+                  type="text"
+                  value={offDutyReasonVacation.value}
+                  onInput$={(_, el) => {
+                    offDutyReasonVacation.value = el.value;
+                  }}
+                  class="w-full"
+                  placeholder="Vacation"
+                />
+              </div>
+
+              <div>
+                <label class="block text-sm font-medium mb-2" style="color: rgb(var(--color-text-secondary))">
+                  Weather
+                </label>
+                <input
+                  name="offDutyReasonWeather"
+                  type="text"
+                  value={offDutyReasonWeather.value}
+                  onInput$={(_, el) => {
+                    offDutyReasonWeather.value = el.value;
+                  }}
+                  class="w-full"
+                  placeholder="Weather"
+                />
+              </div>
+
+              <div>
+                <label class="block text-sm font-medium mb-2" style="color: rgb(var(--color-text-secondary))">
+                  Personal
+                </label>
+                <input
+                  name="offDutyReasonPersonal"
+                  type="text"
+                  value={offDutyReasonPersonal.value}
+                  onInput$={(_, el) => {
+                    offDutyReasonPersonal.value = el.value;
+                  }}
+                  class="w-full"
+                  placeholder="Personal"
+                />
+              </div>
+
+              <div>
+                <label class="block text-sm font-medium mb-2" style="color: rgb(var(--color-text-secondary))">
+                  Bereavement
+                </label>
+                <input
+                  name="offDutyReasonBereavement"
+                  type="text"
+                  value={offDutyReasonBereavement.value}
+                  onInput$={(_, el) => {
+                    offDutyReasonBereavement.value = el.value;
+                  }}
+                  class="w-full"
+                  placeholder="Bereavement"
+                />
+              </div>
+
+              <p class="text-xs" style="color: rgb(var(--color-text-tertiary))">
+                Note: "Holiday" and "Other" reasons will prompt the user for custom text when selected on workday forms.
+              </p>
             </div>
           </div>
 

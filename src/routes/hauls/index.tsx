@@ -111,6 +111,7 @@ export default component$(() => {
   const pageSize = useSignal(7);
   const sortOrder = useSignal('desc');
   const showNewHaulMessage = useSignal(false);
+  const highlightHaulId = useSignal<number | null>(null);
 
   useVisibleTask$(({ track }) => {
     track(() => data.value);
@@ -169,6 +170,41 @@ export default component$(() => {
       }
       if (data.value.currentEndDate) {
         saveToLocalStorage(STORAGE_KEYS.endDate, data.value.currentEndDate);
+      }
+
+      // Check for workdayId and haulId in URL to auto-expand and highlight
+      const workdayIdParam = urlParams.get('workdayId');
+      const haulIdParam = urlParams.get('haulId');
+
+      if (workdayIdParam) {
+        const workdayId = parseInt(workdayIdParam, 10);
+        if (!isNaN(workdayId)) {
+          // Auto-expand the workday
+          const currentExpanded = new Set(expandedRows.value);
+          currentExpanded.add(workdayId);
+          expandedRows.value = currentExpanded;
+        }
+      }
+
+      if (haulIdParam) {
+        const haulId = parseInt(haulIdParam, 10);
+        if (!isNaN(haulId)) {
+          // Set the haul to highlight
+          highlightHaulId.value = haulId;
+
+          // Remove highlight after 3 seconds
+          setTimeout(() => {
+            highlightHaulId.value = null;
+          }, 3000);
+        }
+      }
+
+      // Remove workdayId and haulId from URL after processing
+      if (workdayIdParam || haulIdParam) {
+        urlParams.delete('workdayId');
+        urlParams.delete('haulId');
+        const newUrl = `${window.location.pathname}?${urlParams.toString()}`;
+        window.history.replaceState({}, '', newUrl);
       }
     }
   });
@@ -742,8 +778,13 @@ export default component$(() => {
                                 </thead>
                                 <tbody>
                                   {[...workday.hauls].sort((a: any, b: any) => a.loadTime.localeCompare(b.loadTime)).map((haul: any) => {
+                                    const isHighlighted = highlightHaulId.value === haul.id;
                                     return (
-                                      <tr key={haul.id}>
+                                      <tr
+                                        key={haul.id}
+                                        class={isHighlighted ? 'haul-row-highlight' : ''}
+                                        style={isHighlighted ? 'background-color: rgb(var(--color-primary) / 0.1); transition: background-color 0.3s ease;' : ''}
+                                      >
                                         <td class="whitespace-nowrap">
                                           <div class="font-medium">{formatTime12hr(haul.loadTime)}</div>
                                         </td>

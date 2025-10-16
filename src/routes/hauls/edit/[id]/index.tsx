@@ -22,7 +22,8 @@ export default component$(() => {
   const selectedVendorId = useSignal<string | null>(null);
   const selectedLocationId = useSignal<string | null>(null);
   const selectedLoadType = useSignal<'enddump' | 'flatbed'>('enddump');
-  const selectedRate = useSignal<number | null>(null);
+  const selectedRate = useSignal<string>('');
+  const selectedQuantity = useSignal<string>('');
 
   const raw = loc.url.searchParams.get('returnTo') ?? '';
   const returnTo = raw.startsWith('/') ? decodeURIComponent(raw) : '';
@@ -50,7 +51,8 @@ export default component$(() => {
       }
 
       selectedLoadType.value = haul.loadType as 'enddump' | 'flatbed';
-      selectedRate.value = haul.rate;
+      selectedRate.value = haul.rate.toFixed(2);
+      selectedQuantity.value = haul.quantity.toFixed(2);
     }
   });
 
@@ -88,9 +90,13 @@ export default component$(() => {
 
   useVisibleTask$(({ track }) => {
     const result = track(() => action.value);
-    if (result?.success) {
+    if (result?.success && result?.haulId && result?.workdayId) {
       setTimeout(() => {
-        nav(result.returnTo || fallbackUrl);
+        const redirectUrl = result.returnTo || fallbackUrl;
+        const urlObj = new URL(redirectUrl, window.location.origin);
+        urlObj.searchParams.set('workdayId', result.workdayId.toString());
+        urlObj.searchParams.set('haulId', result.haulId.toString());
+        nav(urlObj.pathname + urlObj.search);
       }, 1000);
     }
   });
@@ -107,11 +113,24 @@ export default component$(() => {
 
   const haul = data.value.haul;
 
+  // Format date as MM/DD/YY
+  const formatDateMMDDYY = (date: Date) => {
+    const month = (date.getMonth() + 1).toString().padStart(2, '0');
+    const day = date.getDate().toString().padStart(2, '0');
+    const year = date.getFullYear().toString().substring(2);
+    return `${month}/${day}/${year}`;
+  };
+
   return (
     <div class="p-6 max-w-3xl mx-auto">
       <div class="mb-6">
         <BackButton />
-        <h1 class="text-2xl font-bold" style="color: rgb(var(--color-text-primary))">Edit Haul</h1>
+        <h1 class="text-2xl font-bold" style="color: rgb(var(--color-text-primary))">
+          Edit Haul
+        </h1>
+        <p class="text-sm mt-1" style="color: rgb(var(--color-text-secondary))">
+          Haul Date: {formatDateMMDDYY(haul.dateHaul)}
+        </p>
       </div>
 
       <div class="card">
@@ -258,7 +277,7 @@ export default component$(() => {
                 const fr = data.value.freightRoutes.find(
                   (r) => r.id.toString() === (e.target as HTMLSelectElement).value,
                 );
-                if (fr) selectedRate.value = fr.freightCost;
+                if (fr) selectedRate.value = fr.freightCost.toFixed(2);
               }}
             >
               <option value="">Select Route</option>
@@ -308,7 +327,16 @@ export default component$(() => {
               step="0.01"
               class="w-full"
               required
-              value={haul.quantity}
+              value={selectedQuantity.value}
+              onInput$={(_, el) => {
+                selectedQuantity.value = el.value;
+              }}
+              onBlur$={(_, el) => {
+                const num = parseFloat(el.value);
+                if (!isNaN(num)) {
+                  selectedQuantity.value = num.toFixed(2);
+                }
+              }}
             />
           </div>
           <div>
@@ -319,7 +347,16 @@ export default component$(() => {
               step="0.01"
               class="w-full"
               required
-              value={selectedRate.value ?? haul.rate}
+              value={selectedRate.value}
+              onInput$={(_, el) => {
+                selectedRate.value = el.value;
+              }}
+              onBlur$={(_, el) => {
+                const num = parseFloat(el.value);
+                if (!isNaN(num)) {
+                  selectedRate.value = num.toFixed(2);
+                }
+              }}
             />
           </div>
         </div>

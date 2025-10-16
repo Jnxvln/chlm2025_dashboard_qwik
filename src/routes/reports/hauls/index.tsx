@@ -23,6 +23,29 @@ function formatCurrency(amount: number) {
 
 const NC_RATE = 20.00; // $20.00 constant for now
 
+// Helper function to get display text for off-duty reasons
+function getOffDutyReasonDisplay(offDutyReason: string | null, settings: any): string {
+  if (!offDutyReason) return 'Off Duty';
+
+  // If it's a custom reason (Holiday: ... or Other: ...), return it as-is
+  if (offDutyReason.startsWith('Holiday:') || offDutyReason.startsWith('Other:')) {
+    return offDutyReason;
+  }
+
+  // Map standard reasons to their Settings fields
+  const reasonMap: Record<string, string> = {
+    'No Work': settings?.offDutyReasonNoWork || 'No Work',
+    'Maintenance': settings?.offDutyReasonMaintenance || 'Maintenance',
+    'Sick': settings?.offDutyReasonSick || 'Sick',
+    'Vacation': settings?.offDutyReasonVacation || 'Vacation',
+    'Weather': settings?.offDutyReasonWeather || 'Weather',
+    'Personal': settings?.offDutyReasonPersonal || 'Personal',
+    'Bereavement': settings?.offDutyReasonBereavement || 'Bereavement',
+  };
+
+  return reasonMap[offDutyReason] || offDutyReason;
+}
+
 export default component$(() => {
   const data = useHaulsSummaryLoader();
   const nav = useNavigate();
@@ -251,7 +274,7 @@ export default component$(() => {
         {/* Hauls Table */}
         {data.value.allHauls.length === 0 ? (
           <div style="text-align: center; margin: 2rem 0;">
-            <p>No hauls recorded for this period</p>
+            <p>No workdays or hauls recorded for this period</p>
           </div>
         ) : (
           <table class="report-table">
@@ -276,33 +299,45 @@ export default component$(() => {
             </thead>
             <tbody>
               {haulsWithCalculations.map((haul) => {
-                // Check if this is an off-duty haul
-                const isOffDuty = !haul.vendorProduct || !haul.freightRoute;
+                // Check if this workday is marked as off-duty
+                const isOffDuty = haul.workday.offDuty;
+                // Check if this is a placeholder entry (negative ID means off-duty placeholder)
+                const isPlaceholder = haul.id < 0;
 
                 return (
                   <tr key={haul.id}>
                     <td>{formatDate(haul.dateHaul)}</td>
-                    <td>{haul.customer}</td>
+                    <td>{haul.customer || '—'}</td>
                     <td>{haul.loadRefNum || '—'}</td>
                     <td>{haul.chInvoice || '—'}</td>
                     <td>{isOffDuty ? '—' : haul.vendorProduct!.name}</td>
                     <td>{isOffDuty ? 'Off Duty' : `${haul.vendorProduct!.vendor.shortName}-${haul.vendorProduct!.vendorLocation.name}`}</td>
-                    <td>{isOffDuty ? 'Off Duty' : haul.freightRoute!.destination}</td>
-                    <td class="number">{haul.quantity.toFixed(2)}</td>
-                    <td>{haul.rateMetric}</td>
-                    <td class="number">{formatCurrency(haul.rate)}</td>
+                    <td>{isOffDuty ? getOffDutyReasonDisplay(haul.workday.offDutyReason, data.value.settings) : haul.freightRoute!.destination}</td>
+                    <td class="number">{isOffDuty ? '—' : haul.quantity.toFixed(2)}</td>
+                    <td>{isOffDuty ? '—' : haul.rateMetric}</td>
+                    <td class="number">{isOffDuty ? '—' : formatCurrency(haul.rate)}</td>
                     <td class="number">{haul.isFirstHaulOfDay ? haul.workday.chHours.toFixed(2) : '—'}</td>
                     <td class="number">{haul.isFirstHaulOfDay ? haul.workday.ncHours.toFixed(2) : '—'}</td>
-                    <td class="number">{formatCurrency(haul.freightPay)}</td>
-                    <td class="number">{formatCurrency(haul.driverPay)}</td>
+                    <td class="number">{isOffDuty ? '—' : formatCurrency(haul.freightPay)}</td>
+                    <td class="number">{isOffDuty ? '—' : formatCurrency(haul.driverPay)}</td>
                     <td class="no-print text-center">
-                      <a
-                        href={`/hauls/edit/${haul.id}?returnTo=${encodeURIComponent(`/reports/hauls?driverId=${data.value.driver?.id}&startDate=${data.value.startDate}&endDate=${data.value.endDate}`)}`}
-                        title="Edit Haul"
-                        class="btn-icon btn-icon-primary"
-                      >
-                        <EditIcon size={14} />
-                      </a>
+                      {!isPlaceholder ? (
+                        <a
+                          href={`/hauls/edit/${haul.id}?returnTo=${encodeURIComponent(`/reports/hauls?driverId=${data.value.driver?.id}&startDate=${data.value.startDate}&endDate=${data.value.endDate}`)}`}
+                          title="Edit Haul"
+                          class="btn-icon btn-icon-primary"
+                        >
+                          <EditIcon size={14} />
+                        </a>
+                      ) : (
+                        <a
+                          href={`/workdays/edit/${haul.workday.id}?returnTo=${encodeURIComponent(`/reports/hauls?driverId=${data.value.driver?.id}&startDate=${data.value.startDate}&endDate=${data.value.endDate}`)}`}
+                          title="Edit Workday"
+                          class="btn-icon btn-icon-secondary"
+                        >
+                          <EditIcon size={14} />
+                        </a>
+                      )}
                     </td>
                   </tr>
                 );

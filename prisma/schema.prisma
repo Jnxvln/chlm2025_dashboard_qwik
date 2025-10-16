@@ -235,7 +235,16 @@ model Settings {
   // DRIVER SETTINGS
   driverDefaultNCPayRate              Decimal   @default(0.00) @db.Decimal(10, 2)
   driverDefaultHolidayPayRate         Decimal   @default(0.00) @db.Decimal(10, 2)
-  
+
+  // OFF-DUTY REASON SETTINGS (for workday off-duty reasons - displayed in reports)
+  offDutyReasonNoWork                 String    @default("No Work")
+  offDutyReasonMaintenance            String    @default("Maintenance")
+  offDutyReasonSick                   String    @default("Sick")
+  offDutyReasonVacation               String    @default("Vacation")
+  offDutyReasonWeather                String    @default("Weather")
+  offDutyReasonPersonal               String    @default("Personal")
+  offDutyReasonBereavement            String    @default("Bereavement")
+
   // USER SETTINGS
   userPrefersCaps                     Boolean   @default(false)       // Whether the user prefers to see all-caps text in the UI
   userDefaultColorTheme               String    @default("default")   // User's preferred Tailwind color theme

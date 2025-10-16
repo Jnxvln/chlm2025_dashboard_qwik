@@ -23,7 +23,8 @@ export default component$(() => {
   const selectedVendorId = useSignal<string | null>(null);
   const selectedLocationId = useSignal<string | null>(null);
   const selectedLoadType = useSignal<'enddump' | 'flatbed'>('enddump');
-  const selectedRate = useSignal<number | null>(null);
+  const selectedRate = useSignal<string>('');
+  const selectedQuantity = useSignal<string>('');
   const selectedDriverId = useSignal<string>(data.value.driverId?.toString() || '');
   const selectedDate = useSignal<string>('');
   const truckNumber = useSignal<string>('');
@@ -187,32 +188,11 @@ export default component$(() => {
     }
 
     if (workdayDialogType.value === 'create') {
-      // Create new workday
-      try {
-        const response = await fetch('/api/create-workday', {
-          method: 'POST',
-          headers: { 'Content-Type': 'application/json' },
-          body: JSON.stringify({
-            driverId: selectedDriverId.value,
-            date: selectedDate.value
-          })
-        });
-
-        const result = await response.json();
-
-        if (result.success) {
-          console.log('NEW HAUL - Workday created:', result.workday);
-          workdayId.value = result.workday.id;
-          workdayExists.value = true;
-          showWorkdayDialog.value = false;
-        } else {
-          console.error('NEW HAUL - Workday creation failed:', result);
-          alert('Failed to create workday');
-        }
-      } catch (error) {
-        console.error('NEW HAUL - Workday creation error:', error);
-        alert('Failed to create workday');
-      }
+      // Set workdayId to 0 to signal action to create workday on save
+      console.log('NEW HAUL - Workday will be created when haul is saved');
+      workdayId.value = 0;
+      workdayExists.value = false;
+      showWorkdayDialog.value = false;
     } else {
       // Use existing workday
       console.log('NEW HAUL - Using existing workday:', workdayDialogData.value.workday);
@@ -224,9 +204,13 @@ export default component$(() => {
   // Handle form submission success
   useVisibleTask$(({ track }) => {
     const result = track(() => action.value);
-    if (result?.success && result?.haulId) {
+    if (result?.success && result?.haulId && result?.workdayId) {
       setTimeout(() => {
-        nav(result.returnTo || returnTo);
+        const redirectUrl = result.returnTo || returnTo;
+        const urlObj = new URL(redirectUrl, window.location.origin);
+        urlObj.searchParams.set('workdayId', result.workdayId.toString());
+        urlObj.searchParams.set('haulId', result.haulId.toString());
+        nav(urlObj.pathname + urlObj.search);
       }, 1000);
     }
   });
@@ -260,7 +244,7 @@ export default component$(() => {
                   No workday exists for <strong>{driver?.firstName} {driver?.lastName}</strong> on <strong>{dateStr}</strong>.
                 </p>
                 <p style="color: rgb(var(--color-text-secondary))">
-                  Would you like to create a workday for this date? This will create a workday with 0 hours that you can edit later.
+                  A new workday will be created when you save this haul. The workday will have 0 hours that you can edit later.
                 </p>
               </div>
             ) : (
@@ -289,7 +273,7 @@ export default component$(() => {
               class="btn btn-primary"
               onClick$={() => handleWorkdayConfirm(true)}
             >
-              {isCreate ? 'Create Workday & Continue' : 'Add to Existing Workday'}
+              {isCreate ? 'Continue' : 'Add to Existing Workday'}
             </button>
           </div>
         </div>
@@ -297,11 +281,30 @@ export default component$(() => {
     );
   }
 
+  // Format date as MM/DD/YY
+  const formatDateMMDDYY = (dateStr: string) => {
+    const [year, month, day] = dateStr.split('-');
+    return `${month}/${day}/${year.substring(2)}`;
+  };
+
   return (
     <div class="p-6 max-w-3xl mx-auto">
+      {/* Show title with date if workday confirmed */}
+      {workdayId.value && selectedDate.value && (
+        <div class="mb-6">
+          <h1 class="text-2xl font-bold" style="color: rgb(var(--color-text-primary))">
+            New Haul
+          </h1>
+          <p class="text-sm mt-1" style="color: rgb(var(--color-text-secondary))">
+            Haul Date: {formatDateMMDDYY(selectedDate.value)}
+          </p>
+        </div>
+      )}
+
       <div class="card">
         <Form action={action} class="space-y-4">
-          <input type="hidden" name="workdayId" value={workdayId.value || ''} />
+          <input type="hidden" name="workdayId" value={workdayId.value || 0} />
+          <input type="hidden" name="driverId" value={selectedDriverId.value} />
           <input type="hidden" name="createdById" value={data.value.createdById} />
           <input type="hidden" name="returnTo" value={returnTo} />
 
@@ -519,7 +522,7 @@ export default component$(() => {
                       const fr = data.value.freightRoutes.find(
                         (r) => r.id.toString() === el.value,
                       );
-                      if (fr) selectedRate.value = fr.freightCost;
+                      if (fr) selectedRate.value = fr.freightCost.toFixed(2);
                     }}
                   >
                     <option value="">Select Route</option>
@@ -568,6 +571,16 @@ export default component$(() => {
                     step="0.01"
                     class="w-full"
                     required
+                    value={selectedQuantity.value}
+                    onInput$={(_, el) => {
+                      selectedQuantity.value = el.value;
+                    }}
+                    onBlur$={(_, el) => {
+                      const num = parseFloat(el.value);
+                      if (!isNaN(num)) {
+                        selectedQuantity.value = num.toFixed(2);
+                      }
+                    }}
                   />
                 </div>
                 <div>
@@ -578,7 +591,16 @@ export default component$(() => {
                     step="0.01"
                     class="w-full"
                     required
-                    value={selectedRate.value ?? ''}
+                    value={selectedRate.value}
+                    onInput$={(_, el) => {
+                      selectedRate.value = el.value;
+                    }}
+                    onBlur$={(_, el) => {
+                      const num = parseFloat(el.value);
+                      if (!isNaN(num)) {
+                        selectedRate.value = num.toFixed(2);
+                      }
+                    }}
                   />
                 </div>
               </div>
