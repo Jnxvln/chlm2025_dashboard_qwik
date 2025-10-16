@@ -12,6 +12,7 @@ export const useNewHaulAction = routeAction$(
       const haul = await db.haul.create({
         data: {
           dateHaul: new Date(data.dateHaul),
+          loadTime: data.loadTime,
           truck: data.truck,
           customer: data.customer,
           chInvoice: data.chInvoice || null,
@@ -39,6 +40,7 @@ export const useNewHaulAction = routeAction$(
   },
   zod$({
     dateHaul: z.string().transform((s) => new Date(s + 'T12:00:00Z')),
+    loadTime: z.string(),
     truck: z.string(),
     customer: z.string(),
     chInvoice: z.string().optional(),

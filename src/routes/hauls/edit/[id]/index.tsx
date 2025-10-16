@@ -119,6 +119,23 @@ export default component$(() => {
         <input type="hidden" name="haulId" value={haul.id} />
         <input type="hidden" name="returnTo" value={returnTo} />
 
+        {/* Load Time - First field */}
+        <div>
+          <label class="block text-sm font-medium mb-1" style="color: rgb(var(--color-text-secondary))">
+            Load Time *
+          </label>
+          <input
+            name="loadTime"
+            type="time"
+            class="w-full"
+            required
+            value={haul.loadTime}
+          />
+          <p class="text-xs mt-1" style="color: rgb(var(--color-text-tertiary))">
+            Time when driver loaded at the quarry
+          </p>
+        </div>
+
         {/* Row 1 */}
         <div class="grid grid-cols-3 gap-4">
           <div>

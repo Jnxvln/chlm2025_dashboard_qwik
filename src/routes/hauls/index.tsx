@@ -28,6 +28,13 @@ function formatDate(date: string | Date) {
   return new Date(date).toISOString().split('T')[0];
 }
 
+function formatTime12hr(time24: string): string {
+  const [hours, minutes] = time24.split(':').map(Number);
+  const period = hours >= 12 ? 'PM' : 'AM';
+  const hours12 = hours % 12 || 12;
+  return `${hours12}:${minutes.toString().padStart(2, '0')} ${period}`;
+}
+
 const STORAGE_KEYS = {
   driver: 'hauls-filter-driver',
   startDate: 'hauls-filter-startDate',
@@ -725,6 +732,7 @@ export default component$(() => {
                               <table class="table-modern text-xs">
                                 <thead>
                                   <tr>
+                                    <th class="text-left">Time</th>
                                     <th class="text-left">Customer / Invoices</th>
                                     <th class="text-left">From → To</th>
                                     <th class="text-left">Material / Tons / Rate</th>
@@ -733,9 +741,12 @@ export default component$(() => {
                                   </tr>
                                 </thead>
                                 <tbody>
-                                  {workday.hauls.map((haul: any) => {
+                                  {[...workday.hauls].sort((a: any, b: any) => a.loadTime.localeCompare(b.loadTime)).map((haul: any) => {
                                     return (
                                       <tr key={haul.id}>
+                                        <td class="whitespace-nowrap">
+                                          <div class="font-medium">{formatTime12hr(haul.loadTime)}</div>
+                                        </td>
                                         <td>
                                           <div class="font-medium">{haul.customer}</div>
                                           <div class="text-xs mt-1" style="color: rgb(var(--color-text-tertiary))">

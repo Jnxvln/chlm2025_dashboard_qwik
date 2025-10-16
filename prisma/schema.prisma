@@ -147,6 +147,7 @@ model Workday {
 model Haul {
   id              Int            @id @default(autoincrement())
   dateHaul        DateTime
+  loadTime        String         @default("08:00")
   truck           String
   customer        String
   chInvoice       String?

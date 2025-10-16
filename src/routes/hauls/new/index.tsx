@@ -361,6 +361,23 @@ export default component$(() => {
           {/* Show form only after workday is confirmed */}
           {workdayId.value && (
             <>
+              {/* Load Time - First field */}
+              <div>
+                <label class="block text-sm font-medium mb-2" style="color: rgb(var(--color-text-secondary))">
+                  Load Time *
+                </label>
+                <input
+                  name="loadTime"
+                  type="time"
+                  class="w-full"
+                  required
+                  value="08:00"
+                />
+                <p class="text-xs mt-1" style="color: rgb(var(--color-text-tertiary))">
+                  Time when driver loaded at the quarry
+                </p>
+              </div>
+
               {/* Row 2: Driver, Load Type, Truck # */}
               <div class="grid grid-cols-3 gap-4">
                 <div>

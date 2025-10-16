@@ -8,6 +8,7 @@ export const useEditHaulAction = routeAction$(
         where: { id: data.haulId },
         data: {
           dateHaul: new Date(data.dateHaul),
+          loadTime: data.loadTime,
           truck: data.truck,
           customer: data.customer,
           chInvoice: data.chInvoice || null,
@@ -35,6 +36,7 @@ export const useEditHaulAction = routeAction$(
   zod$({
     haulId: z.coerce.number(),
     dateHaul: z.string().transform((s) => new Date(s + 'T12:00:00Z')),
+    loadTime: z.string(),
     truck: z.string(),
     customer: z.string(),
     chInvoice: z.string().optional(),

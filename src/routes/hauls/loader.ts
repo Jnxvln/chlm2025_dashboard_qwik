@@ -43,7 +43,7 @@ export const useHaulsLoader = routeLoader$(async (event) => {
         hauls: {
           include: {
             vendorProduct: {
-              include: { 
+              include: {
                 vendor: true,
                 vendorLocation: true,
               },
@@ -52,7 +52,6 @@ export const useHaulsLoader = routeLoader$(async (event) => {
               include: { vendorLocation: true },
             },
           },
-          orderBy: [{ dateHaul: 'asc' }],
         },
         _count: {
           select: { hauls: true },
