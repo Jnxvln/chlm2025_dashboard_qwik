@@ -1,7 +1,18 @@
 import { component$, Slot } from '@builder.io/qwik';
-import { type DocumentHead, type RequestHandler, useLocation } from '@builder.io/qwik-city';
+import { type DocumentHead, type RequestHandler, routeAction$, useLocation } from '@builder.io/qwik-city';
 import { Nav } from '~/components/Nav';
 import { verifyAuthToken } from '~/utils/auth';
+
+export const useLogoutAction = routeAction$(async (data, { cookie, redirect }) => {
+  // Clear the auth cookie by setting it to expire immediately
+  cookie.set('chlm_auth', '', {
+    path: '/',
+    maxAge: 0,
+  });
+
+  // Redirect to password page
+  throw redirect(302, '/password');
+});
 
 export const onRequest: RequestHandler = async ({ cookie, url, redirect }) => {
   // Allow access to password page without authentication

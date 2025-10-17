@@ -1,9 +1,12 @@
 import { $, component$, useSignal } from '@builder.io/qwik';
+import { Form } from '@builder.io/qwik-city';
 import { NavLink } from './NavLink';
 import { ThemeToggle } from './ThemeToggle';
+import { useLogoutAction } from '~/routes/layout';
 
 export const Nav = component$(() => {
   const isOpen = useSignal(false);
+  const logoutAction = useLogoutAction();
 
   const closeMenu = $(() => {
     isOpen.value = false;
@@ -55,6 +58,18 @@ export const Nav = component$(() => {
           </div>
           <div class="pl-6 border-l" style="border-color: rgb(var(--color-border))">
             <ThemeToggle />
+          </div>
+          <div class="pl-6 border-l" style="border-color: rgb(var(--color-border))">
+            <Form action={logoutAction}>
+              <button
+                type="submit"
+                class="transition-colors duration-200 px-3 py-1 rounded"
+                style="color: rgb(var(--color-text-secondary)); border: 1px solid rgb(var(--color-border))"
+                disabled={logoutAction.isRunning}
+              >
+                {logoutAction.isRunning ? 'Logging out...' : 'Logout'}
+              </button>
+            </Form>
           </div>
         </div>
 
@@ -114,6 +129,18 @@ export const Nav = component$(() => {
         >
           Fleet Track
         </a>
+        <div class="pt-2 border-t" style="border-color: rgb(var(--color-border))">
+          <Form action={logoutAction}>
+            <button
+              type="submit"
+              class="w-full transition-colors duration-200 px-3 py-2 rounded"
+              style="color: rgb(var(--color-text-secondary)); border: 1px solid rgb(var(--color-border))"
+              disabled={logoutAction.isRunning}
+            >
+              {logoutAction.isRunning ? 'Logging out...' : 'Logout'}
+            </button>
+          </Form>
+        </div>
       </div>
     </nav>
   );
