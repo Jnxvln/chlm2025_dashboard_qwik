@@ -38,7 +38,7 @@ export function verifyAuthToken(token: string): boolean {
     const maxAge = 24 * 60 * 60 * 1000; // 24 hours in milliseconds
 
     return tokenAge < maxAge;
-  } catch (error) {
+  } catch {
     return false;
   }
 }

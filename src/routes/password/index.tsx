@@ -1,4 +1,4 @@
-import { component$, useSignal } from '@builder.io/qwik';
+import { component$ } from '@builder.io/qwik';
 import { type DocumentHead, routeAction$, Form, z, zod$ } from '@builder.io/qwik-city';
 import { createAuthToken } from '~/utils/auth';
 
@@ -39,7 +39,6 @@ export const usePasswordAction = routeAction$(
 
 export default component$(() => {
   const passwordAction = usePasswordAction();
-  const showError = useSignal(false);
 
   return (
     <div class="fixed inset-0 flex items-center justify-center bg-gradient-to-br from-teal-50 via-cyan-50 to-purple-50 dark:from-gray-900 dark:via-slate-900 dark:to-purple-950">
