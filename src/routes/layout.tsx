@@ -1,8 +1,33 @@
 import { component$, Slot } from '@builder.io/qwik';
-import { DocumentHead } from '@builder.io/qwik-city';
+import { type DocumentHead, type RequestHandler, useLocation } from '@builder.io/qwik-city';
 import { Nav } from '~/components/Nav';
+import { verifyAuthToken } from '~/utils/auth';
+
+export const onRequest: RequestHandler = async ({ cookie, url, redirect }) => {
+  // Allow access to password page without authentication
+  if (url.pathname.startsWith('/password')) {
+    return;
+  }
+
+  // Check for auth cookie
+  const authToken = cookie.get('chlm_auth')?.value;
+
+  // If no auth token or invalid token, redirect to password page
+  if (!authToken || !verifyAuthToken(authToken)) {
+    throw redirect(302, `/password?redirect=${encodeURIComponent(url.pathname + url.search)}`);
+  }
+};
 
 export default component$(() => {
+  const location = useLocation();
+  const isPasswordPage = location.url.pathname.startsWith('/password');
+
+  // For password page, render only the slot without nav or container
+  if (isPasswordPage) {
+    return <Slot />;
+  }
+
+  // For all other pages, render with nav and container
   return (
     <>
       <style>

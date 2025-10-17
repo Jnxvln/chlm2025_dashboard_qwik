@@ -4,9 +4,6 @@
 DEV_NOTES.txt
 chlm2023*.json
 _ISSUES.txt
-COST_CALCULATOR_DESIGN.txt
-_COST_CALCULATOR.txt
-project_calculator_notes.txt
 /.claude*
 
 # Build
