@@ -1,13 +1,20 @@
-import { component$, useSignal } from '@builder.io/qwik';
+import { component$, useSignal, useVisibleTask$ } from '@builder.io/qwik';
 import { routeLoader$, type DocumentHead } from '@builder.io/qwik-city';
 import { db } from '~/lib/db';
 import PageSubtitle from '~/components/PageSubtitle';
 import PageTitle from '~/components/PageTitle';
+import { NoticeBoard } from '~/components/notices/NoticeBoard';
 
 export const useDashboardLoader = routeLoader$(async ({ query }) => {
-  const sortOrder = query.get('waitlistSort') || 'oldest';
-  const order = sortOrder === 'newest' ? 'desc' : 'asc';
+  const waitlistSortOrder = query.get('waitlistSort') || 'oldest';
+  const waitlistOrder = waitlistSortOrder === 'newest' ? 'desc' : 'asc';
 
+  const noticeSortOrder = query.get('noticeSort') || 'newest';
+  const noticeOrder = noticeSortOrder === 'newest' ? 'desc' : 'asc';
+
+  const noticeTypeFilter = query.get('noticeType') || 'all';
+
+  // Fetch waitlist entries
   const waitlistEntries = await db.waitlistEntry.findMany({
     where: {
       status: 'waiting',
@@ -21,14 +28,42 @@ export const useDashboardLoader = routeLoader$(async ({ query }) => {
       },
     },
     orderBy: {
-      createdAt: order,
+      createdAt: waitlistOrder,
+    },
+    take: 10,
+  });
+
+  // Fetch notices (only show notices where displayDate <= today)
+  const today = new Date();
+  today.setHours(23, 59, 59, 999); // End of today
+
+  const noticeWhere: any = {
+    displayDate: {
+      lte: today,
+    },
+  };
+
+  if (noticeTypeFilter !== 'all') {
+    noticeWhere.type = noticeTypeFilter;
+  }
+
+  const notices = await db.notice.findMany({
+    where: noticeWhere,
+    include: {
+      urls: true,
+    },
+    orderBy: {
+      displayDate: noticeOrder,
     },
     take: 10,
   });
 
   return {
     waitlistEntries,
-    sortOrder,
+    sortOrder: waitlistSortOrder,
+    notices,
+    noticeSortOrder,
+    noticeTypeFilter,
   };
 });
 
@@ -39,6 +74,30 @@ export default component$(() => {
   const hoveredNote = useSignal<number | null>(null);
   const tooltipPosition = useSignal<{ x: number; y: number }>({ x: 0, y: 0 });
   const hideTooltipTimeout = useSignal<number | null>(null);
+
+  // Load saved notice preferences from localStorage on mount
+  useVisibleTask$(() => {
+    const url = new URL(window.location.href);
+    const hasNoticeParams = url.searchParams.has('noticeSort') || url.searchParams.has('noticeType');
+
+    // If URL has params, save them to localStorage
+    if (hasNoticeParams) {
+      const noticeSort = url.searchParams.get('noticeSort') || 'newest';
+      const noticeType = url.searchParams.get('noticeType') || 'all';
+      localStorage.setItem('noticeSort', noticeSort);
+      localStorage.setItem('noticeType', noticeType);
+    } else {
+      // If no URL params, check localStorage and redirect if preferences exist
+      const savedSort = localStorage.getItem('noticeSort');
+      const savedType = localStorage.getItem('noticeType');
+
+      if (savedSort || savedType) {
+        if (savedSort) url.searchParams.set('noticeSort', savedSort);
+        if (savedType) url.searchParams.set('noticeType', savedType);
+        window.location.href = url.toString();
+      }
+    }
+  });
 
   // Format date as MM/DD/YY HH:MM AM/PM
   const formatDate = (date: Date | string) => {
@@ -97,88 +156,22 @@ export default component$(() => {
 
       {/* Notices Section */}
       <section class="mb-8">
-        <div class="card">
-          <div
-            class="card-header"
-            style="background: linear-gradient(135deg, rgb(var(--color-primary) / 0.1), rgb(var(--color-secondary) / 0.1))"
-          >
-            <PageSubtitle text="Notices" />
+        <NoticeBoard
+          notices={data.value.notices}
+          sortOrder={data.value.noticeSortOrder}
+          typeFilter={data.value.noticeTypeFilter}
+        />
+        {data.value.notices.length > 0 && (
+          <div class="mt-4 text-center">
+            <a
+              href="/notices"
+              class="text-sm"
+              style="color: rgb(var(--color-accent))"
+            >
+              View all notices →
+            </a>
           </div>
-
-          {/* Notices placeholder listing */}
-          <div class="space-y-4">
-            <div
-              class="flex items-start space-x-3 p-4 rounded-lg border-l-4"
-              style="background-color: rgb(var(--color-warning) / 0.1); border-color: rgb(var(--color-warning))"
-            >
-              <div
-                class="flex-shrink-0 w-2 h-2 rounded-full mt-2"
-                style="background-color: rgb(var(--color-warning))"
-              ></div>
-              <div>
-                <p
-                  class="text-sm"
-                  style="color: rgb(var(--color-text-primary))"
-                >
-                  <span
-                    class="font-medium"
-                    style="color: rgb(var(--color-warning))"
-                  >
-                    6/23/2025:
-                  </span>{' '}
-                  Waiting on Cherry Blend to come in for Larry Williams (see
-                  waitlist)
-                </p>
-              </div>
-            </div>
-            <div
-              class="flex items-start space-x-3 p-4 rounded-lg border-l-4"
-              style="background-color: rgb(var(--color-success) / 0.1); border-color: rgb(var(--color-success))"
-            >
-              <div
-                class="flex-shrink-0 w-2 h-2 rounded-full mt-2"
-                style="background-color: rgb(var(--color-success))"
-              ></div>
-              <div>
-                <p
-                  class="text-sm"
-                  style="color: rgb(var(--color-text-primary))"
-                >
-                  <span
-                    class="font-medium"
-                    style="color: rgb(var(--color-success))"
-                  >
-                    6/21/2025:
-                  </span>{' '}
-                  John Doe did pay his outstanding balance (okay to sign again.)
-                </p>
-              </div>
-            </div>
-            <div
-              class="flex items-start space-x-3 p-4 rounded-lg border-l-4"
-              style="background-color: rgb(var(--color-danger) / 0.1); border-color: rgb(var(--color-danger))"
-            >
-              <div
-                class="flex-shrink-0 w-2 h-2 rounded-full mt-2"
-                style="background-color: rgb(var(--color-danger))"
-              ></div>
-              <div>
-                <p
-                  class="text-sm"
-                  style="color: rgb(var(--color-text-primary))"
-                >
-                  <span
-                    class="font-medium"
-                    style="color: rgb(var(--color-danger))"
-                  >
-                    6/20/2025:
-                  </span>{' '}
-                  NO deliveries for Kelly this Friday the 25th.
-                </p>
-              </div>
-            </div>
-          </div>
-        </div>
+        )}
       </section>
 
       {/* Waitlist Section */}

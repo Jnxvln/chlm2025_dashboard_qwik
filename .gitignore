@@ -4,6 +4,7 @@
 DEV_NOTES.txt
 chlm2023*.json
 _ISSUES.txt
+_FEATURE.txt
 /.claude*
 
 # Build

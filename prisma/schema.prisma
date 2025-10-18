@@ -14,6 +14,13 @@ enum WaitlistStatus {
   cancelled
 }
 
+enum NoticeType {
+  info
+  warning
+  danger
+  success
+}
+
 model Contact {
   id                  Int               @id @default(autoincrement())
   firstName           String
@@ -213,6 +220,27 @@ model WaitlistEntry {
   @@index([contactId])
   @@index([vendorProductId])
   @@index([status])
+}
+
+model URL {
+  id          Int         @id @default(autoincrement())
+  displayText String
+  url         String
+  isExternal  Boolean     @default(true)
+  noticeId    Int?
+  notice      Notice?     @relation(fields: [noticeId], references: [id], onDelete: Cascade)
+  createdAt   DateTime    @default(now())
+  updatedAt   DateTime    @default(now())
+}
+
+model Notice {
+  id              Int           @id @default(autoincrement())
+  content         String
+  displayDate     DateTime
+  urls            URL[]
+  type            NoticeType    @default(info)
+  createdAt       DateTime      @default(now())
+  updatedAt       DateTime      @default(now())
 }
 
 model Settings {
