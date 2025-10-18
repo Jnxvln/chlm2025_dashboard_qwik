@@ -7,7 +7,6 @@ import {
 import { db } from '~/lib/db';
 import { NoticeTable } from '~/components/notices/NoticeTable';
 import PageTitle from '~/components/PageTitle';
-import PageSubtitle from '~/components/PageSubtitle';
 import { AddIcon } from '~/components/icons';
 
 export const useNoticesLoader = routeLoader$(async ({ query }) => {
@@ -62,6 +61,7 @@ export default component$(() => {
   const data = useNoticesLoader();
 
   // Load saved notice preferences from localStorage on mount
+  // eslint-disable-next-line qwik/no-use-visible-task
   useVisibleTask$(() => {
     const url = new URL(window.location.href);
     const hasNoticeParams = url.searchParams.has('noticeSort') || url.searchParams.has('noticeType');

@@ -116,6 +116,7 @@ export default component$(() => {
   }));
 
   // Track action result and navigate on success
+  // eslint-disable-next-line qwik/no-use-visible-task
   useVisibleTask$(({ track }) => {
     track(() => updateNoticeAction.value);
 

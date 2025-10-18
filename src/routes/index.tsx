@@ -76,6 +76,7 @@ export default component$(() => {
   const hideTooltipTimeout = useSignal<number | null>(null);
 
   // Load saved notice preferences from localStorage on mount
+  // eslint-disable-next-line qwik/no-use-visible-task
   useVisibleTask$(() => {
     const url = new URL(window.location.href);
     const hasNoticeParams = url.searchParams.has('noticeSort') || url.searchParams.has('noticeType');

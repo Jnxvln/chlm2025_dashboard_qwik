@@ -80,6 +80,7 @@ export default component$(() => {
   const today = new Date().toISOString().split('T')[0];
 
   // Track action result and navigate on success
+  // eslint-disable-next-line qwik/no-use-visible-task
   useVisibleTask$(({ track }) => {
     track(() => createNoticeAction.value);
 
