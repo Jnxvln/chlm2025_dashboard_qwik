@@ -1,20 +1,26 @@
 import { component$, useSignal, useVisibleTask$ } from '@builder.io/qwik';
 import { routeAction$, Form, z, zod$, useNavigate, type DocumentHead } from '@builder.io/qwik-city';
 import { db } from '~/lib/db';
+import { normalizeFormData } from '~/lib/text-utils';
 import PageTitle from '~/components/PageTitle';
 import BackButton from '~/components/BackButton';
 import { StatusMessage } from '~/components/notifications/StatusMessage';
 import { URLInputList } from '~/components/notices/URLInputList';
 
 export const useCreateNoticeAction = routeAction$(
-  async (data, { fail }) => {
+  async (values, { fail }) => {
     try {
-      console.log('Form data received:', data);
+      // Normalize capitalization before saving (content is preserved like notes, type is enum, url fields preserved)
+      const normalized = normalizeFormData(values, {
+        skipFields: ['content', 'type', 'urlDisplayText', 'urlAddress', 'urlIsExternal'],
+      });
+
+      console.log('Form data received:', normalized);
 
       // Parse URL data from form arrays
-      const urlDisplayTexts = data.urlDisplayText || [];
-      const urlAddresses = data.urlAddress || [];
-      const urlIsExternals = data.urlIsExternal || [];
+      const urlDisplayTexts = normalized.urlDisplayText || [];
+      const urlAddresses = normalized.urlAddress || [];
+      const urlIsExternals = normalized.urlIsExternal || [];
 
       console.log('Raw URL data:', { urlDisplayTexts, urlAddresses, urlIsExternals });
 
@@ -40,14 +46,14 @@ export const useCreateNoticeAction = routeAction$(
       console.log('Built URLs array:', urls);
 
       // Combine date and time into a single DateTime
-      const displayDateTime = new Date(`${data.displayDate}T${data.displayTime}`);
+      const displayDateTime = new Date(`${normalized.displayDate}T${normalized.displayTime}`);
 
       // Create the notice with associated URLs
       const notice = await db.notice.create({
         data: {
-          content: data.content,
+          content: normalized.content,
           displayDate: displayDateTime,
-          type: data.type as any,
+          type: normalized.type as any,
           urls: urls.length > 0 ? {
             create: urls,
           } : undefined,

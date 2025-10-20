@@ -7,6 +7,7 @@ import {
   Form,
 } from '@builder.io/qwik-city';
 import { db } from '~/lib/db';
+import { normalizeFormData } from '~/lib/text-utils';
 import { useNavigate, useLocation } from '@builder.io/qwik-city';
 import BackButton from '~/components/BackButton';
 import PageSubtitle from '~/components/PageSubtitle';
@@ -22,14 +23,17 @@ export const useVendor = routeLoader$(async ({ params }) => {
 });
 
 export const useUpdateVendor = routeAction$(
-  async (data, { params }) => {
+  async (values, { params }) => {
     const id = Number(params.id);
 
     try {
+      // Normalize capitalization before saving
+      const normalized = normalizeFormData(values);
+
       await db.vendor.update({
         where: { id },
         data: {
-          ...data,
+          ...normalized,
         },
       });
 

@@ -8,6 +8,7 @@ import {
   useNavigate,
 } from '@builder.io/qwik-city';
 import { db } from '~/lib/db';
+import { normalizeFormData } from '~/lib/text-utils';
 import BackButton from '~/components/BackButton';
 import PageSubtitle from '~/components/PageSubtitle';
 
@@ -25,11 +26,14 @@ export const useGetVendorsAndLocations = routeLoader$(async () => {
 });
 
 export const useCreateVendorProductAction = routeAction$(
-  async (data) => {
+  async (values) => {
     try {
+      // Normalize capitalization before saving (notes field is preserved)
+      const normalized = normalizeFormData(values);
+
       const vendorProduct = await db.vendorProduct.create({
         data: {
-          ...data,
+          ...normalized,
         },
       });
 

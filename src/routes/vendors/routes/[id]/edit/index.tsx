@@ -15,6 +15,7 @@ import {
   z,
 } from '@builder.io/qwik-city';
 import { db } from '~/lib/db';
+import { normalizeFormData } from '~/lib/text-utils';
 import { validateDestinationNotYard } from '~/lib/validation';
 import PageSubtitle from '~/components/PageSubtitle';
 import BackButton from '~/components/BackButton';
@@ -73,10 +74,16 @@ export const useEditFreightRouteLoader = routeLoader$(async (event) => {
 export const useUpdateFreightRoute = routeAction$(
   async (values, event) => {
     const id = parseInt(event.params.id);
-    const toYard = values.toYard === 'on';
+
+    // Normalize capitalization before saving (notes, destination, and checkbox fields are preserved)
+    const normalized = normalizeFormData(values, {
+      skipFields: ['notes', 'destination', 'toYard', 'isActive'], // Preserve destination and checkbox values
+    });
+
+    const toYard = normalized.toYard === 'on';
 
     // Server-side validation: prevent manual "C&H Yard" entries
-    const validation = validateDestinationNotYard(values.destination, toYard);
+    const validation = validateDestinationNotYard(normalized.destination, toYard);
     if (!validation.isValid) {
       return {
         success: false,
@@ -87,12 +94,12 @@ export const useUpdateFreightRoute = routeAction$(
     await db.freightRoute.update({
       where: { id },
       data: {
-        destination: toYard ? 'C&H Yard' : values.destination,
-        freightCost: parseFloat(values.freightCost),
+        destination: toYard ? 'C&H Yard' : normalized.destination,
+        freightCost: parseFloat(normalized.freightCost),
         toYard,
-        isActive: values.isActive === 'on',
-        notes: values.notes || null,
-        vendorLocationId: parseInt(values.vendorLocationId),
+        isActive: normalized.isActive === 'on',
+        notes: normalized.notes || null,
+        vendorLocationId: parseInt(normalized.vendorLocationId),
       },
     });
 

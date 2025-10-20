@@ -1,6 +1,7 @@
 import { component$ } from '@builder.io/qwik';
 import { routeLoader$, routeAction$, Form, Link } from '@builder.io/qwik-city';
 import { db } from '~/lib/db';
+import { normalizeFormData } from '~/lib/text-utils';
 import BackButton from '~/components/BackButton';
 
 export const useCategoryLoader = routeLoader$(async ({ params }) => {
@@ -17,9 +18,12 @@ export const useCategoryLoader = routeLoader$(async ({ params }) => {
 });
 
 export const useUpdateCategoryAction = routeAction$(
-  async (data, { params, redirect }) => {
+  async (values, { params, redirect }) => {
     const id = parseInt(params.id);
-    const { name } = data as { name: string };
+
+    // Normalize capitalization before saving
+    const normalized = normalizeFormData(values);
+    const { name } = normalized as { name: string };
 
     if (!name.trim()) {
       return {

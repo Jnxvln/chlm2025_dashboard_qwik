@@ -7,6 +7,7 @@ import {
   Form,
 } from '@builder.io/qwik-city';
 import { db } from '~/lib/db';
+import { normalizeFormData } from '~/lib/text-utils';
 import PageTitle from '~/components/PageTitle';
 import { useNavigate } from '@builder.io/qwik-city';
 import BackButton from '~/components/BackButton';
@@ -22,11 +23,14 @@ export const useDriver = routeLoader$(async ({ params }) => {
 });
 
 export const useUpdateDriver = routeAction$(
-  async (data, { params }) => {
+  async (values, { params }) => {
     const id = Number(params.id);
-    const { dateHired, dateReleased, ...rest } = data;
 
     try {
+      // Normalize capitalization before saving
+      const normalized = normalizeFormData(values);
+      const { dateHired, dateReleased, ...rest } = normalized;
+
       // Convert date strings to Date objects (use UTC to avoid timezone shifts)
       const processedDateHired = dateHired ? new Date(dateHired + 'T12:00:00Z') : null;
       const processedDateReleased = dateReleased ? new Date(dateReleased + 'T12:00:00Z') : null;
@@ -43,9 +47,9 @@ export const useUpdateDriver = routeAction$(
       return { success: true, driverId: id };
     } catch (err) {
       console.error('Update failed', err);
-      return { 
-        success: false, 
-        error: `Driver update failed: ${err instanceof Error ? err.message : 'Unknown error'}` 
+      return {
+        success: false,
+        error: `Driver update failed: ${err instanceof Error ? err.message : 'Unknown error'}`
       };
     }
   },

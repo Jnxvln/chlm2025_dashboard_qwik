@@ -277,7 +277,6 @@ model Settings {
   offDutyReasonBereavement            String    @default("Bereavement")
 
   // USER SETTINGS
-  userPrefersCaps                     Boolean   @default(false)       // Whether the user prefers to see all-caps text in the UI
   userDefaultColorTheme               String    @default("default")   // User's preferred Tailwind color theme
 
   createdAt                           DateTime  @default(now())

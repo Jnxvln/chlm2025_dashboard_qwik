@@ -7,18 +7,20 @@ import {
   useNavigate,
 } from '@builder.io/qwik-city';
 import { db } from '~/lib/db';
+import { normalizeFormData } from '~/lib/text-utils';
 import PageTitle from '~/components/PageTitle';
 import BackButton from '~/components/BackButton';
 
 // Create Vendor action
 export const useCreateVendorAction = routeAction$(
-  async (data) => {
-    console.log('\nIncoming form data:', data);
-
+  async (values) => {
     try {
+      // Normalize capitalization before saving
+      const normalized = normalizeFormData(values);
+
       const vendor = await db.vendor.create({
         data: {
-          ...data,
+          ...normalized,
         },
       });
 

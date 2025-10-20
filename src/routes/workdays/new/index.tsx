@@ -11,6 +11,7 @@ import {
   useLocation,
 } from '@builder.io/qwik-city';
 import { db } from '~/lib/db';
+import { normalizeFormData } from '~/lib/text-utils';
 import PageTitle from '~/components/PageTitle';
 import {
   useDriversLoader,
@@ -19,26 +20,31 @@ import {
 } from '../layout';
 
 export const useCreateWorkdayAction = routeAction$(
-  async (data, event) => {
+  async (values, event) => {
     try {
+      // Normalize capitalization before saving (notes, ncReasons, offDutyReason, and checkbox fields are preserved)
+      const normalized = normalizeFormData(values, {
+        skipFields: ['notes', 'ncReasons', 'offDutyReason', 'offDuty'],
+      });
+
       const workday = await db.workday.create({
         data: {
-          date: data.date,
-          chHours: data.chHours,
-          ncHours: data.ncHours,
-          ncReasons: data.ncReasons || null,
-          notes: data.notes || null,
-          offDuty: data.offDuty,
-          offDutyReason: data.offDutyReason || null,
-          driverId: data.driverId,
-          createdById: data.createdById,
+          date: normalized.date,
+          chHours: normalized.chHours,
+          ncHours: normalized.ncHours,
+          ncReasons: normalized.ncReasons || null,
+          notes: normalized.notes || null,
+          offDuty: normalized.offDuty,
+          offDutyReason: normalized.offDutyReason || null,
+          driverId: normalized.driverId,
+          createdById: normalized.createdById,
           updatedAt: new Date(),
         },
       });
 
       // Redirect to returnTo if present
-      if (data.returnTo && typeof data.returnTo === 'string') {
-        throw event.redirect(302, data.returnTo);
+      if (normalized.returnTo && typeof normalized.returnTo === 'string') {
+        throw event.redirect(302, normalized.returnTo);
       }
 
       return { success: true, workdayId: workday.id };

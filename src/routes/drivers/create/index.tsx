@@ -7,58 +7,37 @@ import {
   useNavigate,
 } from '@builder.io/qwik-city';
 import { db } from '~/lib/db';
+import { normalizeFormData } from '~/lib/text-utils';
 import PageTitle from '~/components/PageTitle';
 import BackButton from '~/components/BackButton';
 import StatusMessage from '~/components/notifications/StatusMessage';
 
 export const useCreateDriverAction = routeAction$(
-  async (data) => {
-    console.log('🚀 DRIVER ACTION CALLED! - ACTION IS EXECUTING');
-    console.log('🔍 Environment:', process.env.NODE_ENV);
-    console.log('🔍 Incoming form data:', JSON.stringify(data, null, 2));
-
-    // Add 4 second delay for debugging
-    console.log('⏱️ Waiting 4 seconds for debugging...');
-    await new Promise(resolve => setTimeout(resolve, 4000));
-    console.log('⏱️ Delay complete, continuing with driver creation...');
-
+  async (values) => {
     try {
-      // Manual validation to avoid Zod instanceof issues
-      if (!data.firstName || data.firstName.trim().length === 0) {
-        return { success: false, error: 'First name is required' };
-      }
-      if (!data.lastName || data.lastName.trim().length === 0) {
-        return { success: false, error: 'Last name is required' };
-      }
-      if (data.endDumpPayRate < 0 || data.flatBedPayRate < 0 || data.nonCommissionRate < 0) {
-        return { success: false, error: 'Pay rates must be non-negative' };
-      }
+      // Normalize capitalization before saving
+      const normalized = normalizeFormData(values);
 
       // Convert date strings to Date objects (use UTC to avoid timezone shifts)
-      const processedDateHired = data.dateHired ? new Date(data.dateHired + 'T12:00:00Z') : null;
-      const processedDateReleased = data.dateReleased ? new Date(data.dateReleased + 'T12:00:00Z') : null;
+      const processedDateHired = normalized.dateHired ? new Date(normalized.dateHired + 'T12:00:00Z') : null;
+      const processedDateReleased = normalized.dateReleased ? new Date(normalized.dateReleased + 'T12:00:00Z') : null;
 
       const driver = await db.driver.create({
         data: {
-          firstName: data.firstName,
-          lastName: data.lastName,
-          defaultTruck: data.defaultTruck || null,
-          endDumpPayRate: data.endDumpPayRate,
-          flatBedPayRate: data.flatBedPayRate,
-          nonCommissionRate: data.nonCommissionRate,
+          firstName: normalized.firstName,
+          lastName: normalized.lastName,
+          defaultTruck: normalized.defaultTruck || null,
+          endDumpPayRate: normalized.endDumpPayRate,
+          flatBedPayRate: normalized.flatBedPayRate,
+          nonCommissionRate: normalized.nonCommissionRate,
           dateHired: processedDateHired,
           dateReleased: processedDateReleased,
-          isActive: data.isActive === true, // Explicitly convert: true if checked, false if unchecked
+          isActive: normalized.isActive === true,
         },
       });
 
-      console.log('✅ Driver created successfully:', driver);
       return { success: true, driverId: driver.id };
     } catch (error) {
-      console.error('\n❌ Driver creation failed:');
-      console.error('Error message:', error instanceof Error ? error.message : 'Unknown error');
-      console.error('Full error:', error);
-
       return {
         success: false,
         error: `Driver creation failed: ${error instanceof Error ? error.message : 'Database error'}`
@@ -82,18 +61,10 @@ export default component$(() => {
   const createDriverAction = useCreateDriverAction();
   const nav = useNavigate();
 
-  console.log('🎯 CLIENT-SIDE: Component mounted');
-  console.log('🎯 CLIENT-SIDE: createDriverAction type:', typeof createDriverAction);
-  console.log('🎯 CLIENT-SIDE: createDriverAction keys:', Object.keys(createDriverAction));
-
   useVisibleTask$(({ track }) => {
     const result = track(() => createDriverAction.value);
-    console.log('🎯 Driver action result:', result);
     if (createDriverAction.value?.success && result?.driverId) {
-      console.log('✅ Driver created successfully, redirecting...');
       setTimeout(() => nav(`/drivers?highlight=${result.driverId}`), 1000);
-    } else if (createDriverAction.value?.error) {
-      console.log('❌ Driver creation failed:', createDriverAction.value.error);
     }
   });
 
@@ -109,11 +80,6 @@ export default component$(() => {
         <Form
           action={createDriverAction}
           class="flex flex-col gap-4"
-          onSubmit$={() => {
-            console.log('🎯 CLIENT-SIDE: Form onSubmit$ triggered');
-            console.log('🎯 CLIENT-SIDE: createDriverAction:', createDriverAction);
-          }}
-          preventdefault:submit
         >
         <div class="grid grid-cols-2 gap-4">
           <div>
@@ -208,25 +174,9 @@ export default component$(() => {
         </div>
 
         <button
-          type="button"
+          type="submit"
           class="btn btn-primary"
           disabled={createDriverAction.isRunning}
-          onClick$={async () => {
-            console.log('🎯 CLIENT-SIDE: Submit button clicked!');
-            console.log('🎯 CLIENT-SIDE: About to call action directly...');
-
-            // Prevent default form submission and call action directly
-            const formElement = document.querySelector('form');
-            if (formElement) {
-              const formData = new FormData(formElement);
-              const data = Object.fromEntries(formData.entries());
-              console.log('🎯 CLIENT-SIDE: Form data:', data);
-
-              console.log('🎯 CLIENT-SIDE: Calling createDriverAction.submit()...');
-              await createDriverAction.submit(data as any);
-              console.log('🎯 CLIENT-SIDE: Action submitted!');
-            }
-          }}
         >
           {createDriverAction.isRunning ? 'Creating...' : 'Create Driver'}
         </button>

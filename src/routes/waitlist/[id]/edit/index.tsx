@@ -13,6 +13,7 @@ import {
   useLocation,
 } from '@builder.io/qwik-city';
 import { db } from '~/lib/db';
+import { normalizeFormData } from '~/lib/text-utils';
 import PageSubtitle from '~/components/PageSubtitle';
 import BackButton from '~/components/BackButton';
 import { SearchableSelect } from '~/components/waitlist/SearchableSelect';
@@ -60,20 +61,23 @@ export const useEditWaitlistEntryLoader = routeLoader$(async (event) => {
 export const useUpdateWaitlistEntry = routeAction$(
   async (values, event) => {
     const id = parseInt(event.params.id);
-    const resourceType = values.resourceType;
+
+    // Normalize capitalization before saving (notes field is preserved)
+    const normalized = normalizeFormData(values);
+    const resourceType = normalized.resourceType;
 
     await db.waitlistEntry.update({
       where: { id },
       data: {
-        contactId: parseInt(values.contactId),
+        contactId: parseInt(normalized.contactId),
         resourceType,
-        vendorProductId: resourceType === 'vendor_product' ? parseInt(values.vendorProductId!) : null,
-        customResourceName: resourceType === 'custom' ? values.customResourceName! : null,
-        quantity: parseInt(values.quantity),
-        quantityUnit: values.quantityUnit || null,
-        status: values.status as any,
-        notes: values.notes || null,
-        contactedAt: values.contactedAt ? new Date(values.contactedAt) : null,
+        vendorProductId: resourceType === 'vendor_product' ? parseInt(normalized.vendorProductId!) : null,
+        customResourceName: resourceType === 'custom' ? normalized.customResourceName! : null,
+        quantity: parseInt(normalized.quantity),
+        quantityUnit: normalized.quantityUnit || null,
+        status: normalized.status as any,
+        notes: normalized.notes || null,
+        contactedAt: normalized.contactedAt ? new Date(normalized.contactedAt) : null,
       },
     });
 

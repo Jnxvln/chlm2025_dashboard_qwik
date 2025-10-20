@@ -448,3 +448,25 @@
     margin-top: 0.25rem;
   }
 }
+
+/* All-caps text mode (localStorage-based user preference) */
+[data-caps='true'] body,
+[data-caps='true'] input,
+[data-caps='true'] textarea,
+[data-caps='true'] select,
+[data-caps='true'] button,
+[data-caps='true'] td,
+[data-caps='true'] th,
+[data-caps='true'] label,
+[data-caps='true'] p,
+[data-caps='true'] span,
+[data-caps='true'] div,
+[data-caps='true'] a,
+[data-caps='true'] h1,
+[data-caps='true'] h2,
+[data-caps='true'] h3,
+[data-caps='true'] h4,
+[data-caps='true'] h5,
+[data-caps='true'] h6 {
+  text-transform: uppercase;
+}

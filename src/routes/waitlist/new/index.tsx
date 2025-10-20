@@ -13,6 +13,7 @@ import {
   useLocation,
 } from '@builder.io/qwik-city';
 import { db } from '~/lib/db';
+import { normalizeFormData } from '~/lib/text-utils';
 import PageSubtitle from '~/components/PageSubtitle';
 import BackButton from '~/components/BackButton';
 import { SearchableSelect } from '~/components/waitlist/SearchableSelect';
@@ -40,10 +41,12 @@ export const useWaitlistNewLoader = routeLoader$(async () => {
 
 export const useCreateWaitlistEntry = routeAction$(
   async (values, { fail }) => {
-    const resourceType = values.resourceType;
+    // Normalize capitalization before saving (notes field is preserved)
+    const normalized = normalizeFormData(values);
+    const resourceType = normalized.resourceType;
 
     // Manual validation for conditional required fields
-    if (resourceType === 'vendor_product' && !values.vendorProductId) {
+    if (resourceType === 'vendor_product' && !normalized.vendorProductId) {
       return fail(400, {
         fieldErrors: {
           vendorProductId: 'Please select a product',
@@ -51,7 +54,7 @@ export const useCreateWaitlistEntry = routeAction$(
       });
     }
 
-    if (resourceType === 'custom' && !values.customResourceName) {
+    if (resourceType === 'custom' && !normalized.customResourceName) {
       return fail(400, {
         fieldErrors: {
           customResourceName: 'Please enter a custom resource name',
@@ -61,15 +64,15 @@ export const useCreateWaitlistEntry = routeAction$(
 
     const waitlistEntry = await db.waitlistEntry.create({
       data: {
-        contactId: parseInt(values.contactId),
+        contactId: parseInt(normalized.contactId),
         resourceType,
-        vendorProductId: resourceType === 'vendor_product' ? parseInt(values.vendorProductId!) : null,
-        customResourceName: resourceType === 'custom' ? values.customResourceName! : null,
-        quantity: parseInt(values.quantity),
-        quantityUnit: values.quantityUnit || null,
-        status: values.status as any,
-        contactedAt: values.contactedAt ? new Date(values.contactedAt) : null,
-        notes: values.notes || null,
+        vendorProductId: resourceType === 'vendor_product' ? parseInt(normalized.vendorProductId!) : null,
+        customResourceName: resourceType === 'custom' ? normalized.customResourceName! : null,
+        quantity: parseInt(normalized.quantity),
+        quantityUnit: normalized.quantityUnit || null,
+        status: normalized.status as any,
+        contactedAt: normalized.contactedAt ? new Date(normalized.contactedAt) : null,
+        notes: normalized.notes || null,
       },
     });
 

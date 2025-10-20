@@ -13,19 +13,23 @@ import {
 import { db } from '~/lib/db';
 import PageSubtitle from '~/components/PageSubtitle';
 import BackButton from '~/components/BackButton';
+import { normalizeFormData } from '~/lib/text-utils';
 
 export const useCreateContact = routeAction$(
   async (values) => {
+    // Normalize capitalization before saving to database
+    const normalized = normalizeFormData(values);
+
     const contact = await db.contact.create({
       data: {
-        firstName: values.firstName,
-        lastName: values.lastName,
-        companyName: values.companyName || null,
-        phone1: values.phone1,
-        phone2: values.phone2 || null,
-        email1: values.email1 || null,
-        email2: values.email2 || null,
-        notes: values.notes || null,
+        firstName: normalized.firstName,
+        lastName: normalized.lastName,
+        companyName: normalized.companyName || null,
+        phone1: normalized.phone1,
+        phone2: normalized.phone2 || null,
+        email1: normalized.email1 || null,
+        email2: normalized.email2 || null,
+        notes: normalized.notes || null, // Notes are preserved as-is
       },
     });
 

@@ -1,4 +1,4 @@
-import { component$, Slot } from '@builder.io/qwik';
+import { component$, Slot, useVisibleTask$ } from '@builder.io/qwik';
 import { type DocumentHead, type RequestHandler, routeAction$, useLocation } from '@builder.io/qwik-city';
 import { Nav } from '~/components/Nav';
 import { verifyAuthToken } from '~/utils/auth';
@@ -32,6 +32,17 @@ export const onRequest: RequestHandler = async ({ cookie, url, redirect }) => {
 export default component$(() => {
   const location = useLocation();
   const isPasswordPage = location.url.pathname.startsWith('/password');
+
+  // Apply caps preference from localStorage on mount
+  // eslint-disable-next-line qwik/no-use-visible-task
+  useVisibleTask$(() => {
+    const savedCaps = localStorage.getItem('userPrefersCaps');
+    if (savedCaps === 'true') {
+      document.documentElement.setAttribute('data-caps', 'true');
+    } else {
+      document.documentElement.removeAttribute('data-caps');
+    }
+  });
 
   // For password page, render only the slot without nav or container
   if (isPasswordPage) {

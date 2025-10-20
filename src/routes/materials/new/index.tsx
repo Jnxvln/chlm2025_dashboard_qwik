@@ -1,6 +1,7 @@
 import { component$ } from '@builder.io/qwik';
 import { routeLoader$, routeAction$, Form, Link } from '@builder.io/qwik-city';
 import { db } from '~/lib/db';
+import { normalizeFormData } from '~/lib/text-utils';
 
 export const useCategoriesLoader = routeLoader$(async () => {
   const categories = await db.materialCategory.findMany({
@@ -11,34 +12,35 @@ export const useCategoriesLoader = routeLoader$(async () => {
 });
 
 export const useCreateMaterialAction = routeAction$(
-  async (data, { redirect }) => {
-    const formData = data as any;
+  async (values, { redirect }) => {
+    // Normalize capitalization before saving (description and notes are preserved)
+    const normalized = normalizeFormData(values);
 
-    if (!formData.name?.trim()) {
+    if (!normalized.name?.trim()) {
       return { success: false, error: 'Material name is required' };
     }
 
-    if (!formData.stock?.trim()) {
+    if (!normalized.stock?.trim()) {
       return { success: false, error: 'Stock is required' };
     }
 
-    if (!formData.categoryId) {
+    if (!normalized.categoryId) {
       return { success: false, error: 'Category is required' };
     }
 
     try {
       await db.material.create({
         data: {
-          name: formData.name.trim(),
-          stock: formData.stock.trim(),
-          image: formData.image?.trim() || null,
-          bin: formData.bin?.trim() || null,
-          size: formData.size?.trim() || null,
-          description: formData.description?.trim() || null,
-          notes: formData.notes?.trim() || null,
-          isFeatured: formData.isFeatured === 'on',
-          isTruckable: formData.isTruckable === 'on',
-          categoryId: parseInt(formData.categoryId),
+          name: normalized.name.trim(),
+          stock: normalized.stock.trim(),
+          image: normalized.image?.trim() || null,
+          bin: normalized.bin?.trim() || null,
+          size: normalized.size?.trim() || null,
+          description: normalized.description?.trim() || null,
+          notes: normalized.notes?.trim() || null,
+          isFeatured: normalized.isFeatured === 'on',
+          isTruckable: normalized.isTruckable === 'on',
+          categoryId: parseInt(normalized.categoryId),
           updatedAt: new Date(),
         },
       });

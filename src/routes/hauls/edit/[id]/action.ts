@@ -1,27 +1,33 @@
 import { routeAction$, zod$, z } from '@builder.io/qwik-city';
 import { db } from '~/lib/db';
+import { normalizeFormData } from '~/lib/text-utils';
 
 export const useEditHaulAction = routeAction$(
-  async (data) => {
+  async (values) => {
     try {
+      // Normalize capitalization before saving (flatbedFrom/To preserved for company initials, enum fields preserved)
+      const normalized = normalizeFormData(values, {
+        skipFields: ['flatbedFrom', 'flatbedTo', 'loadType', 'rateMetric'],
+      });
+
       const haul = await db.haul.update({
-        where: { id: data.haulId },
+        where: { id: normalized.haulId },
         data: {
-          dateHaul: new Date(data.dateHaul),
-          loadTime: data.loadTime,
-          truck: data.truck,
-          customer: data.customer,
-          chInvoice: data.chInvoice || null,
-          loadType: data.loadType,
-          loadRefNum: data.loadRefNum || null,
-          rateMetric: data.rateMetric,
-          rate: data.rate,
-          quantity: data.quantity,
-          vendorProductId: data.vendorProductId || null,
-          freightRouteId: data.freightRouteId || null,
-          flatbedFrom: data.flatbedFrom || null,
-          flatbedTo: data.flatbedTo || null,
-          flatbedMaterial: data.flatbedMaterial || null,
+          dateHaul: new Date(normalized.dateHaul),
+          loadTime: normalized.loadTime,
+          truck: normalized.truck,
+          customer: normalized.customer,
+          chInvoice: normalized.chInvoice || null,
+          loadType: normalized.loadType,
+          loadRefNum: normalized.loadRefNum || null,
+          rateMetric: normalized.rateMetric,
+          rate: normalized.rate,
+          quantity: normalized.quantity,
+          vendorProductId: normalized.vendorProductId || null,
+          freightRouteId: normalized.freightRouteId || null,
+          flatbedFrom: normalized.flatbedFrom || null,
+          flatbedTo: normalized.flatbedTo || null,
+          flatbedMaterial: normalized.flatbedMaterial || null,
           // Note: workdayId and createdById are not updated in edits
         },
         select: {
@@ -34,7 +40,7 @@ export const useEditHaulAction = routeAction$(
         success: true,
         haulId: haul.id,
         workdayId: haul.workdayId,
-        returnTo: data.returnTo || null,
+        returnTo: normalized.returnTo || null,
       };
     } catch (error) {
       console.error('Haul update failed:', error);

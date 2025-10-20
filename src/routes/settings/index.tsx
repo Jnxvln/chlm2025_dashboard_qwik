@@ -7,6 +7,7 @@ import {
   Form,
 } from '@builder.io/qwik-city';
 import { db } from '~/lib/db';
+import { normalizeFormData } from '~/lib/text-utils';
 import PageTitle from '~/components/PageTitle';
 
 // Tailwind color options for theme selector
@@ -40,9 +41,21 @@ export const useSettings = routeLoader$(async () => {
 });
 
 export const useUpdateSettings = routeAction$(
-  async (data) => {
+  async (values) => {
     try {
-      console.log('📝 SETTINGS UPDATE - Received data:', JSON.stringify(data, null, 2));
+      // Normalize capitalization before saving (most settings fields are preserved as configuration values)
+      const normalized = normalizeFormData(values, {
+        skipFields: [
+          'storeOpen', 'storeClosureType', 'storeCustomClosureMessage',
+          'storeDefaultClosureReason', 'storeDefaultClosureReasonWeather', 'storeDefaultClosureReasonHoliday',
+          'storeDisplayInventoryStatus',
+          'offDutyReasonNoWork', 'offDutyReasonMaintenance', 'offDutyReasonSick',
+          'offDutyReasonVacation', 'offDutyReasonWeather', 'offDutyReasonPersonal', 'offDutyReasonBereavement',
+          'userDefaultColorTheme'
+        ],
+      });
+
+      console.log('📝 SETTINGS UPDATE - Received data:', JSON.stringify(normalized, null, 2));
 
       // Find the first settings record
       const existingSettings = await db.settings.findFirst();
@@ -55,30 +68,29 @@ export const useUpdateSettings = routeAction$(
       const updated = await db.settings.update({
         where: { id: existingSettings.id },
         data: {
-          storeOpen: data.storeOpen === 'true',
-          storeClosureType: data.storeClosureType,
-          storeCustomClosureMessage: data.storeCustomClosureMessage || null,
-          storeDefaultClosureReason: data.storeDefaultClosureReason,
-          storeDefaultClosureReasonWeather: data.storeDefaultClosureReasonWeather,
-          storeDefaultClosureReasonHoliday: data.storeDefaultClosureReasonHoliday,
-          storeDisplayInventoryStatus: data.storeDisplayInventoryStatus === 'true',
-          operatingHoursMonFriStart: data.operatingHoursMonFriStart,
-          operatingHoursMonFriEnd: data.operatingHoursMonFriEnd,
-          operatingHoursSatStart: data.operatingHoursSatStart,
-          operatingHoursSatEnd: data.operatingHoursSatEnd,
-          operatingHoursSunStart: data.operatingHoursSunStart,
-          operatingHoursSunEnd: data.operatingHoursSunEnd,
-          driverDefaultNCPayRate: Number(data.driverDefaultNCPayRate).toFixed(2),
-          driverDefaultHolidayPayRate: Number(data.driverDefaultHolidayPayRate).toFixed(2),
-          offDutyReasonNoWork: data.offDutyReasonNoWork,
-          offDutyReasonMaintenance: data.offDutyReasonMaintenance,
-          offDutyReasonSick: data.offDutyReasonSick,
-          offDutyReasonVacation: data.offDutyReasonVacation,
-          offDutyReasonWeather: data.offDutyReasonWeather,
-          offDutyReasonPersonal: data.offDutyReasonPersonal,
-          offDutyReasonBereavement: data.offDutyReasonBereavement,
-          userPrefersCaps: data.userPrefersCaps === 'true',
-          userDefaultColorTheme: data.userDefaultColorTheme,
+          storeOpen: normalized.storeOpen === 'true',
+          storeClosureType: normalized.storeClosureType,
+          storeCustomClosureMessage: normalized.storeCustomClosureMessage || null,
+          storeDefaultClosureReason: normalized.storeDefaultClosureReason,
+          storeDefaultClosureReasonWeather: normalized.storeDefaultClosureReasonWeather,
+          storeDefaultClosureReasonHoliday: normalized.storeDefaultClosureReasonHoliday,
+          storeDisplayInventoryStatus: normalized.storeDisplayInventoryStatus === 'true',
+          operatingHoursMonFriStart: normalized.operatingHoursMonFriStart,
+          operatingHoursMonFriEnd: normalized.operatingHoursMonFriEnd,
+          operatingHoursSatStart: normalized.operatingHoursSatStart,
+          operatingHoursSatEnd: normalized.operatingHoursSatEnd,
+          operatingHoursSunStart: normalized.operatingHoursSunStart,
+          operatingHoursSunEnd: normalized.operatingHoursSunEnd,
+          driverDefaultNCPayRate: Number(normalized.driverDefaultNCPayRate).toFixed(2),
+          driverDefaultHolidayPayRate: Number(normalized.driverDefaultHolidayPayRate).toFixed(2),
+          offDutyReasonNoWork: normalized.offDutyReasonNoWork,
+          offDutyReasonMaintenance: normalized.offDutyReasonMaintenance,
+          offDutyReasonSick: normalized.offDutyReasonSick,
+          offDutyReasonVacation: normalized.offDutyReasonVacation,
+          offDutyReasonWeather: normalized.offDutyReasonWeather,
+          offDutyReasonPersonal: normalized.offDutyReasonPersonal,
+          offDutyReasonBereavement: normalized.offDutyReasonBereavement,
+          userDefaultColorTheme: normalized.userDefaultColorTheme,
         },
       });
 
@@ -122,7 +134,6 @@ export const useUpdateSettings = routeAction$(
       offDutyReasonWeather: z.string(),
       offDutyReasonPersonal: z.string(),
       offDutyReasonBereavement: z.string(),
-      userPrefersCaps: z.string(),
       userDefaultColorTheme: z.string(),
     }),
   ),
@@ -144,8 +155,8 @@ export default component$(() => {
 
   // Dropdown state signals (initialized in useVisibleTask)
   const storeDisplayInventory = useSignal('true');
-  const userPrefersCaps = useSignal('false');
   const userColorTheme = useSignal('default');
+  const userPrefersCaps = useSignal(false); // localStorage-based setting
 
   // Text input signals (initialized in useVisibleTask)
   const storeDefaultClosureReason = useSignal('');
@@ -174,7 +185,6 @@ export default component$(() => {
       storeOpen: settings.value.storeOpen,
       storeClosureType: settings.value.storeClosureType,
       storeDisplayInventoryStatus: settings.value.storeDisplayInventoryStatus,
-      userPrefersCaps: settings.value.userPrefersCaps,
       userDefaultColorTheme: settings.value.userDefaultColorTheme,
     });
 
@@ -183,8 +193,14 @@ export default component$(() => {
     storeOpen.value = settings.value.storeOpen ? 'true' : 'false';
     closureType.value = settings.value.storeClosureType || 'default';
     storeDisplayInventory.value = settings.value.storeDisplayInventoryStatus ? 'true' : 'false';
-    userPrefersCaps.value = settings.value.userPrefersCaps ? 'true' : 'false';
     userColorTheme.value = settings.value.userDefaultColorTheme;
+
+    // Load caps preference from localStorage and apply immediately
+    const savedCaps = localStorage.getItem('userPrefersCaps');
+    userPrefersCaps.value = savedCaps === 'true';
+    if (savedCaps === 'true') {
+      document.documentElement.setAttribute('data-caps', 'true');
+    }
 
     storeDefaultClosureReason.value = settings.value.storeDefaultClosureReason;
     storeDefaultClosureReasonWeather.value = settings.value.storeDefaultClosureReasonWeather;
@@ -223,7 +239,6 @@ export default component$(() => {
       storeOpen.value = result.settings.storeOpen ? 'true' : 'false';
       closureType.value = result.settings.storeClosureType || 'default';
       storeDisplayInventory.value = result.settings.storeDisplayInventoryStatus ? 'true' : 'false';
-      userPrefersCaps.value = result.settings.userPrefersCaps ? 'true' : 'false';
       userColorTheme.value = result.settings.userDefaultColorTheme;
 
       storeDefaultClosureReason.value = result.settings.storeDefaultClosureReason;
@@ -800,12 +815,22 @@ export default component$(() => {
                 <label class="block text-sm font-medium mb-2" style="color: rgb(var(--color-text-secondary))">
                   Prefer All-Caps Text
                 </label>
+                <p class="text-xs mb-2" style="color: rgb(var(--color-text-tertiary))">
+                  Display all text in UPPERCASE. Data is not affected. Stored locally per device.
+                </p>
                 <select
-                  name="userPrefersCaps"
                   class="w-full"
-                  value={userPrefersCaps.value}
+                  value={userPrefersCaps.value ? 'true' : 'false'}
                   onChange$={(_, el) => {
-                    userPrefersCaps.value = el.value;
+                    const isEnabled = el.value === 'true';
+                    userPrefersCaps.value = isEnabled;
+                    localStorage.setItem('userPrefersCaps', String(isEnabled));
+                    // Apply immediately by toggling the data attribute
+                    if (isEnabled) {
+                      document.documentElement.setAttribute('data-caps', 'true');
+                    } else {
+                      document.documentElement.removeAttribute('data-caps');
+                    }
                   }}
                 >
                   <option value="true">Yes</option>

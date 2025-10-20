@@ -1,6 +1,7 @@
 import { component$, useSignal, useVisibleTask$ } from '@builder.io/qwik';
 import { routeLoader$, routeAction$, Form, z, zod$, useNavigate, type DocumentHead } from '@builder.io/qwik-city';
 import { db } from '~/lib/db';
+import { normalizeFormData } from '~/lib/text-utils';
 import PageTitle from '~/components/PageTitle';
 import BackButton from '~/components/BackButton';
 import { StatusMessage } from '~/components/notifications/StatusMessage';
@@ -28,7 +29,7 @@ export const useNoticeLoader = routeLoader$(async ({ params, redirect }) => {
 });
 
 export const useUpdateNoticeAction = routeAction$(
-  async (data, { params, fail }) => {
+  async (values, { params, fail }) => {
     const id = Number(params.id);
 
     if (isNaN(id)) {
@@ -36,10 +37,15 @@ export const useUpdateNoticeAction = routeAction$(
     }
 
     try {
+      // Normalize capitalization before saving (content is preserved like notes, type is enum, url fields preserved)
+      const normalized = normalizeFormData(values, {
+        skipFields: ['content', 'type', 'urlDisplayText', 'urlAddress', 'urlIsExternal'],
+      });
+
       // Parse URL data from form arrays
-      const urlDisplayTexts = data.urlDisplayText || [];
-      const urlAddresses = data.urlAddress || [];
-      const urlIsExternals = data.urlIsExternal || [];
+      const urlDisplayTexts = normalized.urlDisplayText || [];
+      const urlAddresses = normalized.urlAddress || [];
+      const urlIsExternals = normalized.urlIsExternal || [];
 
       // Convert to arrays if single values
       const displayTexts = Array.isArray(urlDisplayTexts) ? urlDisplayTexts : urlDisplayTexts ? [urlDisplayTexts] : [];
@@ -64,15 +70,15 @@ export const useUpdateNoticeAction = routeAction$(
       });
 
       // Combine date and time into a single DateTime
-      const displayDateTime = new Date(`${data.displayDate}T${data.displayTime}`);
+      const displayDateTime = new Date(`${normalized.displayDate}T${normalized.displayTime}`);
 
       // Update the notice with new URLs
       await db.notice.update({
         where: { id },
         data: {
-          content: data.content,
+          content: normalized.content,
           displayDate: displayDateTime,
-          type: data.type as any,
+          type: normalized.type as any,
           urls: urls.length > 0 ? {
             create: urls,
           } : undefined,
