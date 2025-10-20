@@ -14,7 +14,7 @@ export const useCategoriesLoader = routeLoader$(async () => {
 export const useCreateMaterialAction = routeAction$(
   async (values, { redirect }) => {
     // Normalize capitalization before saving (description and notes are preserved)
-    const normalized = normalizeFormData(values);
+    const normalized = normalizeFormData(values) as any;
 
     if (!normalized.name?.trim()) {
       return { success: false, error: 'Material name is required' };

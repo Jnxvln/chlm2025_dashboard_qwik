@@ -30,7 +30,7 @@ export const useUpdateMaterialAction = routeAction$(
     const id = parseInt(params.id);
 
     // Normalize capitalization before saving (description and notes are preserved)
-    const normalized = normalizeFormData(values);
+    const normalized = normalizeFormData(values) as any;
 
     if (!normalized.name?.trim()) {
       return { success: false, error: 'Material name is required' };
