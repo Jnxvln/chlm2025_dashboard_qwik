@@ -17,6 +17,7 @@ import { normalizeFormData } from '~/lib/text-utils';
 import PageSubtitle from '~/components/PageSubtitle';
 import BackButton from '~/components/BackButton';
 import { SearchableSelect } from '~/components/waitlist/SearchableSelect';
+import { DeleteIcon } from '~/components/icons';
 
 export const useEditWaitlistEntryLoader = routeLoader$(async (event) => {
   const id = parseInt(event.params.id);
@@ -101,9 +102,24 @@ export const useUpdateWaitlistEntry = routeAction$(
   }),
 );
 
+export const useDeleteWaitlistEntry = routeAction$(
+  async ({ id }, event) => {
+    await db.waitlistEntry.delete({
+      where: { id: parseInt(id) },
+    });
+    
+    const returnTo = event.url.searchParams.get('returnTo') || '/';
+    throw event.redirect(302, returnTo);
+  },
+  zod$({
+    id: z.string(),
+  })
+);
+
 export default component$(() => {
   const data = useEditWaitlistEntryLoader();
   const action = useUpdateWaitlistEntry();
+  const deleteAction = useDeleteWaitlistEntry();
   const nav = useNavigate();
   const loc = useLocation();
 
@@ -343,20 +359,37 @@ export default component$(() => {
             </textarea>
           </div>
 
-          <div class="flex justify-end gap-3">
-            <a
-              href={loc.url.searchParams.get('returnTo') || '/waitlist'}
-              class="btn btn-ghost"
-            >
-              Cancel
-            </a>
+          <div class="flex justify-between">
             <button
-              type="submit"
-              class="btn btn-primary"
-              disabled={action.isRunning}
+              type="button"
+              class="btn-icon btn-icon-danger"
+              title="Delete waitlist entry"
+              tabIndex={-1}
+              onClick$={async () => {
+                const confirmed = confirm(
+                  'Are you sure you want to delete this waitlist entry? This action cannot be undone.'
+                );
+                if (!confirmed) return;
+                await deleteAction.submit({ id: String(entry.id) });
+              }}
             >
-              {action.isRunning ? 'Updating...' : 'Update Waitlist Entry'}
+              <DeleteIcon size={16} />
             </button>
+            <div class="flex gap-3">
+              <a
+                href={loc.url.searchParams.get('returnTo') || '/waitlist'}
+                class="btn btn-ghost"
+              >
+                Cancel
+              </a>
+              <button
+                type="submit"
+                class="btn btn-primary"
+                disabled={action.isRunning}
+              >
+                {action.isRunning ? 'Updating...' : 'Update Waitlist Entry'}
+              </button>
+            </div>
           </div>
         </Form>
       </div>
