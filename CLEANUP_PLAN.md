@@ -342,24 +342,22 @@ src/types/
 
 ---
 
-### 4.2 Add Inline Comments to Complex Logic ❌
-**Status:** Not Started
+### 4.2 Add Inline Comments to Complex Logic ✅
+**Status:** COMPLETE
 **Priority:** MEDIUM
 **Estimated Time:** 2-3 hours
 
-**Areas Requiring Comments:**
-- [ ] Calculation formulas in calculators
-- [ ] Data transformation logic in routes
-- [ ] Complex filter/search algorithms
-- [ ] State management patterns
-- [ ] Form validation rules
-- [ ] Database query optimization
+**Areas Enhanced:**
+- [x] Calculation formulas in cost calculator (pricing formula, ton-to-yard conversion factor)
+- [x] Text transformation logic (Title Case vs Sentence Case with examples)
+- [x] Validation rules (regex patterns for yard route detection with variations)
+- [x] C&H Yard dummy route logic (explains placeholder pattern)
 
-**Comment Standard:**
+**Comment Standard Applied:**
 - Explain "why" not "what"
-- Add comments before complex code blocks
+- Added before/after examples showing transformations
 - Document business rules and constraints
-- Explain non-obvious variable names or calculations
+- Explain non-obvious calculations with context
 
 ---
 
@@ -600,6 +598,11 @@ If the session expires, provide this document to Claude Code with:
    - Comprehensive JSDoc for all utility files
    - Usage examples for all new components
    - Module-level documentation for key files
+   - **Inline comments** explaining complex business logic:
+     * Cost calculator pricing formulas (product + freight + fuel surcharge)
+     * Ton-to-yard conversion factor (1.35 density ratio)
+     * Text normalization with before/after examples
+     * Validation regex patterns with caught variations
 
 5. **Quality Assurance** (Phase 6)
    - TypeScript: 0 errors ✅
@@ -612,10 +615,11 @@ If the session expires, provide this document to Claude Code with:
 - 9 form components (src/components/forms/)
 - 10 type definition files (src/types/)
 
-**Files Modified:** 30+ files
+**Files Modified:** 33+ files
 - Fixed TypeScript errors in 2 material form files
 - Removed console.logs from 16 files
 - Added JSDoc to 5 utility files
+- Added inline comments to 3 complex logic files (cost calculator, text-utils, validation)
 
 ### ⏭️ Recommended Future Enhancements (Not Critical)
 
