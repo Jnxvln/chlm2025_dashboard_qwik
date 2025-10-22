@@ -112,7 +112,6 @@ export default component$(() => {
   useVisibleTask$(({ track }) => {
     const result = track(() => action.value);
     if (result?.success) {
-      console.log('Waitlist entry created!');
       setTimeout(() => nav(`/waitlist`), 1000);
     }
   });

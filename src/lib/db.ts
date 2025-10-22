@@ -1,5 +1,16 @@
+/**
+ * Database connection module using Prisma ORM
+ *
+ * This module exports a singleton Prisma client instance that is reused
+ * across the application. In development, the instance is stored globally
+ * to prevent multiple clients during hot module reloading.
+ *
+ * @module lib/db
+ */
+
 import { PrismaClient } from '@prisma/client';
 
+// Global storage for Prisma client to prevent multiple instances during HMR
 const globalForPrisma = globalThis as unknown as {
   prisma: PrismaClient | undefined;
 };
@@ -11,15 +22,12 @@ if (!process.env.DATABASE_URL) {
   throw new Error('DATABASE_URL must be configured');
 }
 
-console.log('🔗 Database connection:', process.env.DATABASE_URL.substring(0, 50) + '...');
-
 let db: PrismaClient;
 
 try {
   db = globalForPrisma.prisma ?? new PrismaClient({
     log: process.env.NODE_ENV === 'production' ? ['error'] : ['query', 'info', 'warn', 'error'],
   });
-  console.log('✅ Prisma client initialized successfully');
 } catch (error) {
   console.error('❌ Failed to initialize Prisma client:', error);
   throw error;

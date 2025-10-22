@@ -186,7 +186,6 @@ export default component$(() => {
   useVisibleTask$(({ track }) => {
     const result = track(() => action.value);
     if (result?.success) {
-      console.log('Freight Route updated!');
       const returnTo = loc.url.searchParams.get('returnTo') || `/vendors/routes?highlight=${loc.params.id}`;
       setTimeout(() => nav(returnTo), 1000);
     }

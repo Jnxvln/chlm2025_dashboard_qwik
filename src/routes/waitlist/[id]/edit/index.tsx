@@ -132,7 +132,6 @@ export default component$(() => {
   useVisibleTask$(({ track }) => {
     const result = track(() => action.value);
     if (result?.success) {
-      console.log('Waitlist entry updated!');
       const returnTo = loc.url.searchParams.get('returnTo') || '/waitlist';
       setTimeout(() => nav(returnTo), 1000);
     }

@@ -59,7 +59,6 @@ export default component$(() => {
   useVisibleTask$(({ track }) => {
     const result = track(() => action.value);
     if (result?.success) {
-      console.log('Contact created!');
       const returnTo = loc.url.searchParams.get('returnTo');
       if (returnTo) {
         setTimeout(() => nav(decodeURIComponent(returnTo)), 1000);

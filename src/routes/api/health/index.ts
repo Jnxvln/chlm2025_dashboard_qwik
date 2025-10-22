@@ -10,35 +10,19 @@ export const onGet: RequestHandler = async ({ json }) => {
     databaseUrlHost: process.env.DATABASE_URL ? new URL(process.env.DATABASE_URL).host : 'MISSING',
   };
 
-  console.log('🔍 HEALTH CHECK - Environment Variables:');
-  console.log('NODE_ENV:', process.env.NODE_ENV);
-  console.log('DATABASE_URL exists:', !!process.env.DATABASE_URL);
-  console.log('DATABASE_URL length:', process.env.DATABASE_URL?.length);
-  console.log('DATABASE_URL host:', healthData.databaseUrlHost);
-  console.log('Process.cwd:', process.cwd());
-
   try {
-    console.log('🩺 Health check: Testing database connection...');
-
     // Test raw connection first
-    console.log('🔍 Testing raw database query...');
-    const rawResult = await db.$queryRaw`SELECT 1 as test`;
-    console.log('✅ Raw query successful:', rawResult);
+    await db.$queryRaw`SELECT 1 as test`;
 
     // Test basic database connection
-    console.log('🔍 Testing driver count...');
     const driverCount = await db.driver.count();
-    console.log('✅ Database connected, driver count:', driverCount);
 
     // Test schema - this will fail if migration didn't run
-    console.log('🔍 Testing schema with findFirst...');
-    const firstDriver = await db.driver.findFirst({
+    await db.driver.findFirst({
       select: { id: true, firstName: true, dateHired: true }
     });
-    console.log('✅ Schema looks good, first driver:', firstDriver);
 
     // Test a simple create operation (which fails in production)
-    console.log('🔍 Testing simple driver creation...');
     const testDriver = await db.driver.create({
       data: {
         firstName: 'TEST',
@@ -49,13 +33,11 @@ export const onGet: RequestHandler = async ({ json }) => {
         isActive: false
       }
     });
-    console.log('✅ Test driver created:', testDriver.id);
 
     // Clean up test data
     await db.driver.delete({
       where: { id: testDriver.id }
     });
-    console.log('✅ Test driver deleted');
 
     json(200, {
       status: 'healthy',

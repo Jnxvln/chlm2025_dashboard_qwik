@@ -1,6 +1,26 @@
 /**
+ * Custom validation functions for business rules
+ * @module lib/validation
+ */
+
+/**
  * Validates that a freight route destination is not attempting to bypass the toYard checkbox
- * by manually entering variations of "C&H Yard"
+ * by manually entering variations of "C&H Yard".
+ *
+ * This prevents users from creating duplicate yard routes by manually typing variations
+ * of the yard name instead of using the dedicated checkbox.
+ *
+ * @param destination - The destination string to validate
+ * @param toYard - Whether the "To Yard" checkbox is checked
+ * @returns Validation result with isValid flag and optional error message
+ *
+ * @example
+ * ```typescript
+ * const result = validateDestinationNotYard('C&H Yard', false);
+ * if (!result.isValid) {
+ *   return { error: result.error };
+ * }
+ * ```
  */
 export function validateDestinationNotYard(destination: string, toYard: boolean): {
   isValid: boolean;

@@ -153,7 +153,6 @@ export default component$(() => {
   useVisibleTask$(({ track }) => {
     const result = track(() => action.value);
     if (result?.success) {
-      console.log('Freight Route created!');
       const returnTo = loc.url.searchParams.get('returnTo');
       if (returnTo) {
         // Return to the specified URL with the new route ID

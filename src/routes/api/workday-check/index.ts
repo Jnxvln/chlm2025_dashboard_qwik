@@ -31,15 +31,6 @@ export const onGet: RequestHandler = async ({ url, json }) => {
       select: { firstName: true, lastName: true }
     });
 
-    console.log('WORKDAY CHECK API:', {
-      driverId,
-      dateInput: date,
-      dateUsedForLookup: new Date(date + 'T12:00:00Z').toISOString(),
-      workdayExists: !!workday,
-      workdayId: workday?.id,
-      foundWorkdayDate: workday?.date?.toISOString()
-    });
-
     json(200, {
       exists: !!workday,
       workday: workday || null,

@@ -91,12 +91,6 @@ export default component$(() => {
 
     // Auto-proceed if we have a preselected date (from Add Haul/Create Haul buttons)
     if (data.value.hasPreselectedDate && selectedDate.value && selectedDriverId.value) {
-      console.log('NEW HAUL - Auto-proceeding with preselected date:', {
-        hasPreselectedDate: data.value.hasPreselectedDate,
-        selectedDate: selectedDate.value,
-        selectedDriverId: selectedDriverId.value
-      });
-
       // Directly perform workday check without calling handleDateChange
       setTimeout(async () => {
         try {
@@ -104,8 +98,6 @@ export default component$(() => {
             `/api/workday-check?driverId=${selectedDriverId.value}&date=${selectedDate.value}`
           );
           const result = await response.json();
-
-          console.log('NEW HAUL - Auto workday check result:', result);
 
           if (result.exists) {
             workdayExists.value = true;
@@ -124,12 +116,6 @@ export default component$(() => {
           console.error('NEW HAUL - Auto workday check failed:', error);
         }
       }, 100);
-    } else {
-      console.log('NEW HAUL - NOT auto-proceeding:', {
-        hasPreselectedDate: data.value.hasPreselectedDate,
-        selectedDate: selectedDate.value,
-        selectedDriverId: selectedDriverId.value
-      });
     }
   });
 
@@ -141,18 +127,11 @@ export default component$(() => {
       return;
     }
 
-    console.log('NEW HAUL - Checking workday for:', {
-      date: newDate,
-      driverId: selectedDriverId.value
-    });
-
     try {
       const response = await fetch(
         `/api/workday-check?driverId=${selectedDriverId.value}&date=${newDate}`
       );
       const result = await response.json();
-
-      console.log('NEW HAUL - Workday check result:', result);
 
       if (result.exists) {
         // Workday exists - show confirmation to add to existing
@@ -189,13 +168,11 @@ export default component$(() => {
 
     if (workdayDialogType.value === 'create') {
       // Set workdayId to 0 to signal action to create workday on save
-      console.log('NEW HAUL - Workday will be created when haul is saved');
       workdayId.value = 0;
       workdayExists.value = false;
       showWorkdayDialog.value = false;
     } else {
       // Use existing workday
-      console.log('NEW HAUL - Using existing workday:', workdayDialogData.value.workday);
       workdayId.value = workdayDialogData.value.workday.id;
       showWorkdayDialog.value = false;
     }

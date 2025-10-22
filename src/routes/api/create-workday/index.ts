@@ -31,12 +31,6 @@ export const onPost: RequestHandler = async ({ parseBody, json }) => {
       },
     });
 
-    console.log('WORKDAY CREATE API - Created workday:', {
-      workdayId: workday.id,
-      driverId,
-      date
-    });
-
     json(200, {
       success: true,
       workday

@@ -35,8 +35,6 @@ export const useSettings = routeLoader$(async () => {
     driverDefaultHolidayPayRate: Number(settings.driverDefaultHolidayPayRate).toFixed(2),
   };
 
-  console.log('📊 SETTINGS LOADER - Returning settings:', JSON.stringify(result, null, 2));
-
   return result;
 });
 
@@ -54,8 +52,6 @@ export const useUpdateSettings = routeAction$(
           'userDefaultColorTheme'
         ],
       });
-
-      console.log('📝 SETTINGS UPDATE - Received data:', JSON.stringify(normalized, null, 2));
 
       // Find the first settings record
       const existingSettings = await db.settings.findFirst();
@@ -93,8 +89,6 @@ export const useUpdateSettings = routeAction$(
           userDefaultColorTheme: normalized.userDefaultColorTheme,
         },
       });
-
-      console.log('✅ SETTINGS UPDATE - Successfully saved:', JSON.stringify(updated, null, 2));
 
       // Return the updated settings so we can sync the UI (with 2 decimal places)
       return {
@@ -181,13 +175,6 @@ export default component$(() => {
 
   // Sync all signals with loaded settings ONCE on client-side mount
   useVisibleTask$(() => {
-    console.log('🎨 CLIENT - Syncing signals with loaded settings:', {
-      storeOpen: settings.value.storeOpen,
-      storeClosureType: settings.value.storeClosureType,
-      storeDisplayInventoryStatus: settings.value.storeDisplayInventoryStatus,
-      userDefaultColorTheme: settings.value.userDefaultColorTheme,
-    });
-
     // Sync all signals with loaded settings on mount
     // This runs once when component mounts (including after navigation/refresh)
     storeOpen.value = settings.value.storeOpen ? 'true' : 'false';
@@ -232,7 +219,6 @@ export default component$(() => {
   useVisibleTask$(({ track }) => {
     const result = track(() => updateSettings.value);
     if (result?.success && result?.settings) {
-      console.log('✅ CLIENT - Update successful, syncing signals with:', result.settings);
       success.value = true;
 
       // Update all signals with the fresh data from the server

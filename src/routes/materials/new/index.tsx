@@ -14,33 +14,44 @@ export const useCategoriesLoader = routeLoader$(async () => {
 export const useCreateMaterialAction = routeAction$(
   async (values, { redirect }) => {
     // Normalize capitalization before saving (description and notes are preserved)
-    const normalized = normalizeFormData(values) as any;
+    const normalized = normalizeFormData(values);
 
-    if (!normalized.name?.trim()) {
+    // Convert form data to strings with proper type safety
+    const name = String(normalized.name || '').trim();
+    const stock = String(normalized.stock || '').trim();
+    const categoryId = String(normalized.categoryId || '');
+    const image = normalized.image ? String(normalized.image).trim() : null;
+    const bin = normalized.bin ? String(normalized.bin).trim() : null;
+    const size = normalized.size ? String(normalized.size).trim() : null;
+    const description = normalized.description ? String(normalized.description).trim() : null;
+    const notes = normalized.notes ? String(normalized.notes).trim() : null;
+
+    // Validate required fields
+    if (!name) {
       return { success: false, error: 'Material name is required' };
     }
 
-    if (!normalized.stock?.trim()) {
+    if (!stock) {
       return { success: false, error: 'Stock is required' };
     }
 
-    if (!normalized.categoryId) {
+    if (!categoryId) {
       return { success: false, error: 'Category is required' };
     }
 
     try {
       await db.material.create({
         data: {
-          name: normalized.name.trim(),
-          stock: normalized.stock.trim(),
-          image: normalized.image?.trim() || null,
-          bin: normalized.bin?.trim() || null,
-          size: normalized.size?.trim() || null,
-          description: normalized.description?.trim() || null,
-          notes: normalized.notes?.trim() || null,
+          name,
+          stock,
+          image,
+          bin,
+          size,
+          description,
+          notes,
           isFeatured: normalized.isFeatured === 'on',
           isTruckable: normalized.isTruckable === 'on',
-          categoryId: parseInt(normalized.categoryId),
+          categoryId: parseInt(categoryId),
           updatedAt: new Date(),
         },
       });

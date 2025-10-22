@@ -8,12 +8,6 @@ export const useNewHaulLoader = routeLoader$(async (event) => {
   const driverId = parseInt(url.searchParams.get('driver') || '', 10);
   const preselectedDate = url.searchParams.get('date'); // date from workday-specific links
 
-  console.log('NEW HAUL LOADER - Starting:', {
-    driverId: driverId || 'none',
-    preselectedDate: preselectedDate || 'none',
-    hasDriver: !!driverId && !isNaN(driverId)
-  });
-
   // Fetch all drivers
   const drivers = await db.driver.findMany({
     where: { isActive: true },
@@ -58,12 +52,6 @@ export const useNewHaulLoader = routeLoader$(async (event) => {
       orderBy: [{ destination: 'asc' }],
     }),
   ]);
-
-  console.log('NEW HAUL LOADER - Data loaded:', {
-    vendorCount: vendors.length,
-    productCount: vendorProducts.length,
-    routeCount: freightRoutes.length
-  });
 
   return {
     // No workday handling at load time - user will pick date first (unless preselected)

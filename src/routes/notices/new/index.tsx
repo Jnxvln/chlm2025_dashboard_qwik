@@ -15,21 +15,15 @@ export const useCreateNoticeAction = routeAction$(
         skipFields: ['content', 'type', 'urlDisplayText', 'urlAddress', 'urlIsExternal'],
       });
 
-      console.log('Form data received:', normalized);
-
       // Parse URL data from form arrays
       const urlDisplayTexts = normalized.urlDisplayText || [];
       const urlAddresses = normalized.urlAddress || [];
       const urlIsExternals = normalized.urlIsExternal || [];
 
-      console.log('Raw URL data:', { urlDisplayTexts, urlAddresses, urlIsExternals });
-
       // Convert to arrays if single values
       const displayTexts = Array.isArray(urlDisplayTexts) ? urlDisplayTexts : urlDisplayTexts ? [urlDisplayTexts] : [];
       const addresses = Array.isArray(urlAddresses) ? urlAddresses : urlAddresses ? [urlAddresses] : [];
       const externals = Array.isArray(urlIsExternals) ? urlIsExternals : urlIsExternals ? [urlIsExternals] : [];
-
-      console.log('Processed arrays:', { displayTexts, addresses, externals });
 
       // Build URLs array
       const urls = [];
@@ -42,8 +36,6 @@ export const useCreateNoticeAction = routeAction$(
           });
         }
       }
-
-      console.log('Built URLs array:', urls);
 
       // Combine date and time into a single DateTime
       const displayDateTime = new Date(`${normalized.displayDate}T${normalized.displayTime}`);

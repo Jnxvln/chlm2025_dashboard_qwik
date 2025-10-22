@@ -54,7 +54,6 @@ export default component$(() => {
   useVisibleTask$(({ track }) => {
     const result = track(() => data.value);
     if (result && 'error' in result) {
-      console.log('HAULS REPORT ERROR:', result.error);
       // Show error message briefly then redirect
       setTimeout(() => {
         nav(result.error?.redirectTo || '/hauls');
