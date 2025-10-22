@@ -31,28 +31,30 @@ export function validateDestinationNotYard(destination: string, toYard: boolean)
     return { isValid: true };
   }
 
-  // Normalize the destination for comparison:
-  // 1. Convert to lowercase
-  // 2. Remove all spaces, hyphens, and ampersands
-  // 3. Remove punctuation
+  // Normalize the destination for comparison to catch all variations:
+  // 1. Convert to lowercase ("C&H YARD" → "c&h yard")
+  // 2. Remove all spaces, hyphens, and ampersands ("c&h yard" → "chyard")
+  // 3. Remove remaining punctuation ("c.h.yard" → "chyard")
+  // This catches variations like: "C&H Yard", "CH-Yard", "C & H YARD", etc.
   const normalized = destination
     .toLowerCase()
-    .replace(/[\s\-&]/g, '')
-    .replace(/[^\w]/g, '');
+    .replace(/[\s\-&]/g, '')      // Remove spacing/separators
+    .replace(/[^\w]/g, '');        // Remove all other punctuation
 
   // List of forbidden patterns that indicate someone is trying to create a yard route
+  // These patterns catch all common variations of "C&H Yard" that users might type
   const forbiddenPatterns = [
-    'chyard',       // "C&H Yard", "CH Yard", "C & H Yard"
-    'candh',        // "C and H"
-    'candhyard',    // "C and H Yard"
-    'cyard',        // "C Yard"
-    'hyard',        // "H Yard"
+    'chyard',       // Catches: "C&H Yard", "CH Yard", "C & H Yard", "C-H Yard"
+    'candh',        // Catches: "C and H", "C AND H"
+    'candhyard',    // Catches: "C and H Yard", "C AND H YARD"
+    'cyard',        // Catches: "C Yard", "C-Yard"
+    'hyard',        // Catches: "H Yard", "H-Yard"
   ];
 
   // Check if normalized destination matches any forbidden pattern
   const matchesForbidden = forbiddenPatterns.some(pattern => normalized.includes(pattern));
 
-  // Also check if it's JUST "yard" (common shortcut)
+  // Also check if it's JUST "yard" (common shortcut users might try)
   const isJustYard = normalized === 'yard';
 
   if (matchesForbidden || isJustYard) {

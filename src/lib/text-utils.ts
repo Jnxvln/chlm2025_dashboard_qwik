@@ -64,12 +64,16 @@ export function normalizeText(text: string | null | undefined): string {
   const trimmed = text.trim();
   if (trimmed.length === 0) return '';
 
-  // For short text (likely names, titles, etc.), use Title Case
+  // For short text (likely names, titles, addresses), use Title Case
+  // Examples: "JOHN SMITH" → "John Smith", "123 MAIN ST" → "123 Main St"
   if (trimmed.length < 50) {
     return toTitleCase(trimmed);
   }
 
-  // For longer text (likely descriptions, notes), use Sentence Case
+  // For longer text (likely descriptions, notes, messages), use Sentence Case
+  // This preserves natural sentence structure while fixing all-caps input
+  // Example: "THIS IS A LONG DESCRIPTION. IT HAS MULTIPLE SENTENCES." →
+  //          "This is a long description. It has multiple sentences."
   return toSentenceCase(trimmed);
 }
 
@@ -96,6 +100,9 @@ export function isAllCaps(text: string): boolean {
 /**
  * Apply normalization to all string fields in an object
  * Skips fields that should preserve case (emails, IDs, notes, etc.)
+ *
+ * This function is the main entry point for form data processing and prevents
+ * users from accidentally submitting all-caps data to the database.
  */
 export function normalizeFormData<T extends Record<string, any>>(
   data: T,
@@ -106,29 +113,36 @@ export function normalizeFormData<T extends Record<string, any>>(
   } = {}
 ): T {
   const {
-    skipFields = ['notes', 'description', 'customClosureMessage'], // Preserve user-typed notes/descriptions
+    // Fields to preserve as-is (user wants specific formatting in these fields)
+    skipFields = ['notes', 'description', 'customClosureMessage'],
+    // Fields that should be lowercase (email addresses)
     emailFields = ['email', 'email1', 'email2'],
+    // Fields that just need trimming (phone numbers)
     phoneFields = ['phone', 'phone1', 'phone2'],
   } = options;
 
   const normalized = { ...data };
 
+  // Process each string field in the form data
   for (const [key, value] of Object.entries(normalized)) {
     if (typeof value !== 'string' || value.length === 0) continue;
 
     // Skip fields that should preserve case (notes, descriptions, etc.)
+    // These are intentionally left as the user typed them
     if (skipFields.includes(key)) {
       normalized[key as keyof T] = preserveCase(value) as any;
     }
-    // Normalize email fields
+    // Normalize email fields to lowercase (email addresses are case-insensitive)
     else if (emailFields.includes(key)) {
       normalized[key as keyof T] = normalizeEmail(value) as any;
     }
-    // Normalize phone fields
+    // Normalize phone fields (just trim whitespace, no case changes)
     else if (phoneFields.includes(key)) {
       normalized[key as keyof T] = normalizePhone(value) as any;
     }
-    // Default: smart normalization (Title Case for short text, Sentence Case for long text)
+    // Default: smart normalization based on field length
+    // Short fields (names, addresses) → Title Case
+    // Long fields (descriptions) → Sentence Case
     else {
       normalized[key as keyof T] = normalizeText(value) as any;
     }

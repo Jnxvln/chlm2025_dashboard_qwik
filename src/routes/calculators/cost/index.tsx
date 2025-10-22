@@ -81,19 +81,20 @@ export default component$(() => {
     const routes = selectedProduct.value.freightRoutes;
     const yardRoute = routes.find((r) => r.toYard);
 
-    // Always include C&H Yard as first option
+    // Always include C&H Yard as first option to encourage users to set up yard routes
     if (yardRoute) {
-      // Real yard route exists
+      // Real yard route exists - prioritize it at the top of the list
       const otherRoutes = routes.filter((r) => !r.toYard);
       return [yardRoute, ...otherRoutes];
     } else {
-      // Create dummy placeholder for C&H Yard
+      // Create dummy placeholder for C&H Yard to show users this route needs setup
+      // Selecting this dummy will prompt user to create the actual yard route
       const dummyYardRoute: FreightRoute = {
         id: -1,
         destination: 'C&H Yard',
         freightCost: 0,
         toYard: true,
-        isDummy: true,
+        isDummy: true, // Flag indicates this is a placeholder, not a real route
       };
       return [dummyYardRoute, ...routes];
     }
@@ -116,6 +117,9 @@ export default component$(() => {
   // Computed calculations
   const costPerTon = useComputed$(() => {
     if (!selectedProduct.value || !selectedRoute.value || selectedRoute.value.isDummy) return 0;
+
+    // Total cost formula: Base product cost + Delivery freight + Fuel surcharge
+    // This represents the complete per-ton cost to deliver material to destination
     return (
       selectedProduct.value.productCost +
       selectedRoute.value.freightCost +
@@ -124,14 +128,18 @@ export default component$(() => {
   });
 
   const totalCost = useComputed$(() => {
+    // Multiply per-ton cost by quantity to get total order cost
     return costPerTon.value * tons.value;
   });
 
   const quantityYards = useComputed$(() => {
+    // Industry standard conversion: 1 cubic yard ≈ 1.35 tons for typical aggregates
+    // This conversion factor accounts for the density of common landscape materials
     return tons.value / 1.35;
   });
 
   const costPerYard = useComputed$(() => {
+    // Convert per-ton pricing to per-yard pricing using same 1.35 factor
     return costPerTon.value * 1.35;
   });
 
