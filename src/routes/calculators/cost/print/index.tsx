@@ -1,7 +1,8 @@
-import { component$ } from '@builder.io/qwik';
+import { component$, useSignal, useVisibleTask$, $ } from '@builder.io/qwik';
 import { useLocation } from '@builder.io/qwik-city';
 import PageTitle from '~/components/PageTitle';
 import { NavLink } from '~/components/NavLink';
+import type { Driver } from '~/types/driver';
 
 export default component$(() => {
   const loc = useLocation();
@@ -9,7 +10,16 @@ export default component$(() => {
   // Parse the breakdownData from URL params
   const breakdownDataParam = loc.url.searchParams.get('breakdownData');
   const outboundParam = loc.url.searchParams.get('outbound');
+  const driverIdParam = loc.url.searchParams.get('driverId');
+  const dateParam = loc.url.searchParams.get('date');
   const isOutbound = outboundParam === 'true';
+
+  // Signals for form data and driver info
+  const driver = useSignal<Driver | null>(null);
+  const topLeftLine1 = useSignal<string>('');
+  const topLeftLine2 = useSignal<string>('');
+  const topLeftLine3 = useSignal<string>('');
+  const topRightDueDate = useSignal<string>('');
 
   let breakdownData: any = null;
 
@@ -48,6 +58,53 @@ export default component$(() => {
   const vendorBilling = productTotal;
   const chtBilling = freightTotal + chtFscTotal;
 
+
+  // Fetch driver data and calculate prefilled values
+  useVisibleTask$(async () => {
+    if (driverIdParam) {
+      try {
+        const response = await fetch('/api/drivers');
+        const data = await response.json();
+        if (data.success && data.drivers) {
+          const selectedDriver = data.drivers.find((d: Driver) => d.id === parseInt(driverIdParam));
+          if (selectedDriver) {
+            driver.value = selectedDriver;
+          }
+        }
+      } catch (error) {
+        console.error('Failed to fetch driver:', error);
+      }
+    }
+
+    // Calculate prefilled values
+    const currentDate = dateParam || new Date().toISOString().split('T')[0];
+    
+    // Top-left line 1: "#<defaultTruck> <driver firstName>"
+    if (driver.value) {
+      const truck = driver.value.defaultTruck || 'N/A';
+      topLeftLine1.value = `#${truck} ${driver.value.firstName}`;
+    } else {
+      topLeftLine1.value = '#[Truck] [Driver]';
+    }
+
+    // Top-left line 2: date in MM/DD/YY (inline formatting)
+    const dateObj = new Date(currentDate);
+    const month = (dateObj.getMonth() + 1).toString().padStart(2, '0');
+    const day = dateObj.getDate().toString().padStart(2, '0');
+    const year = dateObj.getFullYear().toString().slice(-2);
+    topLeftLine2.value = `${month}/${day}/${year}`;
+
+    // Top-left line 3: "--C&H Yard--" (only if NOT outbound truck)
+    topLeftLine3.value = !isOutbound ? '--C&H Yard--' : '';
+
+    // Top-right: due date (MM/DD format, +29 days from line 2) - inline calculation
+    const dueDateObj = new Date(currentDate);
+    dueDateObj.setDate(dueDateObj.getDate() + 29);
+    const dueMonth = (dueDateObj.getMonth() + 1).toString().padStart(2, '0');
+    const dueDay = dueDateObj.getDate().toString().padStart(2, '0');
+    topRightDueDate.value = `${dueMonth}/${dueDay}`;
+  });
+
   return (
     <section class="space-y-6">
       {/* Header with buttons - will be hidden on print */}
@@ -58,6 +115,129 @@ export default component$(() => {
             Print
           </button>
           <NavLink href="/calculators/cost">Back to Calculator</NavLink>
+        </div>
+      </div>
+
+      {/* Print Information Form - Hidden on Print */}
+      <div class="card space-y-4 no-print">
+        <h3 class="font-semibold" style="color: rgb(var(--color-text-primary))">
+          Print Information (Edit as needed)
+        </h3>
+        <div class="grid grid-cols-1 md:grid-cols-2 gap-6">
+          {/* Left Column - Top Left Print Info */}
+          <div class="space-y-4">
+            <h4 class="font-medium text-sm" style="color: rgb(var(--color-text-secondary))">
+              Top-Left Print Area
+            </h4>
+            
+            <div>
+              <label
+                for="topLeftLine1"
+                class="block text-sm font-medium mb-1"
+                style="color: rgb(var(--color-text-secondary))"
+              >
+                Line 1 (Truck & Driver)
+              </label>
+              <input
+                id="topLeftLine1"
+                type="text"
+                value={topLeftLine1.value}
+                onInput$={(e) => {
+                  topLeftLine1.value = (e.target as HTMLInputElement).value;
+                }}
+                class="w-full"
+                placeholder="#[Truck] [Driver]"
+              />
+            </div>
+
+            <div>
+              <label
+                for="topLeftLine2"
+                class="block text-sm font-medium mb-1"
+                style="color: rgb(var(--color-text-secondary))"
+              >
+                Line 2 (Date MM/DD/YY)
+              </label>
+              <input
+                id="topLeftLine2"
+                type="text"
+                value={topLeftLine2.value}
+                onInput$={(e) => {
+                  topLeftLine2.value = (e.target as HTMLInputElement).value;
+                  // Auto-update due date when this changes
+                  try {
+                    const [month, day, year] = topLeftLine2.value.split('/');
+                    if (month && day && year) {
+                      const fullYear = year.length === 2 ? `20${year}` : year;
+                      const dateStr = `${fullYear}-${month.padStart(2, '0')}-${day.padStart(2, '0')}`;
+                      // Inline calculation instead of using calculateDueDate function
+                      const date = new Date(dateStr);
+                      date.setDate(date.getDate() + 29);
+                      const dueDateMonth = (date.getMonth() + 1).toString().padStart(2, '0');
+                      const dueDateDay = date.getDate().toString().padStart(2, '0');
+                      topRightDueDate.value = `${dueDateMonth}/${dueDateDay}`;
+                    }
+                  } catch (error) {
+                    // Ignore parsing errors
+                  }
+                }}
+                class="w-full"
+                placeholder="MM/DD/YY"
+              />
+            </div>
+
+            {!isOutbound && (
+              <div>
+                <label
+                  for="topLeftLine3"
+                  class="block text-sm font-medium mb-1"
+                  style="color: rgb(var(--color-text-secondary))"
+                >
+                  Line 3 (C&H Yard - shown when not outbound)
+                </label>
+                <input
+                  id="topLeftLine3"
+                  type="text"
+                  value={topLeftLine3.value}
+                  onInput$={(e) => {
+                    topLeftLine3.value = (e.target as HTMLInputElement).value;
+                  }}
+                  class="w-full"
+                  placeholder="--C&H Yard--"
+                />
+              </div>
+            )}
+          </div>
+
+          {/* Right Column - Top Right Print Info */}
+          <div class="space-y-4">
+            <h4 class="font-medium text-sm" style="color: rgb(var(--color-text-secondary))">
+              Top-Right Print Area
+            </h4>
+            
+            <div>
+              <label
+                for="topRightDueDate"
+                class="block text-sm font-medium mb-1"
+                style="color: rgb(var(--color-text-secondary))"
+              >
+                Due Date (MM/DD, auto-calculated +29 days)
+              </label>
+              <input
+                id="topRightDueDate"
+                type="text"
+                value={topRightDueDate.value}
+                onInput$={(e) => {
+                  topRightDueDate.value = (e.target as HTMLInputElement).value;
+                }}
+                class="w-full"
+                placeholder="MM/DD"
+              />
+              <p class="text-xs mt-1" style="color: rgb(var(--color-text-tertiary))">
+                Automatically calculated as Date + 29 days
+              </p>
+            </div>
+          </div>
         </div>
       </div>
 
@@ -85,6 +265,26 @@ export default component$(() => {
                 {JSON.stringify(breakdownData, null, 2)}
               </pre>
             </details>
+          </div>
+
+          {/* Top Print Information - Only visible when printing */}
+          <div class="print-top-info">
+            <div class="print-top-left">
+              {topLeftLine1.value && (
+                <div class="print-top-line">{topLeftLine1.value}</div>
+              )}
+              {topLeftLine2.value && (
+                <div class="print-top-line">{topLeftLine2.value}</div>
+              )}
+              {topLeftLine3.value && !isOutbound && (
+                <div class="print-top-line">{topLeftLine3.value}</div>
+              )}
+            </div>
+            <div class="print-top-right">
+              {topRightDueDate.value && (
+                <div class="print-top-line">{topRightDueDate.value}</div>
+              )}
+            </div>
           </div>
 
           {/* Print section - positioned at bottom of page */}
@@ -162,8 +362,41 @@ export default component$(() => {
 
       <style>
         {`
+          /* Print top information styling */
+          .print-top-info {
+            display: none; /* Hidden by default */
+          }
+
+          .print-top-line {
+            font-size: 16pt;
+            font-weight: bold;
+            line-height: 1.2;
+            margin-bottom: 0.2rem;
+          }
+
           /* Hide elements when printing */
           @media print {
+            /* Show top info only when printing */
+            .print-top-info {
+              display: flex;
+              justify-content: space-between;
+              position: fixed;
+              top: 0.2in;
+              left: 0.4in;
+              right: 0.4in;
+              z-index: 1000;
+            }
+
+            .print-top-left {
+              display: flex;
+              flex-direction: column;
+            }
+
+            .print-top-right {
+              display: flex;
+              flex-direction: column;
+              align-items: flex-end;
+            }
             nav,
             .no-print,
             button,
