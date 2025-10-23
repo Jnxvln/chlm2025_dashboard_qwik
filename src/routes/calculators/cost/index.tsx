@@ -636,10 +636,7 @@ export default component$(() => {
                 <option value="">Select a driver...</option>
                 {drivers.value.map((driver) => (
                   <option key={driver.id} value={driver.id}>
-                    {driver.firstName} {driver.lastName}{' '}
-                    {driver.defaultTruck
-                      ? `(Truck ${driver.defaultTruck})`
-                      : ''}
+                    {`${driver.firstName} ${driver.lastName}${driver.defaultTruck ? ` (Truck ${driver.defaultTruck})` : ''}`}
                   </option>
                 ))}
               </select>
