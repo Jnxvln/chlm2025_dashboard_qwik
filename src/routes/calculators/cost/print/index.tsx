@@ -97,9 +97,10 @@ export default component$(() => {
     // Top-left line 3: "--C&H Yard--" (only if NOT outbound truck)
     topLeftLine3.value = !isOutbound ? '--C&H Yard--' : '';
 
-    // Top-right: due date (MM/DD format, +29 days from line 2) - inline calculation
+    // Top-right: due date (MM/DD format, +1 month -1 day from line 2) - inline calculation
     const dueDateObj = new Date(currentDate);
-    dueDateObj.setDate(dueDateObj.getDate() + 29);
+    dueDateObj.setMonth(dueDateObj.getMonth() + 1); // Add 1 month
+    dueDateObj.setDate(dueDateObj.getDate() - 1);   // Subtract 1 day
     const dueMonth = (dueDateObj.getMonth() + 1).toString().padStart(2, '0');
     const dueDay = dueDateObj.getDate().toString().padStart(2, '0');
     topRightDueDate.value = `${dueMonth}/${dueDay}`;
@@ -170,9 +171,10 @@ export default component$(() => {
                     if (month && day && year) {
                       const fullYear = year.length === 2 ? `20${year}` : year;
                       const dateStr = `${fullYear}-${month.padStart(2, '0')}-${day.padStart(2, '0')}`;
-                      // Inline calculation instead of using calculateDueDate function
+                      // Inline calculation: +1 month -1 day
                       const date = new Date(dateStr);
-                      date.setDate(date.getDate() + 29);
+                      date.setMonth(date.getMonth() + 1); // Add 1 month
+                      date.setDate(date.getDate() - 1);   // Subtract 1 day
                       const dueDateMonth = (date.getMonth() + 1).toString().padStart(2, '0');
                       const dueDateDay = date.getDate().toString().padStart(2, '0');
                       topRightDueDate.value = `${dueDateMonth}/${dueDateDay}`;
