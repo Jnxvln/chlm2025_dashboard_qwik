@@ -378,7 +378,7 @@ export default component$(() => {
                     </div>
                   )}
                   <div>{formatNumber(tons)} T</div>
-                  {!isOutbound && <div>= {formatNumber(yards)} yds</div>}
+                  {!outboundTruck.value && <div>= {formatNumber(yards)} yds</div>}
                 </div>
               </div>
 
