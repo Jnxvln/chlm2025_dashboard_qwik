@@ -1,4 +1,4 @@
-import { component$, useSignal, useVisibleTask$, $ } from '@builder.io/qwik';
+import { component$, useSignal, useVisibleTask$ } from '@builder.io/qwik';
 import { useLocation } from '@builder.io/qwik-city';
 import PageTitle from '~/components/PageTitle';
 import { NavLink } from '~/components/NavLink';
@@ -177,7 +177,7 @@ export default component$(() => {
                       const dueDateDay = date.getDate().toString().padStart(2, '0');
                       topRightDueDate.value = `${dueDateMonth}/${dueDateDay}`;
                     }
-                  } catch (error) {
+                  } catch {
                     // Ignore parsing errors
                   }
                 }}

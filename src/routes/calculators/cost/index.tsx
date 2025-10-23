@@ -249,7 +249,7 @@ export default component$(() => {
         if (driversData.success && driversData.drivers) {
           drivers.value = driversData.drivers;
         }
-      } catch (driverError) {
+      } catch {
         console.log('Drivers API not available yet, using empty array');
         drivers.value = [];
       }
