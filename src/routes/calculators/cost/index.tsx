@@ -7,9 +7,7 @@ import {
 } from '@builder.io/qwik';
 import { useNavigate, useLocation } from '@builder.io/qwik-city';
 import PageTitle from '~/components/PageTitle';
-import { NavLink } from '~/components/NavLink';
 import { PrintIcon } from '~/components/icons';
-import type { Driver } from '~/types/driver';
 
 interface FreightRoute {
   id: number;
@@ -39,8 +37,6 @@ interface FormState {
   selectedProductId: number | null;
   selectedRouteId: number | null;
   outboundTruck: boolean;
-  selectedDriverId: number | null;
-  selectedDate: string;
 }
 
 const STORAGE_KEY = 'cost-calculator-state';
@@ -65,11 +61,6 @@ export default component$(() => {
 
   // Signals for data
   const allProducts = useSignal<VendorProduct[]>([]);
-  const drivers = useSignal<Driver[]>([]);
-  const selectedDriver = useSignal<Driver | null>(null);
-  const selectedDate = useSignal<string>(
-    new Date().toISOString().split('T')[0],
-  ); // Default to today
   const isLoading = useSignal<boolean>(true);
 
   // Computed values for autocomplete filtering
@@ -170,8 +161,6 @@ export default component$(() => {
       selectedProductId: selectedProduct.value?.id || null,
       selectedRouteId: selectedRoute.value?.id || null,
       outboundTruck: outboundTruck.value,
-      selectedDriverId: selectedDriver.value?.id || null,
-      selectedDate: selectedDate.value,
     };
     localStorage.setItem(STORAGE_KEY, JSON.stringify(state));
   });
@@ -186,8 +175,6 @@ export default component$(() => {
       tons.value = state.tons;
       materialInput.value = state.materialInput;
       outboundTruck.value = state.outboundTruck;
-      selectedDate.value =
-        state.selectedDate || new Date().toISOString().split('T')[0];
 
       // Find and restore selected product
       if (state.selectedProductId) {
@@ -210,16 +197,6 @@ export default component$(() => {
         }
       }
 
-      // Find and restore selected driver
-      if (state.selectedDriverId) {
-        const driver = drivers.value.find(
-          (d) => d.id === state.selectedDriverId,
-        );
-        if (driver) {
-          selectedDriver.value = driver;
-        }
-      }
-
       // Clear saved state after restoration
       localStorage.removeItem(STORAGE_KEY);
     } catch (error) {
@@ -232,26 +209,10 @@ export default component$(() => {
     track(() => loc.url.searchParams.get('newRouteId'));
 
     try {
-      // Fetch vendor products and drivers in parallel
-      const [productsResponse, driversResponse] = await Promise.all([
-        fetch('/api/vendor-products'),
-        fetch('/api/drivers'), // We'll need to create this endpoint
-      ]);
-
-      const productsData = await productsResponse.json();
-      if (productsData.success) {
-        allProducts.value = productsData.products;
-      }
-
-      // Handle drivers response - create a fallback if endpoint doesn't exist yet
-      try {
-        const driversData = await driversResponse.json();
-        if (driversData.success && driversData.drivers) {
-          drivers.value = driversData.drivers;
-        }
-      } catch {
-        console.log('Drivers API not available yet, using empty array');
-        drivers.value = [];
+      const response = await fetch('/api/vendor-products');
+      const data = await response.json();
+      if (data.success) {
+        allProducts.value = data.products;
       }
 
       // Restore form state if returning from new route page
@@ -394,8 +355,6 @@ export default component$(() => {
     const params = new URLSearchParams({
       breakdownData: JSON.stringify(breakdownData),
       outbound: outboundTruck.value.toString(),
-      driverId: selectedDriver.value?.id.toString() || '',
-      date: selectedDate.value,
     });
 
     await nav(`/calculators/cost/print?${params.toString()}`);
@@ -473,7 +432,9 @@ export default component$(() => {
     <section class="space-y-6">
       <div class="flex items-center justify-between">
         <PageTitle text="Cost Calculator" />
-        <NavLink href="/calculators">Back to Calculators</NavLink>
+        <a href="/calculators" class="btn btn-ghost">
+          Back to Calculators
+        </a>
       </div>
 
       {isLoading.value ? (
@@ -611,55 +572,6 @@ export default component$(() => {
                   ))}
                 </div>
               )}
-            </div>
-
-            {/* Driver Selector */}
-            <div>
-              <label
-                for="driver"
-                class="block text-sm font-medium mb-2"
-                style="color: rgb(var(--color-text-secondary))"
-              >
-                Driver (Optional)
-              </label>
-              <select
-                id="driver"
-                value={selectedDriver.value?.id || ''}
-                onChange$={(_, el) => {
-                  const driverId = parseInt(el.value) || null;
-                  selectedDriver.value = driverId
-                    ? drivers.value.find((d) => d.id === driverId) || null
-                    : null;
-                }}
-                class="w-full"
-              >
-                <option value="">Select a driver...</option>
-                {drivers.value.map((driver) => (
-                  <option key={driver.id} value={driver.id}>
-                    {`${driver.firstName} ${driver.lastName}${driver.defaultTruck ? ` (Truck ${driver.defaultTruck})` : ''}`}
-                  </option>
-                ))}
-              </select>
-            </div>
-
-            {/* Date Picker */}
-            <div>
-              <label
-                for="date"
-                class="block text-sm font-medium mb-2"
-                style="color: rgb(var(--color-text-secondary))"
-              >
-                Ticket Date
-              </label>
-              <input
-                id="date"
-                type="date"
-                value={selectedDate.value}
-                onInput$={(e) => {
-                  selectedDate.value = (e.target as HTMLInputElement).value;
-                }}
-                class="w-full"
-              />
             </div>
 
             {/* Freight Route Dropdown with Search */}

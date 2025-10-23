@@ -1,7 +1,6 @@
-import { component$, useSignal, useVisibleTask$ } from '@builder.io/qwik';
+import { component$, useSignal, useVisibleTask$, $ } from '@builder.io/qwik';
 import { useLocation } from '@builder.io/qwik-city';
 import PageTitle from '~/components/PageTitle';
-import { NavLink } from '~/components/NavLink';
 import type { Driver } from '~/types/driver';
 
 export default component$(() => {
@@ -10,12 +9,14 @@ export default component$(() => {
   // Parse the breakdownData from URL params
   const breakdownDataParam = loc.url.searchParams.get('breakdownData');
   const outboundParam = loc.url.searchParams.get('outbound');
-  const driverIdParam = loc.url.searchParams.get('driverId');
-  const dateParam = loc.url.searchParams.get('date');
   const isOutbound = outboundParam === 'true';
 
   // Signals for form data and driver info
-  const driver = useSignal<Driver | null>(null);
+  const includeHeader = useSignal<boolean>(true);
+  const outboundTruck = useSignal<boolean>(isOutbound); // Initialize from URL param
+  const drivers = useSignal<Driver[]>([]);
+  const selectedDriver = useSignal<Driver | null>(null);
+  const selectedDate = useSignal<string>(new Date().toISOString().split('T')[0]); // Default to today
   const topLeftLine1 = useSignal<string>('');
   const topLeftLine2 = useSignal<string>('');
   const topLeftLine3 = useSignal<string>('');
@@ -59,30 +60,31 @@ export default component$(() => {
   const chtBilling = freightTotal + chtFscTotal;
 
 
-  // Fetch driver data and calculate prefilled values
+  // Fetch drivers and set default values
   useVisibleTask$(async () => {
-    if (driverIdParam) {
-      try {
-        const response = await fetch('/api/drivers');
-        const data = await response.json();
-        if (data.success && data.drivers) {
-          const selectedDriver = data.drivers.find((d: Driver) => d.id === parseInt(driverIdParam));
-          if (selectedDriver) {
-            driver.value = selectedDriver;
-          }
-        }
-      } catch (error) {
-        console.error('Failed to fetch driver:', error);
+    try {
+      const response = await fetch('/api/drivers');
+      const data = await response.json();
+      if (data.success && data.drivers) {
+        drivers.value = data.drivers;
       }
+    } catch (error) {
+      console.error('Failed to fetch drivers:', error);
+      drivers.value = [];
     }
 
-    // Calculate prefilled values
-    const currentDate = dateParam || new Date().toISOString().split('T')[0];
+    // Calculate initial prefilled values with today's date
+    updatePrintValues();
+  });
+
+  // Function to update print values when driver or date changes
+  const updatePrintValues = $(() => {
+    const currentDate = selectedDate.value;
     
     // Top-left line 1: "#<defaultTruck> <driver firstName>"
-    if (driver.value) {
-      const truck = driver.value.defaultTruck || 'N/A';
-      topLeftLine1.value = `#${truck} ${driver.value.firstName}`;
+    if (selectedDriver.value) {
+      const truck = selectedDriver.value.defaultTruck || 'N/A';
+      topLeftLine1.value = `#${truck} ${selectedDriver.value.firstName}`;
     } else {
       topLeftLine1.value = '#[Truck] [Driver]';
     }
@@ -96,7 +98,7 @@ export default component$(() => {
     topLeftLine2.value = `${month}/${day}/${year}`;
 
     // Top-left line 3: "--C&H Yard--" (only if NOT outbound truck)
-    topLeftLine3.value = !isOutbound ? '--C&H Yard--' : '';
+    topLeftLine3.value = !outboundTruck.value ? '--C&H Yard--' : '';
 
     // Top-right: due date (MM/DD format, +1 month -1 day from line 2) - inline calculation
     const dueDateObj = new Date(parseInt(yearStr), parseInt(monthStr) - 1, parseInt(dayStr)); // Use same date object to avoid timezone issues
@@ -116,15 +118,86 @@ export default component$(() => {
           <button class="btn btn-primary" onClick$={() => window.print()}>
             Print
           </button>
-          <NavLink href="/calculators/cost">Back to Calculator</NavLink>
+          <a href="/calculators/cost" class="btn btn-ghost">
+            Back to Calculator
+          </a>
         </div>
       </div>
 
       {/* Print Information Form - Hidden on Print */}
       <div class="card space-y-4 no-print">
-        <h3 class="font-semibold" style="color: rgb(var(--color-text-primary))">
-          Print Information (Edit as needed)
-        </h3>
+        <div class="flex items-center justify-between">
+          <h3 class="font-semibold" style="color: rgb(var(--color-text-primary))">
+            Print Information
+          </h3>
+          <div class="flex items-center gap-6">
+            <div class="flex items-center gap-2">
+              <input
+                id="outboundTruck"
+                type="checkbox"
+                checked={outboundTruck.value}
+                onChange$={(e) => {
+                  outboundTruck.value = (e.target as HTMLInputElement).checked;
+                  updatePrintValues();
+                }}
+              />
+              <label
+                for="outboundTruck"
+                class="text-sm font-medium"
+                style="color: rgb(var(--color-text-primary))"
+              >
+                Outbound Truck
+              </label>
+            </div>
+            <div class="flex items-center gap-2">
+              <input
+                id="includeHeader"
+                type="checkbox"
+                checked={includeHeader.value}
+                onChange$={(e) => {
+                  includeHeader.value = (e.target as HTMLInputElement).checked;
+                }}
+              />
+              <label
+                for="includeHeader"
+                class="text-sm font-medium"
+                style="color: rgb(var(--color-text-primary))"
+              >
+                Include Header
+              </label>
+            </div>
+          </div>
+        </div>
+
+        {/* Driver Selection */}
+        <div class="mb-4">
+          <label
+            for="driver"
+            class="block text-sm font-medium mb-2"
+            style="color: rgb(var(--color-text-secondary))"
+          >
+            Driver
+          </label>
+          <select
+            id="driver"
+            value={selectedDriver.value?.id || ''}
+            disabled={!includeHeader.value}
+            onChange$={(_, el) => {
+              const driverId = parseInt(el.value) || null;
+              selectedDriver.value = driverId ? drivers.value.find(d => d.id === driverId) || null : null;
+              updatePrintValues();
+            }}
+            class={`w-full ${!includeHeader.value ? 'disabled-input' : ''}`}
+          >
+            <option value="">Select a driver...</option>
+            {drivers.value.map((driver) => (
+              <option key={driver.id} value={driver.id}>
+                {`${driver.firstName} ${driver.lastName}${driver.defaultTruck ? ` (Truck ${driver.defaultTruck})` : ''}`}
+              </option>
+            ))}
+          </select>
+        </div>
+
         <div class="grid grid-cols-1 md:grid-cols-2 gap-6">
           {/* Left Column - Top Left Print Info */}
           <div class="space-y-4">
@@ -144,52 +217,37 @@ export default component$(() => {
                 id="topLeftLine1"
                 type="text"
                 value={topLeftLine1.value}
+                disabled={!includeHeader.value}
                 onInput$={(e) => {
                   topLeftLine1.value = (e.target as HTMLInputElement).value;
                 }}
-                class="w-full"
+                class={`w-full ${!includeHeader.value ? 'disabled-input' : ''}`}
                 placeholder="#[Truck] [Driver]"
               />
             </div>
 
             <div>
               <label
-                for="topLeftLine2"
+                for="ticketDate"
                 class="block text-sm font-medium mb-1"
                 style="color: rgb(var(--color-text-secondary))"
               >
-                Line 2 (Date MM/DD/YY)
+                Ticket Date
               </label>
               <input
-                id="topLeftLine2"
-                type="text"
-                value={topLeftLine2.value}
+                id="ticketDate"
+                type="date"
+                value={selectedDate.value}
+                disabled={!includeHeader.value}
                 onInput$={(e) => {
-                  topLeftLine2.value = (e.target as HTMLInputElement).value;
-                  // Auto-update due date when this changes
-                  try {
-                    const [month, day, year] = topLeftLine2.value.split('/');
-                    if (month && day && year) {
-                      const fullYear = year.length === 2 ? `20${year}` : year;
-                      const dateStr = `${fullYear}-${month.padStart(2, '0')}-${day.padStart(2, '0')}`;
-                      // Inline calculation: +1 month -1 day
-                      const date = new Date(dateStr);
-                      date.setMonth(date.getMonth() + 1); // Add 1 month
-                      date.setDate(date.getDate() - 1);   // Subtract 1 day
-                      const dueDateMonth = (date.getMonth() + 1).toString().padStart(2, '0');
-                      const dueDateDay = date.getDate().toString().padStart(2, '0');
-                      topRightDueDate.value = `${dueDateMonth}/${dueDateDay}`;
-                    }
-                  } catch {
-                    // Ignore parsing errors
-                  }
+                  selectedDate.value = (e.target as HTMLInputElement).value;
+                  updatePrintValues();
                 }}
-                class="w-full"
-                placeholder="MM/DD/YY"
+                class={`w-full ${!includeHeader.value ? 'disabled-input' : ''}`}
               />
             </div>
 
-            {!isOutbound && (
+            {!outboundTruck.value && (
               <div>
                 <label
                   for="topLeftLine3"
@@ -202,10 +260,11 @@ export default component$(() => {
                   id="topLeftLine3"
                   type="text"
                   value={topLeftLine3.value}
+                  disabled={!includeHeader.value}
                   onInput$={(e) => {
                     topLeftLine3.value = (e.target as HTMLInputElement).value;
                   }}
-                  class="w-full"
+                  class={`w-full ${!includeHeader.value ? 'disabled-input' : ''}`}
                   placeholder="--C&H Yard--"
                 />
               </div>
@@ -230,10 +289,11 @@ export default component$(() => {
                 id="topRightDueDate"
                 type="text"
                 value={topRightDueDate.value}
+                disabled={!includeHeader.value}
                 onInput$={(e) => {
                   topRightDueDate.value = (e.target as HTMLInputElement).value;
                 }}
-                class="w-full"
+                class={`w-full ${!includeHeader.value ? 'disabled-input' : ''}`}
                 placeholder="MM/DD"
               />
               <p class="text-xs mt-1" style="color: rgb(var(--color-text-tertiary))">
@@ -253,25 +313,27 @@ export default component$(() => {
       ) : (
         <>
 
-          {/* Top Print Information - Only visible when printing */}
-          <div class="print-top-info">
-            <div class="print-top-left">
-              {topLeftLine1.value && (
-                <div class="print-top-line">{topLeftLine1.value}</div>
-              )}
-              {topLeftLine2.value && (
-                <div class="print-top-line">{topLeftLine2.value}</div>
-              )}
-              {topLeftLine3.value && !isOutbound && (
-                <div class="print-top-line">{topLeftLine3.value}</div>
-              )}
+          {/* Top Print Information - Only visible when printing and checkbox is checked */}
+          {includeHeader.value && (
+            <div class="print-top-info">
+              <div class="print-top-left">
+                {topLeftLine1.value && (
+                  <div class="print-top-line">{topLeftLine1.value}</div>
+                )}
+                {topLeftLine2.value && (
+                  <div class="print-top-line">{topLeftLine2.value}</div>
+                )}
+                {topLeftLine3.value && !outboundTruck.value && (
+                  <div class="print-top-line">{topLeftLine3.value}</div>
+                )}
+              </div>
+              <div class="print-top-right">
+                {topRightDueDate.value && (
+                  <div class="print-top-line">{topRightDueDate.value}</div>
+                )}
+              </div>
             </div>
-            <div class="print-top-right">
-              {topRightDueDate.value && (
-                <div class="print-top-line">{topRightDueDate.value}</div>
-              )}
-            </div>
-          </div>
+          )}
 
           {/* Print section - positioned at bottom of page */}
           <div class="print-section">
@@ -348,6 +410,12 @@ export default component$(() => {
 
       <style>
         {`
+          /* Disabled input styling */
+          .disabled-input {
+            background-color: rgb(248, 250, 252) !important;
+            opacity: 0.6;
+          }
+
           /* Print top information styling */
           .print-top-info {
             display: none; /* Hidden by default */
