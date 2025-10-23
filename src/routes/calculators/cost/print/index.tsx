@@ -372,7 +372,7 @@ export default component$(() => {
               {/* Column 1 - Tons/Yards */}
               <div class="print-col print-col-center">
                 <div class="print-quantity">
-                  {isOutbound && (
+                  {outboundTruck.value && (
                     <div class="print-outbound-label">
                       <strong>Outbound Truckload</strong>
                     </div>
