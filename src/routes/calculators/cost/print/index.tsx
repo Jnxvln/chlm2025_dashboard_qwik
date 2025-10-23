@@ -87,8 +87,9 @@ export default component$(() => {
       topLeftLine1.value = '#[Truck] [Driver]';
     }
 
-    // Top-left line 2: date in MM/DD/YY (inline formatting)
-    const dateObj = new Date(currentDate);
+    // Top-left line 2: date in MM/DD/YY (inline formatting) - avoid timezone issues
+    const [yearStr, monthStr, dayStr] = currentDate.split('-');
+    const dateObj = new Date(parseInt(yearStr), parseInt(monthStr) - 1, parseInt(dayStr)); // Use local timezone
     const month = (dateObj.getMonth() + 1).toString().padStart(2, '0');
     const day = dateObj.getDate().toString().padStart(2, '0');
     const year = dateObj.getFullYear().toString().slice(-2);
@@ -98,7 +99,7 @@ export default component$(() => {
     topLeftLine3.value = !isOutbound ? '--C&H Yard--' : '';
 
     // Top-right: due date (MM/DD format, +1 month -1 day from line 2) - inline calculation
-    const dueDateObj = new Date(currentDate);
+    const dueDateObj = new Date(parseInt(yearStr), parseInt(monthStr) - 1, parseInt(dayStr)); // Use same date object to avoid timezone issues
     dueDateObj.setMonth(dueDateObj.getMonth() + 1); // Add 1 month
     dueDateObj.setDate(dueDateObj.getDate() - 1);   // Subtract 1 day
     const dueMonth = (dueDateObj.getMonth() + 1).toString().padStart(2, '0');
@@ -223,7 +224,7 @@ export default component$(() => {
                 class="block text-sm font-medium mb-1"
                 style="color: rgb(var(--color-text-secondary))"
               >
-                Due Date (MM/DD, auto-calculated +29 days)
+                Due Date (MM/DD, auto-calculated +1 month -1 day)
               </label>
               <input
                 id="topRightDueDate"
@@ -236,7 +237,7 @@ export default component$(() => {
                 placeholder="MM/DD"
               />
               <p class="text-xs mt-1" style="color: rgb(var(--color-text-tertiary))">
-                Automatically calculated as Date + 29 days
+                Automatically calculated as Date + 1 month - 1 day
               </p>
             </div>
           </div>
@@ -251,23 +252,6 @@ export default component$(() => {
         </div>
       ) : (
         <>
-          {/* Debug section - hidden on print */}
-          <div class="card space-y-4 no-print">
-            <h3 class="font-semibold" style="color: rgb(var(--color-text-primary))">
-              Preview (this section will not print)
-            </h3>
-            <details class="cursor-pointer">
-              <summary class="font-semibold mb-3" style="color: rgb(var(--color-text-primary))">
-                Raw Data (for debugging)
-              </summary>
-              <pre
-                class="p-4 rounded-lg text-xs overflow-auto"
-                style="background-color: rgb(var(--color-bg-secondary)); color: rgb(var(--color-text-primary)); max-height: 400px;"
-              >
-                {JSON.stringify(breakdownData, null, 2)}
-              </pre>
-            </details>
-          </div>
 
           {/* Top Print Information - Only visible when printing */}
           <div class="print-top-info">
