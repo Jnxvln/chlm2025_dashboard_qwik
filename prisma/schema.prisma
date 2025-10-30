@@ -243,6 +243,18 @@ model Notice {
   updatedAt       DateTime      @default(now())
 }
 
+model StoreNotice {
+  id              Int           @id @default(autoincrement())
+  title           String
+  content         String
+  type            NoticeType    @default(info)
+  createdAt       DateTime      @default(now())
+  displayUntil    DateTime
+  showCreatedAt   Boolean       @default(true)
+  isActive        Boolean       @default(true)
+  updatedAt       DateTime      @default(now())
+}
+
 model Settings {
   id                                  Int       @id @default(autoincrement())
 

@@ -5,13 +5,15 @@ import {
   type DocumentHead,
 } from '@builder.io/qwik-city';
 import { db } from '~/lib/db';
-import { NoticeTable } from '~/components/notices/NoticeTable';
+import { StoreNoticeTable } from '~/components/notices/StoreNoticeTable';
 import PageTitle from '~/components/PageTitle';
 import { AddIcon } from '~/components/icons';
+import BackButton from '~/components/BackButton';
 
-export const useNoticesLoader = routeLoader$(async ({ query }) => {
-  const sortOrder = query.get('noticeSort') || 'newest';
-  const typeFilter = query.get('noticeType') || 'all';
+export const useStoreNoticesLoader = routeLoader$(async ({ query }) => {
+  const sortOrder = query.get('storeNoticeSort') || 'newest';
+  const typeFilter = query.get('storeNoticeType') || 'all';
+  const statusFilter = query.get('storeNoticeStatus') || 'all';
 
   const order = sortOrder === 'newest' ? 'desc' : 'asc';
 
@@ -19,14 +21,16 @@ export const useNoticesLoader = routeLoader$(async ({ query }) => {
   if (typeFilter !== 'all') {
     where.type = typeFilter;
   }
+  if (statusFilter === 'active') {
+    where.isActive = true;
+  } else if (statusFilter === 'inactive') {
+    where.isActive = false;
+  }
 
-  const notices = await db.notice.findMany({
+  const notices = await db.storeNotice.findMany({
     where,
-    include: {
-      urls: true,
-    },
     orderBy: {
-      displayDate: order,
+      displayUntil: order,
     },
   });
 
@@ -34,52 +38,56 @@ export const useNoticesLoader = routeLoader$(async ({ query }) => {
     notices,
     sortOrder,
     typeFilter,
+    statusFilter,
   };
 });
 
-export const useDeleteNoticeAction = routeAction$(async (data, { fail }) => {
+export const useDeleteStoreNoticeAction = routeAction$(async (data, { fail }) => {
   const id = Number(data.id);
 
   if (isNaN(id)) {
-    return fail(400, { error: 'Invalid notice ID' });
+    return fail(400, { error: 'Invalid store notice ID' });
   }
 
   try {
-    // Delete the notice (cascade will delete associated URLs)
-    await db.notice.delete({
+    await db.storeNotice.delete({
       where: { id },
     });
 
     return { success: true };
   } catch (error) {
-    console.error('Failed to delete notice:', error);
-    return fail(500, { error: 'Failed to delete notice' });
+    console.error('Failed to delete store notice:', error);
+    return fail(500, { error: 'Failed to delete store notice' });
   }
 });
 
 export default component$(() => {
-  const data = useNoticesLoader();
+  const data = useStoreNoticesLoader();
 
-  // Load saved notice preferences from localStorage on mount
+  // Load saved store notice preferences from localStorage on mount
   // eslint-disable-next-line qwik/no-use-visible-task
   useVisibleTask$(() => {
     const url = new URL(window.location.href);
-    const hasNoticeParams = url.searchParams.has('noticeSort') || url.searchParams.has('noticeType');
+    const hasStoreNoticeParams = url.searchParams.has('storeNoticeSort') || url.searchParams.has('storeNoticeType') || url.searchParams.has('storeNoticeStatus');
 
     // If URL has params, save them to localStorage
-    if (hasNoticeParams) {
-      const noticeSort = url.searchParams.get('noticeSort') || 'newest';
-      const noticeType = url.searchParams.get('noticeType') || 'all';
-      localStorage.setItem('noticeSort', noticeSort);
-      localStorage.setItem('noticeType', noticeType);
+    if (hasStoreNoticeParams) {
+      const storeNoticeSort = url.searchParams.get('storeNoticeSort') || 'newest';
+      const storeNoticeType = url.searchParams.get('storeNoticeType') || 'all';
+      const storeNoticeStatus = url.searchParams.get('storeNoticeStatus') || 'all';
+      localStorage.setItem('storeNoticeSort', storeNoticeSort);
+      localStorage.setItem('storeNoticeType', storeNoticeType);
+      localStorage.setItem('storeNoticeStatus', storeNoticeStatus);
     } else {
       // If no URL params, check localStorage and redirect if preferences exist
-      const savedSort = localStorage.getItem('noticeSort');
-      const savedType = localStorage.getItem('noticeType');
+      const savedSort = localStorage.getItem('storeNoticeSort');
+      const savedType = localStorage.getItem('storeNoticeType');
+      const savedStatus = localStorage.getItem('storeNoticeStatus');
 
-      if (savedSort || savedType) {
-        if (savedSort) url.searchParams.set('noticeSort', savedSort);
-        if (savedType) url.searchParams.set('noticeType', savedType);
+      if (savedSort || savedType || savedStatus) {
+        if (savedSort) url.searchParams.set('storeNoticeSort', savedSort);
+        if (savedType) url.searchParams.set('storeNoticeType', savedType);
+        if (savedStatus) url.searchParams.set('storeNoticeStatus', savedStatus);
         window.location.href = url.toString();
       }
     }
@@ -87,23 +95,20 @@ export default component$(() => {
 
   return (
     <div class="container mx-auto p-6">
+      <div class="mb-6">
+        <BackButton />
+      </div>
+
       <div class="mb-6 flex items-center justify-between">
         <div>
-          <PageTitle text="Notice Board" />
+          <PageTitle text="Store Notices" />
           <p class="text-sm mt-2" style="color: rgb(var(--color-text-secondary))">
-            Dashboard notices for internal use.{' '}
-            <a
-              href="/notices/store"
-              class="underline hover:opacity-80"
-              style="color: rgb(var(--color-accent))"
-            >
-              Manage Store Notices →
-            </a>
+            Manage notices for the public store website homepage
           </p>
         </div>
-        <a href="/notices/new" class="btn btn-primary flex items-center gap-2">
+        <a href="/notices/store/new" class="btn btn-primary flex items-center gap-2">
           <AddIcon size={16} />
-          New Notice
+          New Store Notice
         </a>
       </div>
 
@@ -132,9 +137,9 @@ export default component$(() => {
               style="background-color: rgb(var(--color-bg-primary)); border: 1px solid rgb(var(--color-border)); color: rgb(var(--color-text-primary))"
               onChange$={(e) => {
                 const newFilter = (e.target as HTMLSelectElement).value;
-                localStorage.setItem('noticeType', newFilter);
+                localStorage.setItem('storeNoticeType', newFilter);
                 const url = new URL(window.location.href);
-                url.searchParams.set('noticeType', newFilter);
+                url.searchParams.set('storeNoticeType', newFilter);
                 window.location.href = url.toString();
               }}
             >
@@ -167,6 +172,38 @@ export default component$(() => {
 
           <div>
             <label
+              for="statusFilter"
+              class="block text-sm font-medium mb-1"
+              style="color: rgb(var(--color-text-secondary))"
+            >
+              Status
+            </label>
+            <select
+              id="statusFilter"
+              class="px-3 py-2 rounded"
+              style="background-color: rgb(var(--color-bg-primary)); border: 1px solid rgb(var(--color-border)); color: rgb(var(--color-text-primary))"
+              onChange$={(e) => {
+                const newFilter = (e.target as HTMLSelectElement).value;
+                localStorage.setItem('storeNoticeStatus', newFilter);
+                const url = new URL(window.location.href);
+                url.searchParams.set('storeNoticeStatus', newFilter);
+                window.location.href = url.toString();
+              }}
+            >
+              <option value="all" selected={data.value.statusFilter === 'all'}>
+                All Statuses
+              </option>
+              <option value="active" selected={data.value.statusFilter === 'active'}>
+                Active Only
+              </option>
+              <option value="inactive" selected={data.value.statusFilter === 'inactive'}>
+                Inactive Only
+              </option>
+            </select>
+          </div>
+
+          <div>
+            <label
               for="sortOrder"
               class="block text-sm font-medium mb-1"
               style="color: rgb(var(--color-text-secondary))"
@@ -179,9 +216,9 @@ export default component$(() => {
               style="background-color: rgb(var(--color-bg-primary)); border: 1px solid rgb(var(--color-border)); color: rgb(var(--color-text-primary))"
               onChange$={(e) => {
                 const newSort = (e.target as HTMLSelectElement).value;
-                localStorage.setItem('noticeSort', newSort);
+                localStorage.setItem('storeNoticeSort', newSort);
                 const url = new URL(window.location.href);
-                url.searchParams.set('noticeSort', newSort);
+                url.searchParams.set('storeNoticeSort', newSort);
                 window.location.href = url.toString();
               }}
             >
@@ -202,28 +239,28 @@ export default component$(() => {
         </div>
       </div>
 
-      {/* Notices Table */}
+      {/* Store Notices Table */}
       <div class="card">
         <div class="card-header">
           <h3
             class="text-lg font-semibold"
             style="color: rgb(var(--color-text-primary))"
           >
-            All Notices ({data.value.notices.length})
+            All Store Notices ({data.value.notices.length})
           </h3>
         </div>
-        <NoticeTable notices={data.value.notices} />
+        <StoreNoticeTable notices={data.value.notices} />
       </div>
     </div>
   );
 });
 
 export const head: DocumentHead = {
-  title: 'Notice Board | CHLM Dashboard',
+  title: 'Store Notices | CHLM Dashboard',
   meta: [
     {
       name: 'description',
-      content: 'Manage notices for the CHLM dashboard',
+      content: 'Manage store notices for the public website',
     },
   ],
 };
