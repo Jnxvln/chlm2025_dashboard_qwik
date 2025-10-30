@@ -265,6 +265,7 @@ model Settings {
   storeDefaultClosureReason           String    @default("C&H is currently closed")
   storeDefaultClosureReasonWeather    String    @default("C&H is closed due to weather")
   storeDefaultClosureReasonHoliday    String    @default("C&H is closed for the holiday")
+  storeClosedAt                       DateTime? @default(now())
   storeDisplayInventoryStatus         Boolean   @default(true)
   
   // OPERATING HOURS (Displayed as: "Mon-Fri: 8:00am - 5:00pm", "Sat: 8:00am - 12:00pm", etc.)

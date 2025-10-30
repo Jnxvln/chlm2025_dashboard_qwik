@@ -46,7 +46,7 @@ export const useUpdateSettings = routeAction$(
         skipFields: [
           'storeOpen', 'storeClosureType', 'storeCustomClosureMessage',
           'storeDefaultClosureReason', 'storeDefaultClosureReasonWeather', 'storeDefaultClosureReasonHoliday',
-          'storeDisplayInventoryStatus',
+          'storeDisplayInventoryStatus', 'storeClosedAt',
           'offDutyReasonNoWork', 'offDutyReasonMaintenance', 'offDutyReasonSick',
           'offDutyReasonVacation', 'offDutyReasonWeather', 'offDutyReasonPersonal', 'offDutyReasonBereavement',
           'userDefaultColorTheme'
@@ -60,16 +60,21 @@ export const useUpdateSettings = routeAction$(
         throw new Error('Settings record not found');
       }
 
+      // Determine storeClosedAt based on storeOpen value
+      const isStoreOpen = normalized.storeOpen === 'true';
+      const storeClosedAt = isStoreOpen ? null : new Date();
+
       // Update the settings
       const updated = await db.settings.update({
         where: { id: existingSettings.id },
         data: {
-          storeOpen: normalized.storeOpen === 'true',
+          storeOpen: isStoreOpen,
           storeClosureType: normalized.storeClosureType,
           storeCustomClosureMessage: normalized.storeCustomClosureMessage || null,
           storeDefaultClosureReason: normalized.storeDefaultClosureReason,
           storeDefaultClosureReasonWeather: normalized.storeDefaultClosureReasonWeather,
           storeDefaultClosureReasonHoliday: normalized.storeDefaultClosureReasonHoliday,
+          storeClosedAt: storeClosedAt,
           storeDisplayInventoryStatus: normalized.storeDisplayInventoryStatus === 'true',
           operatingHoursMonFriStart: normalized.operatingHoursMonFriStart,
           operatingHoursMonFriEnd: normalized.operatingHoursMonFriEnd,
@@ -112,6 +117,7 @@ export const useUpdateSettings = routeAction$(
       storeDefaultClosureReason: z.string(),
       storeDefaultClosureReasonWeather: z.string(),
       storeDefaultClosureReasonHoliday: z.string(),
+      storeClosedAt: z.string().optional(),
       storeDisplayInventoryStatus: z.string(),
       operatingHoursMonFriStart: z.string(),
       operatingHoursMonFriEnd: z.string(),
@@ -157,6 +163,7 @@ export default component$(() => {
   const storeDefaultClosureReasonWeather = useSignal('');
   const storeDefaultClosureReasonHoliday = useSignal('');
   const storeCustomClosureMessage = useSignal('');
+  const storeClosedAt = useSignal('');
   const operatingHoursMonFriStart = useSignal('08:00');
   const operatingHoursMonFriEnd = useSignal('17:00');
   const operatingHoursSatStart = useSignal('08:00');
@@ -193,6 +200,14 @@ export default component$(() => {
     storeDefaultClosureReasonWeather.value = settings.value.storeDefaultClosureReasonWeather;
     storeDefaultClosureReasonHoliday.value = settings.value.storeDefaultClosureReasonHoliday;
     storeCustomClosureMessage.value = settings.value.storeCustomClosureMessage || '';
+
+    // Initialize storeClosedAt - use existing value or leave empty
+    if (settings.value.storeClosedAt) {
+      const date = new Date(settings.value.storeClosedAt);
+      storeClosedAt.value = date.toISOString().slice(0, 16); // Format: YYYY-MM-DDTHH:mm
+    } else {
+      storeClosedAt.value = '';
+    }
 
     monFriClosed.value = settings.value.operatingHoursMonFriStart === 'CLOSED';
     satClosed.value = settings.value.operatingHoursSatStart === 'CLOSED';
@@ -232,6 +247,15 @@ export default component$(() => {
       storeDefaultClosureReasonHoliday.value = result.settings.storeDefaultClosureReasonHoliday;
       storeCustomClosureMessage.value = result.settings.storeCustomClosureMessage || '';
 
+      // Sync storeClosedAt - clear it if null, otherwise format it
+      if (result.settings.storeClosedAt) {
+        const date = new Date(result.settings.storeClosedAt);
+        storeClosedAt.value = date.toISOString().slice(0, 16);
+      } else {
+        // When store is opened, clear the datetime picker
+        storeClosedAt.value = '';
+      }
+
       monFriClosed.value = result.settings.operatingHoursMonFriStart === 'CLOSED';
       satClosed.value = result.settings.operatingHoursSatStart === 'CLOSED';
       sunClosed.value = result.settings.operatingHoursSunStart === 'CLOSED';
@@ -267,6 +291,29 @@ export default component$(() => {
       <div class="card mt-6 max-w-4xl">
         <Form action={updateSettings} class="space-y-8">
 
+          {/* Top Submit Button */}
+          <div class="flex justify-between items-center pb-4 border-b" style="border-color: rgb(var(--color-border))">
+            <div>
+              {success.value && (
+                <div class="text-sm font-medium" style="color: rgb(var(--color-success))">
+                  Settings saved successfully!
+                </div>
+              )}
+              {updateSettings.value?.error && (
+                <div class="text-sm font-medium" style="color: rgb(var(--color-danger))">
+                  {updateSettings.value.error}
+                </div>
+              )}
+            </div>
+            <button
+              type="submit"
+              class="btn btn-primary"
+              disabled={updateSettings.isRunning || success.value}
+            >
+              {updateSettings.isRunning ? 'Saving...' : 'Save Settings'}
+            </button>
+          </div>
+
           {/* STORE SETTINGS */}
           <div>
             <h2 class="text-xl font-semibold mb-4" style="color: rgb(var(--color-text-primary))">
@@ -290,11 +337,35 @@ export default component$(() => {
                   value={storeOpen.value}
                   onChange$={(_, el) => {
                     storeOpen.value = el.value;
+                    // Automatically update storeClosedAt based on store status
+                    if (el.value === 'false') {
+                      // Store closed - set to current datetime
+                      const now = new Date();
+                      storeClosedAt.value = now.toISOString().slice(0, 16);
+                    } else {
+                      // Store opened - clear the datetime
+                      storeClosedAt.value = '';
+                    }
                   }}
                 >
                   <option value="true">Open</option>
                   <option value="false">Closed</option>
                 </select>
+              </div>
+
+              <div>
+                <label class="block text-sm font-medium mb-2" style="color: rgb(var(--color-text-secondary))">
+                  Store Closed At
+                </label>
+                <input
+                  name="storeClosedAt"
+                  type="datetime-local"
+                  value={storeClosedAt.value}
+                  onInput$={(_, el) => {
+                    storeClosedAt.value = el.value;
+                  }}
+                  class="w-full"
+                />
               </div>
 
               {/* Show closure options when store is closed */}

@@ -1,0 +1,2 @@
+-- AlterTable
+ALTER TABLE "Settings" ADD COLUMN     "storeClosedAt" TIMESTAMP(3) DEFAULT CURRENT_TIMESTAMP;
