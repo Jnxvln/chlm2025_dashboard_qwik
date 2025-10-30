@@ -23,6 +23,8 @@ node_modules
 .mf
 .rollup.cache
 tsconfig.tsbuildinfo
+vite.config.ts.timestamp-*.mjs
+nul
 
 # Logs
 logs
