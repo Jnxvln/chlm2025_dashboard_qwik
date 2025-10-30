@@ -55,8 +55,6 @@ export default component$(() => {
   const navigate = useNavigate();
   const success = useSignal(false);
 
-  // Get today's date in YYYY-MM-DD format for default value
-  const today = new Date().toISOString().split('T')[0];
   // Default to 30 days from now for displayUntil
   const thirtyDaysFromNow = new Date();
   thirtyDaysFromNow.setDate(thirtyDaysFromNow.getDate() + 30);

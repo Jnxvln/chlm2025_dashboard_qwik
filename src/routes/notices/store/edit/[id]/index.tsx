@@ -21,14 +21,6 @@ export const useStoreNoticeLoader = routeLoader$(async ({ params, redirect }) =>
     throw redirect(302, '/notices/store');
   }
 
-  console.log('Loaded store notice:', {
-    id: storeNotice.id,
-    showCreatedAt: storeNotice.showCreatedAt,
-    isActive: storeNotice.isActive,
-    showCreatedAtType: typeof storeNotice.showCreatedAt,
-    isActiveType: typeof storeNotice.isActive,
-  });
-
   return storeNotice;
 });
 
@@ -52,13 +44,6 @@ export const useUpdateStoreNoticeAction = routeAction$(
       // Parse boolean values (use raw values, not normalized)
       const showCreatedAt = values.showCreatedAt === 'on' || values.showCreatedAt === 'true' || values.showCreatedAt === true;
       const isActive = values.isActive === 'on' || values.isActive === 'true' || values.isActive === true;
-
-      console.log('Update form data:', {
-        rawShowCreatedAt: values.showCreatedAt,
-        rawIsActive: values.isActive,
-        parsedShowCreatedAt: showCreatedAt,
-        parsedIsActive: isActive,
-      });
 
       // Update the store notice
       await db.storeNotice.update({
