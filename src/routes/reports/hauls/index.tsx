@@ -21,7 +21,7 @@ function formatCurrency(amount: number) {
   }).format(amount);
 }
 
-const NC_RATE = 20.00; // $20.00 constant for now
+// NC_RATE is now calculated per driver - see below in component
 
 // Helper function to get display text for off-duty reasons
 function getOffDutyReasonDisplay(offDutyReason: string | null, settings: any): string {
@@ -101,6 +101,11 @@ export default component$(() => {
       </div>
     );
   }
+
+  // Calculate NC_RATE: use driver's nonCommissionRate, fallback to global driverDefaultNCPayRate
+  const NC_RATE = (data.value.driver?.nonCommissionRate && data.value.driver.nonCommissionRate > 0)
+    ? data.value.driver.nonCommissionRate
+    : (data.value.settings?.driverDefaultNCPayRate ? Number(data.value.settings.driverDefaultNCPayRate) : 0);
 
   // Calculate totals for success state
   let totalFreightPay = 0;

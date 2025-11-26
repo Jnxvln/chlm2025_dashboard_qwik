@@ -1,4 +1,4 @@
-import { component$, useSignal, useVisibleTask$ } from '@builder.io/qwik';
+import { component$, useSignal, useVisibleTask$, $ } from '@builder.io/qwik';
 import {
   routeLoader$,
   routeAction$,
@@ -82,6 +82,15 @@ export default component$(() => {
     }
   });
 
+  // Handler to format number inputs to 2 decimal places
+  const formatToTwoDecimals = $((event: Event) => {
+    const input = event.target as HTMLInputElement;
+    const value = parseFloat(input.value);
+    if (!isNaN(value)) {
+      input.value = value.toFixed(2);
+    }
+  });
+
   return (
     <section class="max-w-3xl mx-auto px-4 py-6">
       <PageTitle text="Edit Driver" />
@@ -136,6 +145,7 @@ export default component$(() => {
             step="0.01"
             value={driver.value.endDumpPayRate}
             class="w-full"
+            onBlur$={formatToTwoDecimals}
           />
         </div>
 
@@ -147,6 +157,7 @@ export default component$(() => {
             step="0.01"
             value={driver.value.flatBedPayRate}
             class="w-full"
+            onBlur$={formatToTwoDecimals}
           />
         </div>
 
@@ -158,6 +169,7 @@ export default component$(() => {
             step="0.01"
             value={driver.value.nonCommissionRate}
             class="w-full"
+            onBlur$={formatToTwoDecimals}
           />
         </div>
 

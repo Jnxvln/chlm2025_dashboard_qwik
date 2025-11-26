@@ -1,4 +1,4 @@
-import { component$, useVisibleTask$ } from '@builder.io/qwik';
+import { component$, useVisibleTask$, $ } from '@builder.io/qwik';
 import {
   routeAction$,
   zod$,
@@ -68,6 +68,15 @@ export default component$(() => {
     }
   });
 
+  // Handler to format number inputs to 2 decimal places
+  const formatToTwoDecimals = $((event: Event) => {
+    const input = event.target as HTMLInputElement;
+    const value = parseFloat(input.value);
+    if (!isNaN(value)) {
+      input.value = value.toFixed(2);
+    }
+  });
+
   return (
     <section>
       <PageTitle text="New Driver" />
@@ -115,6 +124,7 @@ export default component$(() => {
             step={0.01}
             required
             class="w-full"
+            onBlur$={formatToTwoDecimals}
           />
         </div>
         <div>
@@ -126,6 +136,7 @@ export default component$(() => {
             step={0.01}
             required
             class="w-full"
+            onBlur$={formatToTwoDecimals}
           />
         </div>
         <div>
@@ -137,6 +148,7 @@ export default component$(() => {
             step={0.01}
             required
             class="w-full"
+            onBlur$={formatToTwoDecimals}
           />
         </div>
 
