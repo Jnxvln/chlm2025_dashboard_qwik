@@ -36,6 +36,8 @@ export const useCreateWorkdayAction = routeAction$(
           notes: normalized.notes || null,
           offDuty: normalized.offDuty,
           offDutyReason: normalized.offDutyReason || null,
+          offDutyReasonHoliday: normalized.offDutyReasonHoliday || null,
+          offDutyReasonOther: normalized.offDutyReasonOther || null,
           driverId: normalized.driverId,
           createdById: normalized.createdById,
           updatedAt: new Date(),
@@ -50,7 +52,7 @@ export const useCreateWorkdayAction = routeAction$(
       return { success: true, workdayId: workday.id };
     } catch (error) {
       console.error('Workday creation failed:', error);
-      return { success: false, error: 'Failed to create workday' };
+      return { success: false, error: `Failed to create workday: ${error instanceof Error ? error.message : String(error)}` };
     }
   },
   zod$({
@@ -61,6 +63,8 @@ export const useCreateWorkdayAction = routeAction$(
     notes: z.string().optional(),
     offDuty: z.coerce.boolean(),
     offDutyReason: z.string().optional(),
+    offDutyReasonHoliday: z.string().optional(),
+    offDutyReasonOther: z.string().optional(),
     driverId: z.coerce.number(),
     createdById: z.coerce.number(),
     returnTo: z.string().optional(),
@@ -85,6 +89,7 @@ export default component$(() => {
 
   // Get today's date as default
   const today = new Date().toISOString().split('T')[0];
+  const selectedDate = useSignal(today);
 
   // Handler for off-duty reason change
   const handleOffDutyReasonChange = $((value: string) => {
@@ -99,12 +104,8 @@ export default component$(() => {
 
   // Handler for custom reason modal confirmation
   const handleCustomReasonConfirm = $(() => {
-    const customText = customReasonInput.value.trim();
-    if (customText) {
-      offDutyReason.value = `${customReasonType.value}: ${customText}`;
-    } else {
-      offDutyReason.value = customReasonType.value;
-    }
+    offDutyReason.value = customReasonType.value;
+    isOffDuty.value = true; // Ensure checkbox stays checked
     showCustomReasonModal.value = false;
   });
 
@@ -158,12 +159,14 @@ export default component$(() => {
 
           <div class="flex justify-end gap-3">
             <button
+              type="button"
               class="btn btn-ghost"
               onClick$={handleCustomReasonCancel}
             >
               Cancel
             </button>
             <button
+              type="button"
               class="btn btn-primary"
               onClick$={handleCustomReasonConfirm}
               disabled={!customReasonInput.value.trim()}
@@ -222,7 +225,10 @@ export default component$(() => {
                   type="date"
                   id="date"
                   name="date"
-                  value={today}
+                  value={selectedDate.value}
+                  onChange$={(_, el) => {
+                    selectedDate.value = el.value;
+                  }}
                   required
                   class="w-full"
                 />
@@ -346,6 +352,7 @@ export default component$(() => {
                     id="offDuty"
                     name="offDuty"
                     value="true"
+                    checked={isOffDuty.value}
                     class="h-4 w-4 rounded"
                     style="accent-color: rgb(var(--color-primary))"
                     onChange$={(_, el) => {
@@ -391,12 +398,12 @@ export default component$(() => {
                       <option value="Bereavement">Bereavement</option>
                       <option value="Other">Other</option>
                     </select>
-                    {offDutyReason.value && !offDutyReason.value.startsWith('Holiday:') && !offDutyReason.value.startsWith('Other:') && (
-                      <input type="hidden" name="offDutyReason" value={offDutyReason.value} />
-                    )}
-                    {(offDutyReason.value.startsWith('Holiday:') || offDutyReason.value.startsWith('Other:')) && (
+                    <input type="hidden" name="offDutyReason" value={offDutyReason.value} />
+                    <input type="hidden" name="offDutyReasonHoliday" value={customReasonType.value === 'Holiday' ? customReasonInput.value : ''} />
+                    <input type="hidden" name="offDutyReasonOther" value={customReasonType.value === 'Other' ? customReasonInput.value : ''} />
+                    {(customReasonType.value === 'Holiday' || customReasonType.value === 'Other') && customReasonInput.value && (
                       <div class="mt-2 p-2 rounded text-sm" style="background-color: rgb(var(--color-bg-tertiary)); color: rgb(var(--color-text-secondary))">
-                        {offDutyReason.value}
+                        {customReasonType.value}: {customReasonInput.value}
                       </div>
                     )}
                   </div>

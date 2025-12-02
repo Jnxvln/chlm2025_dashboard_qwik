@@ -353,7 +353,12 @@ export default component$(() => {
                         </span>
                         {workday.offDutyReason && (
                           <div class="text-xs mt-1" style="color: rgb(var(--color-text-tertiary))">
-                            {workday.offDutyReason}
+                            {workday.offDutyReason === 'Holiday' 
+                              ? `Holiday: ${workday.offDutyReasonHoliday || '[N/A]'}`
+                              : workday.offDutyReason === 'Other'
+                              ? `Other: ${workday.offDutyReasonOther || '[N/A]'}`
+                              : workday.offDutyReason
+                            }
                           </div>
                         )}
                       </div>

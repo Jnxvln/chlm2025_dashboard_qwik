@@ -55,6 +55,8 @@ export const useUpdateWorkdayAction = routeAction$(
           notes: normalized.notes || null,
           offDuty: normalized.offDuty,
           offDutyReason: normalized.offDutyReason || null,
+          offDutyReasonHoliday: normalized.offDutyReasonHoliday || null,
+          offDutyReasonOther: normalized.offDutyReasonOther || null,
           driverId: normalized.driverId,
           updatedAt: new Date(),
         },
@@ -80,6 +82,8 @@ export const useUpdateWorkdayAction = routeAction$(
     notes: z.string().optional(),
     offDuty: z.coerce.boolean(),
     offDutyReason: z.string().optional(),
+    offDutyReasonHoliday: z.string().optional(),
+    offDutyReasonOther: z.string().optional(),
     driverId: z.coerce.number(),
     returnTo: z.string().optional(),
   }),
@@ -102,8 +106,12 @@ export default component$(() => {
   const offDutyReason = useSignal(workday.value.offDutyReason || '');
   const showDeleteHaulsModal = useSignal(false);
   const showCustomReasonModal = useSignal(false);
-  const customReasonType = useSignal<'Holiday' | 'Other'>('Holiday');
-  const customReasonInput = useSignal('');
+  // Initialize custom reason signals with existing data
+  const initialCustomType = workday.value.offDutyReason === 'Holiday' ? 'Holiday' : workday.value.offDutyReason === 'Other' ? 'Other' : 'Holiday';
+  const initialCustomText = workday.value.offDutyReason === 'Holiday' ? (workday.value.offDutyReasonHoliday || '') : workday.value.offDutyReason === 'Other' ? (workday.value.offDutyReasonOther || '') : '';
+  
+  const customReasonType = useSignal<'Holiday' | 'Other'>(initialCustomType);
+  const customReasonInput = useSignal(initialCustomText);
   const dateValue = new Date(workday.value.date).toISOString().split('T')[0];
 
   // Handler for off-duty checkbox change
@@ -455,7 +463,7 @@ export default component$(() => {
                       id="offDutyReasonSelect"
                       class="w-full"
                       required
-                      value={offDutyReason.value.startsWith('Holiday:') ? 'Holiday' : offDutyReason.value.startsWith('Other:') ? 'Other' : offDutyReason.value}
+                      value={offDutyReason.value.startsWith('Holiday') ? 'Holiday' : offDutyReason.value.startsWith('Other') ? 'Other' : offDutyReason.value}
                       onChange$={(_, el) => {
                         handleOffDutyReasonChange(el.value);
                       }}
@@ -472,9 +480,11 @@ export default component$(() => {
                       <option value="Other">Other</option>
                     </select>
                     <input type="hidden" name="offDutyReason" value={offDutyReason.value} />
-                    {(offDutyReason.value.startsWith('Holiday:') || offDutyReason.value.startsWith('Other:')) && (
+                    <input type="hidden" name="offDutyReasonHoliday" value={customReasonType.value === 'Holiday' ? customReasonInput.value : ''} />
+                    <input type="hidden" name="offDutyReasonOther" value={customReasonType.value === 'Other' ? customReasonInput.value : ''} />
+                    {(customReasonType.value === 'Holiday' || customReasonType.value === 'Other') && customReasonInput.value && (
                       <div class="mt-2 p-2 rounded text-sm" style="background-color: rgb(var(--color-bg-tertiary)); color: rgb(var(--color-text-secondary))">
-                        {offDutyReason.value}
+                        {customReasonType.value}: {customReasonInput.value}
                       </div>
                     )}
                   </div>

@@ -132,21 +132,23 @@ model Material {
 }
 
 model Workday {
-  id            Int      @id @default(autoincrement())
-  date          DateTime
-  chHours       Float
-  ncHours       Float
-  ncReasons     String?
-  notes         String?
-  offDuty       Boolean  @default(false)
-  offDutyReason String?
-  createdAt     DateTime @default(now())
-  updatedAt     DateTime @default(now())
-  driverId      Int
-  createdById   Int
-  hauls         Haul[]
-  createdBy     User     @relation(fields: [createdById], references: [id])
-  driver        Driver   @relation(fields: [driverId], references: [id])
+  id                    Int      @id @default(autoincrement())
+  date                  DateTime
+  chHours               Float
+  ncHours               Float
+  ncReasons             String?
+  notes                 String?
+  offDuty               Boolean  @default(false)
+  offDutyReason         String?
+  offDutyReasonHoliday  String?
+  offDutyReasonOther    String?
+  createdAt             DateTime @default(now())
+  updatedAt             DateTime @default(now())
+  driverId              Int
+  createdById           Int
+  hauls                 Haul[]
+  createdBy             User     @relation(fields: [createdById], references: [id])
+  driver                Driver   @relation(fields: [driverId], references: [id])
 
   @@unique([driverId, date])
 }
