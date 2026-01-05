@@ -378,7 +378,7 @@ export default component$(() => {
                 // Check if this is a placeholder entry (negative ID means off-duty placeholder)
                 const isPlaceholder = haul.id < 0;
 
-                const dayNcHours = workdayNcHoursById.get(haul.workday.id) || 0;
+                // const dayNcHours = workdayNcHoursById.get(haul.workday.id) || 0;
 
                 return (
                   <tr key={haul.id}>
