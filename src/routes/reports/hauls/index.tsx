@@ -12,6 +12,12 @@ function formatDate(date: string | Date) {
   });
 }
 
+function formatDateShort(date: string | Date) {
+  return new Date(date).toLocaleDateString('en-US', {
+    month: '2-digit',
+    day: '2-digit',
+  });
+}
 function formatCurrency(amount: number) {
   return new Intl.NumberFormat('en-US', {
     style: 'currency',
@@ -20,8 +26,6 @@ function formatCurrency(amount: number) {
     maximumFractionDigits: 2,
   }).format(amount);
 }
-
-// NC_RATE is now calculated per driver - see below in component
 
 // Helper function to get display text for off-duty reasons
 function getOffDutyReasonDisplay(offDutyReason: string | null, settings: any): string {
@@ -61,9 +65,7 @@ export default component$(() => {
     }
   });
 
-  const handlePrint = $(() => {
-    window.print();
-  });
+  const handlePrint = $(() => window.print());
 
   const handleBack = $(() => {
     if ('error' in data.value) return; // Prevent access if error state
@@ -102,10 +104,70 @@ export default component$(() => {
     );
   }
 
+  const workdays = data.value.workdays || [];
+
   // Calculate NC_RATE: use driver's nonCommissionRate, fallback to global driverDefaultNCPayRate
-  const NC_RATE = (data.value.driver?.nonCommissionRate && data.value.driver.nonCommissionRate > 0)
+  const DEFAULT_NC_RATE = (data.value.driver?.nonCommissionRate && data.value.driver.nonCommissionRate > 0)
     ? data.value.driver.nonCommissionRate
     : (data.value.settings?.driverDefaultNCPayRate ? Number(data.value.settings.driverDefaultNCPayRate) : 0);
+
+  // Legacy NC rate (old system: ncHours * $20.00, single combined ncReasons string)
+  const LEGACY_NC_RATE = 20;
+
+  // Build per-workday NC totals from ncItems
+  const workdayNcHoursById = new Map<number, number>();
+  const workdayNcPayById = new Map<number, number>();
+
+  // Build a detailed NC “reasons” list (date + item lines)
+  const ncReasonDetails: string[] = [];
+
+  for (const wd of workdays) {
+    const items = (wd as any).ncItems || [];
+    
+    // const hours = items.reduce((sum: number, it: any) => sum + (Number(it.hours) || 0), 0);
+    // BACKWARDS-COMPATIBILITY PATCH (some "old system" records contained `ncHours` <number> and `ncReasons` <string>)
+    const legacyHours = Number((wd as any).ncHours) || 0;
+    const legacyReasonsRaw = (wd as any).ncReasons;
+    const legacyReasons = typeof legacyReasonsRaw === 'string' ? legacyReasonsRaw.trim() : '';
+    const isLegacyNc = items.length === 0 && legacyHours > 0;
+    const effectiveItems = isLegacyNc ? [{
+      description: legacyReasons || 'Non-Comm (Legacy)',
+      hours: legacyHours,
+      rate: LEGACY_NC_RATE,
+    }] : items;
+
+    const hours = effectiveItems.reduce((sum: number, it: any) => sum + (Number(it.hours) || 0), 0);
+    
+    // const pay = items.reduce((sum: number, it: any) => {
+    //   const h = Number(it.hours) || 0;
+    //   const r = (it.rate == null || !Number.isFinite(Number(it.rate))) ? DEFAULT_NC_RATE : Number(it.rate);
+    //   return sum + h * r;
+    // }, 0);
+    const pay = effectiveItems.reduce((sum: number, it: any) => {
+      const h = Number(it.hours) || 0;
+      const r = isLegacyNc ? LEGACY_NC_RATE : ((it.rate == null || !Number.isFinite(Number(it.rate))) ? DEFAULT_NC_RATE : Number(it.rate));
+      return sum + h * r;
+    }, 0);
+
+    workdayNcHoursById.set(wd.id, hours);
+    workdayNcPayById.set(wd.id, pay);
+
+    if (effectiveItems.length) {
+      const dateStr = formatDateShort(wd.date);
+      for (const it of effectiveItems) {
+        const h = Number(it.hours) || 0;
+        // const r = (it.rate == null || !Number.isFinite(Number(it.rate))) ? DEFAULT_NC_RATE : Number(it.rate);
+        const r = isLegacyNc ? LEGACY_NC_RATE : ((it.rate == null || !Number.isFinite(Number(it.rate))) ? DEFAULT_NC_RATE : Number(it.rate));
+        const line = `${dateStr}: ${String(it.description || '').trim()} (${h.toFixed(2)}hr @ ${formatCurrency(r)} = ${formatCurrency(h * r)})`;
+        ncReasonDetails.push(line);
+      }
+    }
+  }
+
+  // Calculate totals
+  const totalChHours = workdays.reduce((sum, wd) => sum + (Number(wd.chHours) || 0), 0);
+  const totalNcHours = workdays.reduce((sum, wd) => sum + (workdayNcHoursById.get(wd.id) || 0), 0);
+  const ncTotalPay = workdays.reduce((sum, wd) => sum + (workdayNcPayById.get(wd.id) || 0), 0);
 
   // Calculate totals for success state
   let totalFreightPay = 0;
@@ -113,8 +175,8 @@ export default component$(() => {
 
   // Track unique workdays to avoid double-counting hours
   const seenWorkdayIds = new Set<number>();
-  let totalChHours = 0;
-  let totalNcHours = 0;
+  // let totalChHours = 0;
+  // let totalNcHours = 0;
 
   const haulsWithCalculations = (data.value.allHauls || []).map((haul, index) => {
     // Calculate freight pay based on load type
@@ -132,16 +194,18 @@ export default component$(() => {
     totalFreightPay += freightPay;
     totalDriverPay += driverPay;
 
+    // Determine if this is the first haul of the day
+    const isFirstHaulOfDay =
+      index === 0 ||
+      formatDate((data.value.allHauls || [])[index - 1]?.dateHaul || '') !== formatDate(haul.dateHaul);
+
     // Only count hours once per workday
     if (!seenWorkdayIds.has(haul.workday.id)) {
-      totalChHours += haul.workday.chHours;
-      totalNcHours += haul.workday.ncHours;
+      // totalChHours += haul.workday.chHours;
+      // totalNcHours += haul.workday.ncHours;
+      // seenWorkdayIds.add(haul.workday.id);
       seenWorkdayIds.add(haul.workday.id);
     }
-
-    // Determine if this is the first haul of the day
-    const isFirstHaulOfDay = index === 0 ||
-      formatDate((data.value.allHauls || [])[index - 1]?.dateHaul || '') !== formatDate(haul.dateHaul);
 
     return {
       ...haul,
@@ -151,8 +215,8 @@ export default component$(() => {
     };
   });
 
-  const ncTotal = totalNcHours * NC_RATE;
-  const driverTotal = totalDriverPay + ncTotal;
+  // const ncTotal = totalNcHours * NC_RATE;
+  const driverTotal = totalDriverPay + ncTotalPay;
 
   return (
     <>
@@ -236,7 +300,7 @@ export default component$(() => {
 
           .summary-section {
             display: grid;
-            grid-template-columns: 1fr 1fr 1fr;
+            grid-template-columns: 0.5fr 1.2fr 0.7fr;
             gap: 2rem;
             margin-top: 1rem;
             padding-top: 1rem;
@@ -314,6 +378,8 @@ export default component$(() => {
                 // Check if this is a placeholder entry (negative ID means off-duty placeholder)
                 const isPlaceholder = haul.id < 0;
 
+                const dayNcHours = workdayNcHoursById.get(haul.workday.id) || 0;
+
                 return (
                   <tr key={haul.id}>
                     <td>{formatDate(haul.dateHaul)}</td>
@@ -380,15 +446,26 @@ export default component$(() => {
           <div class="summary-column">
             <div><strong>C&H Hours:</strong> {totalChHours.toFixed(2)}</div>
             <div><strong>NC Hours:</strong> {totalNcHours.toFixed(2)}</div>
-            <div><strong>NC Rate:</strong> {formatCurrency(NC_RATE)}</div>
+            <div><strong>Default NC Rate:</strong> {formatCurrency(DEFAULT_NC_RATE)}</div>
+            <div style="font-size: 0.60rem; color: #444;">
+              (Item rates may override default)
+            </div>
           </div>
 
           {/* Middle Column */}
           <div class="summary-column">
-            <div><strong>NC Reasons:</strong></div>
-            {data.value.totals.ncReasonDetails.length > 0 ? (
+            {/* <div><strong>NC Reasons:</strong></div> */}
+            <div><strong>NC Items:</strong></div>
+            {/* {data.value.totals.ncReasonDetails.length > 0 ? (
               data.value.totals.ncReasonDetails.map((reason, index) => (
                 <div key={index} style="margin-bottom: 0.125rem;">{reason}</div>
+              ))
+            ) : (
+              <div>None</div>
+            )} */}
+            {ncReasonDetails.length > 0 ? (
+              ncReasonDetails.map((line, idx) => (
+                <div key={idx} style="font-size: 11px; margin-bottom: 0.3rem; white-space: pre-line;">{line}</div>
               ))
             ) : (
               <div>None</div>
@@ -399,7 +476,7 @@ export default component$(() => {
           <div class="summary-column">
             <div><strong>Total Freight Pay:</strong> {formatCurrency(totalFreightPay)}</div>
             <div><strong>Driver Subtotal:</strong> {formatCurrency(totalDriverPay)}</div>
-            <div><strong>NC Total:</strong> {formatCurrency(ncTotal)}</div>
+            <div><strong>NC Total:</strong> {formatCurrency(ncTotalPay)}</div>
             <div style="padding-top: 0.5rem; border-top: 1px solid black; margin-top: 0.5rem;">
               <strong>Driver Total:</strong> {formatCurrency(driverTotal)}
             </div>

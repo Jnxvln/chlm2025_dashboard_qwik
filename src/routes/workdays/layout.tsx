@@ -18,3 +18,13 @@ export const useCurrentUserLoader = routeLoader$(async () => {
   const user = await db.user.findFirst();
   return user;
 });
+
+export const useSettingsLoader = routeLoader$(async() => {
+  const settings = await db.settings.findFirst();
+  if (!settings) return null;
+  return {
+    ...settings,
+    driverDefaultNCPayRate: Number(settings.driverDefaultNCPayRate?.toString() ?? 0),
+    driverDefaultHolidayPayRate: Number(settings.driverDefaultHolidayPayRate?.toString() ?? 0),
+  }
+})

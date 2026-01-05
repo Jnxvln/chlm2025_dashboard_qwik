@@ -13,36 +13,73 @@ import {
 import { db } from '~/lib/db';
 import { normalizeFormData } from '~/lib/text-utils';
 import PageTitle from '~/components/PageTitle';
+import type { NcItemDraft } from '~/utils/nonCommUtils';
+import { parseNcItemsJson, getDefaultRate } from '~/utils/nonCommUtils';
 import {
   useDriversLoader,
   useCurrentUserLoader,
   useDriverParam,
+  useSettingsLoader,
 } from '../layout';
 
 export const useCreateWorkdayAction = routeAction$(
   async (values, event) => {
+    
     try {
       // Normalize capitalization before saving (notes, ncReasons, offDutyReason, and checkbox fields are preserved)
       const normalized = normalizeFormData(values, {
         skipFields: ['notes', 'ncReasons', 'offDutyReason', 'offDuty'],
       });
 
-      const workday = await db.workday.create({
-        data: {
-          date: normalized.date,
-          chHours: normalized.chHours,
-          ncHours: normalized.ncHours,
-          ncReasons: normalized.ncReasons || null,
-          notes: normalized.notes || null,
-          offDuty: normalized.offDuty,
-          offDutyReason: normalized.offDutyReason || null,
-          offDutyReasonHoliday: normalized.offDutyReasonHoliday || null,
-          offDutyReasonOther: normalized.offDutyReasonOther || null,
-          driverId: normalized.driverId,
-          createdById: normalized.createdById,
-          updatedAt: new Date(),
-        },
-      });
+      const items = parseNcItemsJson(values.ncItemsJson)
+      const cachedNcHours = items.reduce((sum, i) => sum + (Number.isFinite(i.hours) ? i.hours : 0), 0)
+
+      // const workday = await db.workday.create({
+      //   data: {
+      //     date: normalized.date,
+      //     chHours: normalized.chHours,
+      //     ncHours: normalized.ncHours,
+      //     ncReasons: normalized.ncReasons || null,
+      //     notes: normalized.notes || null,
+      //     offDuty: normalized.offDuty,
+      //     offDutyReason: normalized.offDutyReason || null,
+      //     offDutyReasonHoliday: normalized.offDutyReasonHoliday || null,
+      //     offDutyReasonOther: normalized.offDutyReasonOther || null,
+      //     driverId: normalized.driverId,
+      //     createdById: normalized.createdById,
+      //     updatedAt: new Date(),
+      //   },
+      // });
+
+      const workday = await db.$transaction(async (tx) => {
+        const created = await tx.workday.create({
+          data: {
+            date: normalized.date,
+            chHours: normalized.chHours,
+            ncHours: cachedNcHours, // cache (legacy)
+            ncReasons: normalized.ncReasons || null, // legacy
+            notes: normalized.notes || null,
+            offDuty: normalized.offDuty,
+            offDutyReason: normalized.offDutyReason || null,
+            offDutyReasonHoliday: normalized.offDutyReasonHoliday || null,
+            offDutyReasonOther: normalized.offDutyReasonOther || null,
+            driverId: normalized.driverId,
+            createdById: normalized.createdById,
+          }
+        })
+
+        if (items.length && !normalized.offDuty) {
+          await tx.ncItem.createMany({
+            data: items.map(i => ({
+              workdayId: created.id,
+              description: i.description,
+              hours: i.hours,
+              rate: i.rate ?? null,
+            })),
+          })
+        }
+        return created;
+      })
 
       // Redirect to returnTo if present
       if (normalized.returnTo && typeof normalized.returnTo === 'string') {
@@ -58,7 +95,8 @@ export const useCreateWorkdayAction = routeAction$(
   zod$({
     date: z.string().transform((s) => new Date(s + 'T12:00:00Z')),
     chHours: z.coerce.number().min(0),
-    ncHours: z.coerce.number().min(0),
+    // ncHours: z.coerce.number().min(0),
+    ncItemsJson: z.string().optional(),
     ncReasons: z.string().optional(),
     notes: z.string().optional(),
     offDuty: z.coerce.boolean(),
@@ -77,15 +115,18 @@ export default component$(() => {
   const currentUser = useCurrentUserLoader();
   const createAction = useCreateWorkdayAction();
   const nav = useNavigate();
-
+  const settings = useSettingsLoader();
   const loc = useLocation();
-  const returnToParam = loc.url.searchParams.get('returnTo');
 
   const isOffDuty = useSignal(false);
   const offDutyReason = useSignal('');
   const showCustomReasonModal = useSignal(false);
   const customReasonType = useSignal<'Holiday' | 'Other'>('Holiday');
   const customReasonInput = useSignal('');
+  const chHoursInput = useSignal<string>('0.00');
+  const ncItems = useSignal<NcItemDraft[]>([])
+  
+  const returnToParam = loc.url.searchParams.get('returnTo');
 
   // Get today's date as default
   const today = new Date().toISOString().split('T')[0];
@@ -114,6 +155,39 @@ export default component$(() => {
     offDutyReason.value = '';
     showCustomReasonModal.value = false;
   });
+
+  // Pre-convert settings rate outside the $ scope to avoid Decimal serialization
+  // const settingsRateRaw = settings.value?.driverDefaultNCPayRate as any;
+  const precomputedSettingsRate = settings.value?.driverDefaultNCPayRate ?? null;
+  
+  // Helper to compute default rate from selected driver
+  // const getDefaultRate = $((driverIdStr: string) => {
+  //   const driverId = Number(driverIdStr);
+  //   const drv = drivers.value.find(d => d.id === driverId)
+  //   const driverRate = drv?.nonCommissionRate ?? null
+    
+  //   return Number.isFinite(driverRate as any) ? Number(driverRate) : Number.isFinite(precomputedSettingsRate) ? Number(precomputedSettingsRate) : 0
+  // })
+
+  const addNcItem = $(async () => {
+    const driverIdStr = String(driverParam.value || '')
+    const defaultRate = await getDefaultRate(drivers.value as any, driverIdStr, precomputedSettingsRate);
+
+    ncItems.value = [
+      ...ncItems.value,
+      { description: '', hours: 0, rate: defaultRate },
+    ]
+  })
+
+  const removeNcItem = $((idx: number) => {
+    ncItems.value = ncItems.value.filter((_, i) => i !== idx)
+  })
+
+  const updateNcItem = $((idx: number, patch: Partial<NcItemDraft>) => {
+    const copy = ncItems.value.slice();
+    copy[idx] = { ...copy[idx], ...patch };
+    ncItems.value = copy;
+  })
 
   // eslint-disable-next-line qwik/no-use-visible-task
   useVisibleTask$(({ track }) => {
@@ -180,7 +254,7 @@ export default component$(() => {
   }
 
   return (
-    <div class="container mx-auto p-6 max-w-2xl">
+    <div class="container mx-auto p-6 max-w-5xl">
       <div class="mb-6">
         {/* <Link href="/workdays" class="text-blue-500 hover:text-blue-700">
           ← Back to Workdays
@@ -213,6 +287,7 @@ export default component$(() => {
           <div class="grid grid-cols-1 md:grid-cols-2 gap-6">
             {/* Left Column */}
             <div class="space-y-4">
+               {/* Date */}
               <div>
                 <label
                   for="date"
@@ -234,6 +309,7 @@ export default component$(() => {
                 />
               </div>
 
+              {/* Driver */}
               <div>
                 <label
                   for="driverId"
@@ -256,7 +332,7 @@ export default component$(() => {
                     nav(url.pathname + '?' + url.searchParams.toString());
                   }}
                 >
-                  <option value="">All Drivers</option>
+                  <option value="">Choose Driver...</option>
                   {drivers.value.map((driver) => (
                     <option key={driver.id} value={driver.id.toString()}>
                       {`${driver.firstName} ${driver.lastName}${driver.defaultTruck ? ` - ${driver.defaultTruck}` : ''}`}
@@ -265,6 +341,7 @@ export default component$(() => {
                 </select>
               </div>
 
+              {/* C&H Hours */}
               <div>
                 <label
                   for="chHours"
@@ -279,13 +356,19 @@ export default component$(() => {
                   name="chHours"
                   min="0"
                   step="0.25"
-                  value="0"
+                  value={chHoursInput.value}
                   required
                   class="w-full"
-                  placeholder="8.00"
+                  onBlur$={(_, el) => {
+                    if (el.value === '') return;
+                    const n = Number(el.value);
+                    const snapped = Math.round(n / 0.25) * 0.25;
+                    chHoursInput.value = snapped.toFixed(2)
+                  }}
                 />
               </div>
 
+              {/* 
               <div>
                 <label
                   for="ncHours"
@@ -323,93 +406,215 @@ export default component$(() => {
                   placeholder="Reason for non-commission hours..."
                 ></textarea>
               </div>
-            </div>
+              */}
 
-            {/* Right Column */}
-            <div class="space-y-4">
-              <div>
-                <label
-                  for="notes"
-                  class="block text-sm font-medium mb-2"
-                  style="color: rgb(var(--color-text-secondary))"
-                >
-                  Notes
-                </label>
-                <textarea
-                  id="notes"
-                  name="notes"
-                  rows={4}
-                  class="w-full"
-                  placeholder="Any additional notes for this workday..."
-                ></textarea>
-              </div>
-
-              {/* Off Duty Section */}
-              <div class="rounded-lg p-4" style="border: 1px solid rgb(var(--color-border)); background-color: rgb(var(--color-bg-secondary))">
-                <div class="flex items-center mb-3">
-                  <input
-                    type="checkbox"
-                    id="offDuty"
-                    name="offDuty"
-                    value="true"
-                    checked={isOffDuty.value}
-                    class="h-4 w-4 rounded"
-                    style="accent-color: rgb(var(--color-primary))"
-                    onChange$={(_, el) => {
-                      isOffDuty.value = el.checked;
-                    }}
-                  />
+              {/* Notes & Off-Duty */}
+              <div class="space-y-4">
+                {/* Notes */}
+                <div>
                   <label
-                    for="offDuty"
-                    class="ml-2 block text-sm font-medium"
-                    style="color: rgb(var(--color-text-primary))"
+                    for="notes"
+                    class="block text-sm font-medium mb-2"
+                    style="color: rgb(var(--color-text-secondary))"
                   >
-                    Driver was off duty
+                    Notes
                   </label>
+                  <textarea
+                    id="notes"
+                    name="notes"
+                    rows={4}
+                    class="w-full"
+                    placeholder="Any additional notes for this workday..."
+                  ></textarea>
                 </div>
 
-                {isOffDuty.value && (
-                  <div>
-                    <label
-                      for="offDutyReason"
-                      class="block text-sm font-medium mb-2"
-                      style="color: rgb(var(--color-text-secondary))"
-                    >
-                      Off Duty Reason *
-                    </label>
-                    <select
-                      id="offDutyReason"
-                      name="offDutyReason"
-                      class="w-full"
-                      required
-                      value={offDutyReason.value}
+                {/* Off Duty Section */}
+                <div class="rounded-lg p-4" style="border: 1px solid rgb(var(--color-border)); background-color: rgb(var(--color-bg-secondary))">
+                  <div class="flex items-center mb-3">
+                    <input
+                      type="checkbox"
+                      id="offDuty"
+                      name="offDuty"
+                      value="true"
+                      checked={isOffDuty.value}
+                      class="h-4 w-4 rounded"
+                      style="accent-color: rgb(var(--color-primary))"
                       onChange$={(_, el) => {
-                        handleOffDutyReasonChange(el.value);
+                        isOffDuty.value = el.checked;
+                        if (el.checked) ncItems.value = [];
                       }}
+                    />
+                    <label
+                      for="offDuty"
+                      class="ml-2 block text-sm font-medium"
+                      style="color: rgb(var(--color-text-primary))"
                     >
-                      <option value="">Select reason...</option>
-                      <option value="No Work">No Work</option>
-                      <option value="Maintenance">Maintenance</option>
-                      <option value="Sick">Sick</option>
-                      <option value="Holiday">Holiday</option>
-                      <option value="Vacation">Vacation</option>
-                      <option value="Weather">Weather</option>
-                      <option value="Personal">Personal</option>
-                      <option value="Bereavement">Bereavement</option>
-                      <option value="Other">Other</option>
-                    </select>
-                    <input type="hidden" name="offDutyReason" value={offDutyReason.value} />
-                    <input type="hidden" name="offDutyReasonHoliday" value={customReasonType.value === 'Holiday' ? customReasonInput.value : ''} />
-                    <input type="hidden" name="offDutyReasonOther" value={customReasonType.value === 'Other' ? customReasonInput.value : ''} />
-                    {(customReasonType.value === 'Holiday' || customReasonType.value === 'Other') && customReasonInput.value && (
-                      <div class="mt-2 p-2 rounded text-sm" style="background-color: rgb(var(--color-bg-tertiary)); color: rgb(var(--color-text-secondary))">
-                        {customReasonType.value}: {customReasonInput.value}
-                      </div>
-                    )}
+                      Driver was off duty
+                    </label>
                   </div>
-                )}
+
+                  {isOffDuty.value && (
+                    <div>
+                      <label
+                        for="offDutyReason"
+                        class="block text-sm font-medium mb-2"
+                        style="color: rgb(var(--color-text-secondary))"
+                      >
+                        Off Duty Reason *
+                      </label>
+                      <select
+                        id="offDutyReason"
+                        name="offDutyReason"
+                        class="w-full"
+                        required
+                        value={offDutyReason.value}
+                        onChange$={(_, el) => {
+                          handleOffDutyReasonChange(el.value);
+                        }}
+                      >
+                        <option value="">Select reason...</option>
+                        <option value="No Work">No Work</option>
+                        <option value="Maintenance">Maintenance</option>
+                        <option value="Sick">Sick</option>
+                        <option value="Holiday">Holiday</option>
+                        <option value="Vacation">Vacation</option>
+                        <option value="Weather">Weather</option>
+                        <option value="Personal">Personal</option>
+                        <option value="Bereavement">Bereavement</option>
+                        <option value="Other">Other</option>
+                      </select>
+                      <input type="hidden" name="offDutyReason" value={offDutyReason.value} />
+                      <input type="hidden" name="offDutyReasonHoliday" value={customReasonType.value === 'Holiday' ? customReasonInput.value : ''} />
+                      <input type="hidden" name="offDutyReasonOther" value={customReasonType.value === 'Other' ? customReasonInput.value : ''} />
+                      {(customReasonType.value === 'Holiday' || customReasonType.value === 'Other') && customReasonInput.value && (
+                        <div class="mt-2 p-2 rounded text-sm" style="background-color: rgb(var(--color-bg-tertiary)); color: rgb(var(--color-text-secondary))">
+                          {customReasonType.value}: {customReasonInput.value}
+                        </div>
+                      )}
+                    </div>
+                  )}
+                </div>
+              </div>
+            </div> 
+            
+
+
+
+
+
+
+            {/* Right Column */}
+            <div>
+              {/* Non-Commission Items */}
+              <div>
+                <div class="flex items-center justify-between mb-2">
+                  <label class="block text-sm font-medium" style="color: rgb(var(--color-text-secondary))">
+                    Non-Commission Items
+                  </label>
+                  <button
+                    type="button"
+                    class="btn btn-ghost btn-sm"
+                    onClick$={addNcItem}
+                    disabled={isOffDuty.value}
+                    title={isOffDuty.value ? 'Off duty workdays cannot have NC items.' : 'Add NC item'}
+                  >
+                    + Add
+                  </button>
+                </div>
+
+                {/* Hidden JSON field posted with the form */}
+                <input
+                  type="hidden"
+                  name="ncItemsJson"
+                  value={JSON.stringify(ncItems.value)}
+                />
+
+                {/* NC Items List */}
+                <div class="overflow-x-auto rounded-lg" style="border: 1px solid rgb(var(--color-border))">
+                  <table class="w-full text-sm">
+                    <thead style="background-color: rgb(var(--color-bg-secondary))">
+                      <tr>
+                        <th class="text-left p-2">Description</th>
+                        <th class="text-left p-2 w-28">Hours</th>
+                        <th class="text-left p-2 w-28">Rate</th>
+                        <th class="p-2 w-16"></th>
+                      </tr>
+                    </thead>
+                    <tbody>
+                      {ncItems.value.length === 0 ? (
+                        <tr>
+                          <td class="p-3" colSpan={4} style="color: rgb(var(--color-text-tertiary))">
+                            No NC items. Click “Add” to enter truck wash, maintenance, etc.
+                          </td>
+                        </tr>
+                      ) : (
+                        ncItems.value.map((item, idx) => (
+                          <tr key={idx} class="border-t" style="border-color: rgb(var(--color-border))">
+                            <td class="p-2">
+                              <input
+                                type="text"
+                                class="w-full"
+                                value={item.description}
+                                disabled={isOffDuty.value}
+                                placeholder="e.g. Truck Wash"
+                                onInput$={(_, el) => updateNcItem(idx, { description: el.value })}
+                              />
+                            </td>
+                            <td class="p-2">
+                              <input
+                                type="number"
+                                class="w-full"
+                                min="0"
+                                step="0.25"
+                                value={String(item.hours)}
+                                disabled={isOffDuty.value}
+                                onInput$={(_, el) => updateNcItem(idx, { hours: Number(el.value) || 0 })}
+                              />
+                            </td>
+                            <td class="p-2">
+                              <input
+                                type="number"
+                                class="w-full"
+                                min="0"
+                                step="0.01"
+                                value={item.rate == null ? '' : item.rate.toFixed(2)}
+                                disabled={isOffDuty.value}
+                                placeholder="(default)"
+                                onBlur$={(_, el) => {
+                                  updateNcItem(idx, { rate: el.value === '' ? null : Number(Number(el.value).toFixed(2)) })
+                                }}
+                              />
+                            </td>
+                            <td class="p-2 text-right">
+                              <button
+                                type="button"
+                                class="btn btn-ghost btn-sm"
+                                onClick$={() => removeNcItem(idx)}
+                                disabled={isOffDuty.value}
+                                title="Remove"
+                                tabIndex={-1}
+                              >
+                                ✕
+                              </button>
+                            </td>
+                          </tr>
+                        ))
+                      )}
+                    </tbody>
+                  </table>
+                </div>
+
+                <div class="mt-2 text-sm" style="color: rgb(var(--color-text-tertiary))">
+                  Total NC Hours:{' '}
+                  {ncItems.value.reduce((sum, x) => sum + (Number(x.hours) || 0), 0).toFixed(2)}
+                </div>
               </div>
             </div>
+
+
+
+
+
           </div>
 
           {createAction.value?.error && (
