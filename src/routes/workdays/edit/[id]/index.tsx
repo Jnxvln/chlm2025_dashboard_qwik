@@ -77,30 +77,27 @@ export const useUpdateWorkdayAction = routeAction$(
       //   },
       // });
       const workday = await db.$transaction(async (tx) => {
-        // If marking as off-duty, delete associated hauls + ncItems
+        // If marking as off-duty, delete associated hauls
         if (normalized.offDuty) {
           await tx.haul.deleteMany({
             where: { workdayId: Number(normalized.id) },
           });
-          await tx.ncItem.deleteMany({
-            where: { workdayId: Number(normalized.id) },
-          });
-        } else {
-          // Not off-duty -> replace ncItems with submitted list
-          await tx.ncItem.deleteMany({
-            where: { workdayId: Number(normalized.id) },
-          });
+        }
 
-          if (items.length) {
-            await tx.ncItem.createMany({
-              data: items.map((i) => ({
-                workdayId: Number(normalized.id),
-                description: i.description,
-                hours: i.hours,
-                rate: i.rate ?? null,
-              })),
-            });
-          }
+        // Replace ncItems with submitted list (regardless of off-duty status)
+        await tx.ncItem.deleteMany({
+          where: { workdayId: Number(normalized.id) },
+        });
+
+        if (items.length) {
+          await tx.ncItem.createMany({
+            data: items.map((i) => ({
+              workdayId: Number(normalized.id),
+              description: i.description,
+              hours: i.hours,
+              rate: i.rate ?? null,
+            })),
+          });
         }
 
         return tx.workday.update({
@@ -108,7 +105,7 @@ export const useUpdateWorkdayAction = routeAction$(
           data: {
             date: normalized.date,
             chHours: normalized.chHours,
-            ncHours: normalized.offDuty ? 0 : cachedNcHours, // cache (legacy)
+            ncHours: cachedNcHours, // cache (legacy)
             // ncReasons: normalized.ncReasons || null, // legacy (optional)
             notes: normalized.notes || null,
             offDuty: normalized.offDuty,
@@ -242,8 +239,7 @@ export default component$(() => {
 
     // If unchecking, just uncheck
     isOffDuty.value = checked;
-    if (checked) ncItems.value = [];
-    else offDutyReason.value = '';
+    if (!checked) offDutyReason.value = '';
   });
 
   // Handler for modal confirmation
@@ -251,7 +247,6 @@ export default component$(() => {
     // Mark as off-duty and close modal
     // The backend will delete hauls when the form is submitted
     isOffDuty.value = true;
-    ncItems.value = [];
     showDeleteHaulsModal.value = false;
   });
 
@@ -282,7 +277,6 @@ export default component$(() => {
     // showCustomReasonModal.value = false;
     offDutyReason.value = customReasonType.value;
     isOffDuty.value = true;
-    ncItems.value = [];
     showCustomReasonModal.value = false;
   });
 
@@ -669,12 +663,7 @@ export default component$(() => {
                     type="button"
                     class="btn btn-ghost btn-sm"
                     onClick$={addNcItem}
-                    disabled={isOffDuty.value}
-                    title={
-                      isOffDuty.value
-                        ? 'Off duty workdays cannot have NC items.'
-                        : 'Add NC item'
-                    }
+                    title="Add NC item"
                   >
                     + Add
                   </button>
@@ -717,7 +706,6 @@ export default component$(() => {
                                 type="text"
                                 class="w-full"
                                 value={item.description}
-                                disabled={isOffDuty.value}
                                 placeholder="e.g. Truck Wash"
                                 onInput$={(_, el) =>
                                   updateNcItem(idx, { description: el.value })
@@ -731,7 +719,6 @@ export default component$(() => {
                                 min="0"
                                 step="0.25"
                                 value={String(item.hours)}
-                                disabled={isOffDuty.value}
                                 onInput$={(_, el) =>
                                   updateNcItem(idx, {
                                     hours: Number(el.value) || 0,
@@ -748,7 +735,6 @@ export default component$(() => {
                                 value={
                                   item.rate == null ? '' : item.rate.toFixed(2)
                                 }
-                                disabled={isOffDuty.value}
                                 placeholder="(default)"
                                 onBlur$={(_, el) => {
                                   updateNcItem(idx, {
@@ -765,7 +751,6 @@ export default component$(() => {
                                 type="button"
                                 class="btn btn-ghost btn-sm"
                                 onClick$={() => removeNcItem(idx)}
-                                disabled={isOffDuty.value}
                                 title="Remove"
                                 tabIndex={-1}
                               >

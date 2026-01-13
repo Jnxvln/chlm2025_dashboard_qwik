@@ -68,7 +68,7 @@ export const useCreateWorkdayAction = routeAction$(
           }
         })
 
-        if (items.length && !normalized.offDuty) {
+        if (items.length) {
           await tx.ncItem.createMany({
             data: items.map(i => ({
               workdayId: created.id,
@@ -441,7 +441,6 @@ export default component$(() => {
                       style="accent-color: rgb(var(--color-primary))"
                       onChange$={(_, el) => {
                         isOffDuty.value = el.checked;
-                        if (el.checked) ncItems.value = [];
                       }}
                     />
                     <label
@@ -515,8 +514,7 @@ export default component$(() => {
                     type="button"
                     class="btn btn-ghost btn-sm"
                     onClick$={addNcItem}
-                    disabled={isOffDuty.value}
-                    title={isOffDuty.value ? 'Off duty workdays cannot have NC items.' : 'Add NC item'}
+                    title="Add NC item"
                   >
                     + Add
                   </button>
@@ -555,7 +553,6 @@ export default component$(() => {
                                 type="text"
                                 class="w-full"
                                 value={item.description}
-                                disabled={isOffDuty.value}
                                 placeholder="e.g. Truck Wash"
                                 onInput$={(_, el) => updateNcItem(idx, { description: el.value })}
                               />
@@ -567,7 +564,6 @@ export default component$(() => {
                                 min="0"
                                 step="0.25"
                                 value={String(item.hours)}
-                                disabled={isOffDuty.value}
                                 onInput$={(_, el) => updateNcItem(idx, { hours: Number(el.value) || 0 })}
                               />
                             </td>
@@ -578,7 +574,6 @@ export default component$(() => {
                                 min="0"
                                 step="0.01"
                                 value={item.rate == null ? '' : item.rate.toFixed(2)}
-                                disabled={isOffDuty.value}
                                 placeholder="(default)"
                                 onBlur$={(_, el) => {
                                   updateNcItem(idx, { rate: el.value === '' ? null : Number(Number(el.value).toFixed(2)) })
@@ -590,7 +585,6 @@ export default component$(() => {
                                 type="button"
                                 class="btn btn-ghost btn-sm"
                                 onClick$={() => removeNcItem(idx)}
-                                disabled={isOffDuty.value}
                                 title="Remove"
                                 tabIndex={-1}
                               >
